@@ -45,17 +45,21 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
     setSheetOpen(false);
   };
 
+  const isRTL = language === 'ar';
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200/50 bg-white shadow-sm">
-      <div className="w-full max-w-[1600px] mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200/50 bg-white shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="w-full max-w-400 mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
         {/* Left: Logo */}
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center shrink-0">
           <button
             onClick={() => onNavigate('landing')}
             className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
           >
             <img src={unifyLogo} alt="Unify" className="h-14 w-auto" />
-            <span className="text-lg font-extrabold tracking-normal text-blue-950 ">Unify</span>
+            <span className="text-lg font-extrabold tracking-normal text-blue-950">
+              {isRTL ? 'يونيفاي' : 'Unify'}
+            </span>
           </button>
         </div>
 
@@ -118,7 +122,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
         </div>
 
         {/* Right: User actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isAuthenticated ? (
             <>
               {/* Language Toggle */}
@@ -126,7 +130,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                 onClick={toggleLanguage}
                 className="hidden lg:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                 aria-label="Change Language"
-                title={language === 'en' ? 'العربية' : 'English'}
+                title={language === 'en' ? 'العربية' : 'الانجليزية'}
               >
                 <Globe className="h-5 w-5 text-gray-700" strokeWidth={2} />
               </button>
@@ -151,7 +155,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               >
                 <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
                 {notificationCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                  <span className="absolute -right-0.5 -top-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
                     {notificationCount}
                   </span>
                 )}
@@ -161,24 +165,24 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="hidden lg:flex ml-2 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                    className="hidden lg:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                     aria-label="User menu"
                   >
                     <User className="h-5 w-5 text-gray-700" strokeWidth={2} />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 mt-2">
-                  <div className="px-3 py-2 bg-gradient-to-br from-primary-50 to-primary-100/50">
+                  <div className="px-3 py-2 bg-linear-to-br from-primary-50 to-primary-100/50">
                     <p className="font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-600">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onNavigate('profile')} onSelect={() => onNavigate('profile')} className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4 text-primary-600" />
+                    <User className="me-2 h-4 w-4 text-primary-600" />
                     <span className="font-medium">{t('nav.profile')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} onSelect={handleLogout} className="cursor-pointer text-red-600 focus:text-red-700">
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="me-2 h-4 w-4" />
                     <span className="font-medium">{t('nav.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -216,9 +220,9 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] flex flex-col p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <SheetContent side="right" className="w-75 sm:w-87.5 flex flex-col p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
               {/* Header row: title + close button on same line */}
-              <div className="flex items-start justify-between px-6 pt-6 pb-2 flex-shrink-0">
+              <div className="flex items-start justify-between px-6 pt-6 pb-2 shrink-0">
                 <div className="flex flex-col gap-1">
                   <span className="text-lg font-semibold text-gray-900">{t('nav.navigationMenu')}</span>
                   <span className="text-sm text-gray-500">{t('nav.browseFeatures')}</span>
@@ -236,47 +240,47 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                 <div className="space-y-0">
                   <button
                     onClick={() => handleNavClick('search')}
-                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:pl-8 ${
+                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
                       currentPage === 'search'
-                        ? 'bg-primary/20 text-black font-semibold border-l-4 border-primary'
-                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                        ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
                     }`}
                   >
-                    <Search className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                    <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.search')}</span>
+                    <Search className="h-5 w-5 shrink-0" />
+                    <span className="font-medium">{t('nav.search')}</span>
                   </button>
                   <button
                     onClick={() => handleNavClick('create-post')}
-                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:pl-8 ${
+                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
                       currentPage === 'create-post'
-                        ? 'bg-primary/20 text-black font-semibold border-l-4 border-primary'
-                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                        ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
                     }`}
                   >
-                    <PlusCircle className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                    <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.createPost')}</span>
+                    <PlusCircle className="h-5 w-5 shrink-0" />
+                    <span className="font-medium">{t('nav.createPost')}</span>
                   </button>
                   <button
                     onClick={() => handleNavClick('poster-builder')}
-                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:pl-8 ${
+                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
                       currentPage === 'poster-builder'
-                        ? 'bg-primary/20 text-black font-semibold border-l-4 border-primary'
-                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                        ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
                     }`}
                   >
-                    <FileImage className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                    <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.posterBuilder')}</span>
+                    <FileImage className="h-5 w-5 shrink-0" />
+                    <span className="font-medium">{t('nav.posterBuilder')}</span>
                   </button>
                   <button
                     onClick={() => handleNavClick('map')}
-                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:pl-8 ${
+                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
                       currentPage === 'map'
-                        ? 'bg-primary/20 text-black font-semibold border-l-4 border-primary'
-                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                        ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
                     }`}
                   >
-                    <MapPin className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                    <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.map')}</span>
+                    <MapPin className="h-5 w-5 shrink-0" />
+                    <span className="font-medium">{t('nav.map')}</span>
                   </button>
                 </div>
 
@@ -288,10 +292,10 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                 </div>
                 <button
                   onClick={toggleLanguage}
-                  className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-l-4 border-transparent hover:pl-8"
+                  className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                 >
-                  <Globe className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                  <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{language === 'en' ? 'العربية' : 'English'}</span>
+                  <Globe className="h-5 w-5 shrink-0" />
+                  <span className="font-medium">{language === 'en' ? 'العربية' : 'الانجليزية'}</span>
                 </button>
 
                 {/* Login/Register Buttons for Non-Authenticated Users */}
@@ -304,25 +308,25 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                     <div className="space-y-0">
                       <button
                         onClick={() => { onNavigate('login'); setSheetOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none hover:pl-8 ${
+                        className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none hover:ps-8 ${
                           currentPage === 'login'
-                            ? 'bg-primary/20 text-black font-semibold border-l-4 border-primary'
-                            : 'bg-transparent hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                            ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                            : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
                         }`}
                       >
-                        <LogIn className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                        <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.login')}</span>
+                        <LogIn className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{t('nav.login')}</span>
                       </button>
                       <button
                         onClick={() => { onNavigate('register'); setSheetOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none hover:pl-8 ${
+                        className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none hover:ps-8 ${
                           currentPage === 'register'
-                            ? 'bg-primary/20 text-black font-semibold border-l-4 border-primary'
-                            : 'bg-transparent hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                            ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                            : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
                         }`}
                       >
-                        <UserPlus className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                        <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.register')}</span>
+                        <UserPlus className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{t('nav.register')}</span>
                       </button>
                     </div>
                   </>
@@ -338,31 +342,31 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                     <div className="space-y-0 pb-6">
                       <button
                         onClick={() => { onNavigate('profile'); setSheetOpen(false); }}
-                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-l-4 border-transparent hover:pl-8"
+                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
-                        <User className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                        <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.profile')}</span>
+                        <User className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{t('nav.profile')}</span>
                       </button>
                       <button
                         onClick={() => { onNavigate('notifications'); setSheetOpen(false); }}
-                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-l-4 border-transparent hover:pl-8"
+                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
-                        <Bell className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                        <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.notifications')}</span>
+                        <Bell className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{t('nav.notifications')}</span>
                       </button>
                       <button
                         onClick={() => { onNavigate('chat'); setSheetOpen(false); }}
-                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-l-4 border-transparent hover:pl-8"
+                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
-                        <Mail className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                        <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.messages')}</span>
+                        <Mail className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{t('nav.messages')}</span>
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-red-50 transition-all duration-300 text-red-600 w-full border-none border-l-4 border-transparent hover:pl-8"
+                        className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-red-50 transition-all duration-300 text-red-600 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
-                        <LogOut className={`h-5 w-5 flex-shrink-0 ${language === 'ar' ? 'order-2' : ''}`} />
-                        <span className={`font-medium ${language === 'ar' ? 'order-1 flex-1 text-start' : ''}`}>{t('nav.logout')}</span>
+                        <LogOut className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{t('nav.logout')}</span>
                       </button>
                     </div>
                   </>
