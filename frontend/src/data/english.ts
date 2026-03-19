@@ -1,8 +1,8 @@
 export const en = {
     hero: {
-        title: "Every person deserves to be home",
+        title: "Reuniting families, restoring hope",
         subtitle: "AI-powered reunification technology backed by the Ministry of Social Solidarity. We're here to help you bring them back.",
-        placeholder: "Search for your loved one (Name, Image)...",
+        placeholder: "Search for a missing person (Name, Image)...",
         searchButton: "Search Unify"
     }
 };

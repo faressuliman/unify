@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { Navbar } from './components/Navbar'
 import Index from './pages/Index'
+import LoadingScreen from './components/LoadingScreen'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing')
@@ -11,7 +12,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+      <LoadingScreen />
       <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
       {currentPage === 'landing' ? (
         <Index />

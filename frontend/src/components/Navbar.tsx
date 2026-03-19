@@ -2,6 +2,7 @@ import { Bell, Menu, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe,
 import { Button } from './ui/button';
 import { useAuth } from './AuthContext';
 import { useLanguage } from './LanguageContext';
+import { motion } from 'framer-motion';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from './ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import unifyLogo from '../assets/unify.png';
 
 interface IProps {
@@ -46,9 +47,35 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
   };
 
   const isRTL = language === 'ar';
+  const [isReady, setIsReady] = useState(() => {
+    return Boolean((window as any).__unifyLoadingComplete);
+  });
+
+  useEffect(() => {
+    if ((window as any).__unifyLoadingComplete) {
+      return;
+    }
+
+    const handleReady = () => setIsReady(true);
+    window.addEventListener('loadingComplete', handleReady);
+    
+    // Fallback if loading screen was bypassed or already removed
+    const timer = setTimeout(() => setIsReady(true), 1200); 
+    
+    return () => {
+      window.removeEventListener('loadingComplete', handleReady);
+      clearTimeout(timer);
+    }
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200/50 bg-white shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+    <motion.header 
+      initial={{ y: -100, opacity: 0 }}
+      animate={isReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="sticky top-0 z-50 w-full border-b border-gray-200/50 bg-white shadow-sm" 
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
       <div className="w-full max-w-400 mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
         {/* Left: Logo */}
         <div className="flex items-center shrink-0">
@@ -57,7 +84,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
             className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
           >
             <img src={unifyLogo} alt="Unify" className="h-14 w-auto" />
-            <span className="text-lg font-extrabold tracking-normal text-blue-950">
+            <span className="text-lg font-extrabold tracking-normal text-secondary">
               {isRTL ? 'يونيفاي' : 'Unify'}
             </span>
           </button>
@@ -376,6 +403,6 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
           </Sheet>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

@@ -1,0 +1,129 @@
+import { useEffect, useState } from 'react';
+import { HeartHandshake, UserSearch, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from './LanguageContext';
+
+type UnifyWindow = Window & {
+  __unifyLoadingComplete?: boolean;
+};
+
+export default function Stats() {
+  const { language } = useLanguage();
+  const isRTL = language === 'ar';
+  const [isReady, setIsReady] = useState(() => {
+    return Boolean((window as UnifyWindow).__unifyLoadingComplete);
+  });
+
+  useEffect(() => {
+    if ((window as UnifyWindow).__unifyLoadingComplete) {
+      // Already complete, state is true
+      return;
+    }
+
+    const handleReady = () => setIsReady(true);
+    window.addEventListener('loadingComplete', handleReady);
+    
+    // Fallback timer
+    const timer = setTimeout(() => setIsReady(true), 1200); 
+    
+    return () => {
+      window.removeEventListener('loadingComplete', handleReady);
+      clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    <section className="bg-slate-50 w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="w-full max-w-400 mx-auto px-6 lg:px-12 py-8">
+        <AnimatePresence>
+          {isReady && (
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.2, delayChildren: 0.6 }
+                }
+              }}
+            >
+              {/* Card 1 - Reunited */}
+              <motion.div 
+                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                }}
+              >
+                <div className="p-2.5 lg:p-3 bg-primary/20 rounded-full text-[#b89500] shrink-0">
+                  <HeartHandshake className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
+                    {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
+                  </p>
+                  <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
+                    {isRTL ? '124 عائلة' : '124 Families'}
+                  </p>
+                  <p className="text-[10px] lg:text-xs text-[#b89500] font-bold mt-0.5 whitespace-nowrap">
+                    {isRTL ? '+12% عن الشهر الماضي' : '+12% from last month'}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Card 2 - Active Searches */}
+              <motion.div 
+                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                }}
+              >
+                <div className="p-2.5 lg:p-3 bg-primary/20 rounded-full text-[#b89500] shrink-0">
+                  <UserSearch className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
+                    {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
+                  </p>
+                  <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
+                    {isRTL ? '2,450 حالة' : '2,450 Cases'}
+                  </p>
+                  <p className="text-[10px] lg:text-xs text-gray-400 mt-0.5 whitespace-nowrap">
+                    {isRTL ? 'يتم التحديث كل 10 دقائق' : 'Updates every 10 mins'}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Card 3 - Verified Matches */}
+              <motion.div 
+                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                }}
+              >
+                <div className="p-2.5 lg:p-3 bg-primary/20 rounded-full text-[#b89500] shrink-0">
+                  <ShieldCheck className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
+                    {isRTL ? 'عمليات تحقق موثقة' : 'Verified Matches'}
+                  </p>
+                  <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
+                    {isRTL ? '+18.5k مسجل' : '18.5k+ Users'}
+                  </p>
+                  <p className="text-[10px] lg:text-xs text-[#b89500] font-bold mt-0.5 whitespace-nowrap">
+                    {isRTL ? 'مدعوم بالذكاء الاصطناعي' : 'Powered by AI'}
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}

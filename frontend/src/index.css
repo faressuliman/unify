@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 @theme {
+  --color-background: #ffffff;
+  --color-foreground: #1c190d;
   --color-primary: #F5D63D;
   --color-primary-foreground: #1a1a1a;
   --color-primary-50: #FEFCE8;
@@ -11,26 +13,12 @@
   --color-primary-500: #EAB308;
   --color-primary-600: #CA8A04;
   --color-primary-700: #A16207;
-  --color-secondary: #67A1BF;
-  --color-secondary-dark: #5a8fa8;
-  --color-secondary-light: #7ab3d1;
+  --color-secondary: #172554;
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-light: #1e3a8a;
+  --color-secondary-dark: #0f172a;
 }
 
-/* X button spin-in animation */
-@keyframes x-spin-in {
-  from {
-    transform: rotate(-180deg);
-    opacity: 0.3;
-  }
-  to {
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-}
-
-.x-spin-in {
-  animation: x-spin-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
 
 /* Sheet sidebar animations */
 @keyframes sheet-slide-in-from-right {
@@ -59,6 +47,26 @@
     transform: translateX(0);
   }
 }
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@utility animate-blob {
+  animation: blob 7s infinite;
+}
+
+@utility animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+@utility animation-delay-4000 {
+  animation-delay: 4s;
+}
+
 
 @keyframes sheet-slide-out-to-left {
   from {
