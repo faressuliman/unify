@@ -1,4 +1,4 @@
-# Unify - Reuniting Missing Persons with Their Families 🔍⛶
+# Unify - Reuniting Missing Persons with Their Families 🔍
 
 > A web-based platform designed to reconnect missing persons with their families using AI, identity verification, and authority oversight.
 
