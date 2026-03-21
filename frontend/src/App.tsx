@@ -3,6 +3,7 @@ import './App.css'
 import { Navbar } from './components/Navbar'
 import Index from './pages/Index'
 import LoadingScreen from './components/LoadingScreen'
+import ScrollToTopButton from './components/ScrollToTopButton'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing')
@@ -12,9 +13,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 overflow-x-clip">
       <LoadingScreen />
       <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
+      <ScrollToTopButton />
       {currentPage === 'landing' ? (
         <Index />
       ) : (

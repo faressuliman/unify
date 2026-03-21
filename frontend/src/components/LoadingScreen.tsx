@@ -48,13 +48,13 @@ export default function LoadingScreen() {
       {isLoading && (
         <motion.div
           dir={language === "ar" ? "rtl" : "ltr"}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white overflow-hidden"
+          className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-white overflow-hidden"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Subtle Ambient Background Gradient */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50 via-white to-white opacity-80" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-blue-50 via-white to-white opacity-80" />
 
           {/* Main Logo Container */}
           <div className="relative z-10 flex flex-col items-center justify-center gap-8">
@@ -83,7 +83,7 @@ export default function LoadingScreen() {
                 transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
               />
               <motion.div
-                className="absolute inset-2 border-[1px] border-transparent border-b-secondary/50 rounded-full"
+                className="absolute inset-2 border border-transparent border-b-secondary/50 rounded-full"
                 animate={{ rotate: -360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               />
@@ -115,17 +115,17 @@ export default function LoadingScreen() {
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-                    className="w-1.5 h-1.5 bg-primary/70 rounded-full"
+                    className="w-1.5 h-1.5 bg-secondary/70 rounded-full"
                   />
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-                    className="w-1.5 h-1.5 bg-primary/70 rounded-full"
+                    className="w-1.5 h-1.5 bg-secondary/70 rounded-full"
                   />
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
-                    className="w-1.5 h-1.5 bg-primary/70 rounded-full"
+                    className="w-1.5 h-1.5 bg-secondary/70 rounded-full"
                   />
                 </div>
               </div>

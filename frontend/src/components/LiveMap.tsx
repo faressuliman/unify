@@ -74,10 +74,10 @@ export default function LiveMap() {
     const t = isRTL ? ar.liveMap : en.liveMap;
     
     return (
-        <div className="w-full h-[500px] rounded-2xl overflow-hidden border-2 border-primary-300 shadow-sm relative z-0">
-            <MapContainer center={[27.8206, 30.8025]} zoom={6} scrollWheelZoom={false} className="w-full h-full z-10">
+        <div className="w-full h-125 rounded-2xl overflow-hidden border-2 border-primary-dark shadow-sm relative z-0">
+            <MapContainer center={[27.8206, 30.8025]} zoom={6} scrollWheelZoom={false} className="w-full h-full z-10 custom-map-tiles">
                 <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 />
                 

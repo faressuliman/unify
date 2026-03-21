@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 
 @theme {
@@ -13,6 +14,7 @@
   --color-primary-500: #F5D63D;
   --color-primary-600: #dcb822;
   --color-primary-700: #A16207;
+  --color-primary-dark: #FAF3EA;
   --color-secondary: #b89500;
   --color-secondary-foreground: #1c190d;
   --color-secondary-light: #ffffff;
@@ -23,33 +25,20 @@
   --color-tertiary-dark: #0f172a;
 }
 
-
 /* Sheet sidebar animations */
 @keyframes sheet-slide-in-from-right {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes sheet-slide-out-to-right {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(100%);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
 }
 
 @keyframes sheet-slide-in-from-left {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes blob {
@@ -71,32 +60,19 @@
   animation-delay: 4s;
 }
 
-
 @keyframes sheet-slide-out-to-left {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
 }
 
 @keyframes sheet-overlay-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes sheet-overlay-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .sheet-slide-right[data-state="open"] {
@@ -146,3 +122,21 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+
+
+.leaflet-container {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #e5f0f9 !important;
+}
+
+.leaflet-tooltip.tertiary-tooltip {
+    color: var(--color-tertiary) !important;
+    font-weight: 600 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+}
+
+

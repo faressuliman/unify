@@ -11,19 +11,19 @@ export default function FooterSection() {
   const t = isRTL ? ar.footer : en.footer;
 
   return (
-    <section className="relative flex snap-start items-center justify-center bg-tertiary pt-8 pb-12 md:pt-8 md:pb-12 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'} style={{ isolation: "isolate", zIndex: 1 }}>
+    <section className="relative flex snap-start items-center justify-center bg-primary-dark pt-8 pb-12 md:pt-8 md:pb-12 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'} style={{ isolation: "isolate", zIndex: 1 }}>
       {/* Grid Pattern Overlay */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: "linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px)",
+          backgroundImage: "linear-gradient(rgba(0, 0, 0, 1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 1) 1px, transparent 1px)",
           backgroundSize: "50px 50px",
         }}
       />
 
       {/* Floating Background Icons */}
       <motion.div
-        className="absolute left-10 top-20 text-white/5 rtl:right-10 rtl:left-auto"
+        className="absolute left-10 top-20 text-tertiary/5 rtl:right-10 rtl:left-auto"
         animate={{
           rotate: [0, 360],
           y: [0, -30, 0],
@@ -33,7 +33,7 @@ export default function FooterSection() {
         <ScanFace size={200} />
       </motion.div>
       <motion.div
-        className="absolute right-10 bottom-20 text-secondary/5 rtl:left-10 rtl:right-auto"
+        className="absolute right-10 bottom-20 text-tertiary/5 rtl:left-10 rtl:right-auto"
         animate={{
           rotate: [360, 0],
           y: [0, 30, 0],
@@ -44,7 +44,7 @@ export default function FooterSection() {
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 lg:px-12 pt-4 sm:pt-4 md:pt-6 pb-24 sm:pb-24 md:pb-24 border-b border-primary/20">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 lg:px-12 pt-4 sm:pt-4 md:pt-6 pb-24 sm:pb-24 md:pb-24 border-b border-tertiary/10">
         <div className="grid gap-8 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-3">
           {/* Column 1 - Company Info */}
           <motion.div
@@ -54,12 +54,12 @@ export default function FooterSection() {
             transition={{ duration: 0.5 }}
           >
             <div className="mb-3 sm:mb-3 md:mb-4 flex items-center gap-2">
-              <img src={unifyLogo} alt="Unify" className="h-14 w-auto brightness-0 invert" />
-              <h3 className="text-lg font-extrabold tracking-normal text-white">
-                {isRTL ? 'يونيفاي' : 'Unify'}
+              <img src={unifyLogo} alt="Unify" className="h-14 w-auto drop-shadow-sm brightness-0" />
+              <h3 className="text-lg font-extrabold tracking-normal text-tertiary">
+                {t.brand}
               </h3>
             </div>
-            <p className="text-sm md:text-base text-slate-300 leading-relaxed text-start max-w-xs">
+            <p className="text-sm md:text-base text-tertiary/80 leading-relaxed text-start max-w-xs">
               {t.description}
             </p>
           </motion.div>
@@ -73,11 +73,11 @@ export default function FooterSection() {
             className="sm:flex sm:justify-center"
           >
             <div>
-              <h4 className="mb-3 sm:mb-3 md:mb-4 text-base sm:text-lg md:text-lg font-bold text-white text-start">{t.quickLinksTitle}</h4>
+              <h4 className="mb-3 sm:mb-3 md:mb-4 text-base sm:text-lg md:text-lg font-bold text-tertiary text-start">{t.quickLinksTitle}</h4>
               <ul className="space-y-2 md:space-y-3 text-start">
                 {t.quickLinks.map((link, idx) => (
                   <li key={idx}>
-                    <a href="#" className="text-sm md:text-base text-slate-300 hover:text-primary transition-colors duration-200">
+                    <a href="#" className="text-sm md:text-base text-tertiary/80 hover:text-tertiary transition-colors duration-200 font-medium">
                       {link}
                     </a>
                   </li>
@@ -95,19 +95,25 @@ export default function FooterSection() {
             className="sm:flex sm:justify-end"
           >
             <div>
-              <h4 className="mb-3 sm:mb-3 md:mb-4 text-base sm:text-lg md:text-lg font-bold text-white text-start">{t.contactTitle}</h4>
-              <ul className="space-y-3 md:space-y-3">
-                <li className="flex items-center gap-3 text-sm md:text-base text-slate-300">
-                  <Phone className="h-5 w-5 shrink-0 text-primary rtl:-scale-x-100" />
-                  <span dir="ltr" className="hover:text-white transition-colors cursor-pointer">{t.phone}</span>
+              <h4 className="mb-3 sm:mb-3 md:mb-4 text-base sm:text-lg md:text-lg font-bold text-tertiary text-start">{t.contactTitle}</h4>
+              <ul className="space-y-4">
+                <li className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5">
+                    <Phone className="h-5 w-5 text-secondary border-none rtl:-scale-x-100" />
+                  </div>
+                  <span dir="ltr" className="text-sm md:text-base text-tertiary/80 transition-colors cursor-pointer font-medium hover:text-secondary">{t.phone}</span>
                 </li>
-                <li className="flex items-center gap-3 text-sm md:text-base text-slate-300">
-                  <Mail className="h-5 w-5 shrink-0 text-primary" />
-                  <span className="break-all hover:text-white transition-colors cursor-pointer">{t.email}</span>
+                <li className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5">
+                    <Mail className="h-5 w-5 text-secondary border-none" />
+                  </div>
+                  <span className="break-all text-sm md:text-base text-tertiary/80 transition-colors cursor-pointer font-medium hover:text-secondary">{t.email}</span>
                 </li>
-                <li className="flex items-center gap-3 text-sm md:text-base text-slate-300">
-                  <MapPin className="h-5 w-5 shrink-0 text-primary" />
-                  <span>{t.location}</span>
+                <li className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5">
+                    <MapPin className="h-5 w-5 text-secondary border-none" />
+                  </div>
+                  <span className="text-sm md:text-base text-tertiary/80 font-medium">{t.location}</span>
                 </li>
               </ul>
             </div>
@@ -116,15 +122,15 @@ export default function FooterSection() {
       </div>
 
       {/* Bottom Footer Section for Copyright and Emergency */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 w-full bg-slate-900/50 backdrop-blur-sm">
+      <div className="absolute bottom-0 left-0 right-0 z-10 w-full bg-white/50 backdrop-blur-md border-t border-tertiary/5">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-6 lg:px-12 py-4 md:flex-row">
-            <p className="text-xs md:text-sm text-slate-400 font-medium">
+            <p className="text-xs md:text-sm text-tertiary/70 font-semibold">
                 {t.rights}
             </p>
-            <div className="flex items-center gap-2 sm:gap-3 text-xs md:text-sm text-slate-300 bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20">
-                <Phone className="h-4 w-4 shrink-0 text-red-400 animate-pulse" />
-                <span className="font-bold text-red-400">{t.emergencyTitle}</span>
-                <span className="font-bold text-white tracking-wider" dir="ltr">{t.emergencyNumber}</span>
+            <div className="flex items-center gap-2 sm:gap-3 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200">
+                <Phone className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
+                <span className="font-bold text-red-600">{t.emergencyTitle}</span>
+                <span className="font-bold text-tertiary tracking-wider" dir="ltr">{t.emergencyNumber}</span>
             </div>
         </div>
       </div>

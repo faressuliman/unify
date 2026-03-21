@@ -29,7 +29,7 @@ export default function PersonCard({ profile, idx, isRTL }: PersonCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: idx * 0.1 }}
-      className="flex-none w-[calc(65%-0.5rem)] md:w-[calc(40%-1rem)] lg:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm"
+      className="flex-none w-[calc(85%-0.5rem)] md:w-[calc(45%-1rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm"
     >
       <div className="relative h-48 sm:h-52 overflow-hidden bg-[#faf9f5]">
         <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} z-10`}>

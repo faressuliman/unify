@@ -47,9 +47,18 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
   };
 
   const isRTL = language === 'ar';
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isReady, setIsReady] = useState(() => {
     return Boolean((window as any).__unifyLoadingComplete);
   });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if ((window as any).__unifyLoadingComplete) {
@@ -73,10 +82,19 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
       initial={{ y: -100, opacity: 0 }}
       animate={isReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="sticky top-0 z-50 w-full border-b border-gray-200/50 bg-white shadow-sm" 
+      className={`sticky top-0 z-50 w-full transition-all duration-300 
+        ${isScrolled 
+          ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none' 
+          : 'bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto'
+        }`
+      }
       dir={isRTL ? 'rtl' : 'ltr'}
     >
-      <div className="w-full max-w-400 mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
+      <div className={`w-full max-w-400 mx-auto flex h-20 items-center justify-between px-6 lg:px-12 transition-all duration-300 pointer-events-auto
+        ${isScrolled 
+          ? '2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-[2rem]' 
+          : '2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none'
+        }`}>
         {/* Left: Logo */}
         <div className="flex items-center shrink-0">
           <button
@@ -91,8 +109,8 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
         </div>
 
         {/* Center: Navigation */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden lg:flex">
-          <nav className="hidden lg:flex items-center gap-2  px-3 py-2  ">
+        <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden 2xl:flex">
+          <nav className="hidden 2xl:flex items-center gap-2  px-3 py-2  ">
             <button
               onClick={() => handleNavClick('search')}
               className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
@@ -155,7 +173,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               {/* Language Toggle */}
               <button
                 onClick={toggleLanguage}
-                className="hidden lg:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                 aria-label="Change Language"
                 title={language === 'en' ? 'العربية' : 'الانجليزية'}
               >
@@ -165,7 +183,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               {/* Messages */}
               <button
                 onClick={() => onNavigate('chat')}
-                className="hidden lg:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                 aria-label="Messages"
               >
                 <Mail className="h-5 w-5 text-gray-700" strokeWidth={2} />
@@ -177,7 +195,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               {/* Notifications */}
               <button
                 onClick={handleNotificationClick}
-                className="hidden lg:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
@@ -192,7 +210,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="hidden lg:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                    className="hidden 2xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                     aria-label="User menu"
                   >
                     <User className="h-5 w-5 text-gray-700" strokeWidth={2} />
@@ -216,7 +234,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               </DropdownMenu>
             </>
           ) : (
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden 2xl:flex items-center gap-3">
               <button
                 onClick={toggleLanguage}
                 className="relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 cursor-pointer border-none"
@@ -242,7 +260,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
           )}
 
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild className="lg:hidden">
+            <SheetTrigger asChild className="2xl:hidden">
               <Button variant="ghost" size="icon" aria-label="Open menu" className="cursor-pointer">
                 <Menu className="h-5 w-5" />
               </Button>

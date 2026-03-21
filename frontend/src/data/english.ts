@@ -10,7 +10,7 @@ export const en = {
         subtitle: "AI-matched sightings and recent registrations",
         loadMore: "Load More Profiles",
         buttons: {
-            seen: "I might have seen them",
+            seen: "I might've seen them",
             details: "View Full Details"
         }
     },
@@ -67,7 +67,7 @@ export const en = {
         contactTitle: "Contact Us",
         email: "support@unify.eg",
         phone: "+20 100 123 4567",
-        location: "Cairo, Egypt",
+        location: "Alexandria, Egypt",
         emergencyTitle: "Emergency Hotline:",
         emergencyDesc: "Available 24/7 for urgent cases:",
         emergencyNumber: "12345",
