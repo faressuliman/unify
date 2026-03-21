@@ -84,7 +84,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
             className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
           >
             <img src={unifyLogo} alt="Unify" className="h-14 w-auto" />
-            <span className="text-lg font-extrabold tracking-normal text-secondary">
+            <span className="text-lg font-extrabold tracking-normal text-tertiary">
               {isRTL ? 'يونيفاي' : 'Unify'}
             </span>
           </button>
@@ -234,7 +234,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               </Button>
               <Button
                 onClick={() => onNavigate('register')}
-                className="rounded-full px-6 font-medium bg-primary hover:bg-primary-300 shadow-lg shadow-primary/30 hover:shadow-xl cursor-pointer text-primary-foreground"
+                className="rounded-full px-6 font-medium bg-primary hover:bg-[#e6dcaf] shadow-lg shadow-primary/30 hover:shadow-xl transition-colors duration-300 cursor-pointer text-primary-foreground"
               >
                 {t('nav.register')}
               </Button>

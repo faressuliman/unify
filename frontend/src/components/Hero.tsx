@@ -170,7 +170,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
           <AnimatePresence>
             {isReady && (
               <motion.h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-6 text-slate-800 leading-[1.2] flex flex-wrap md:flex-nowrap justify-center gap-y-2 gap-x-[0.3em]"
+                className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-6 text-tertiary leading-[1.2] flex flex-wrap md:flex-nowrap justify-center gap-y-2 gap-x-[0.3em]"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -291,7 +291,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
                 <button
                   type="button"
                   onClick={triggerImagePicker}
-                  className="p-2.5 sm:p-3 hover:bg-slate-50 rounded-full transition-colors group/upload cursor-pointer shrink-0 ml-1 sm:ml-2 text-slate-400 hover:text-primary"
+                  className="p-2.5 sm:p-3 hover:bg-primary rounded-full transition-colors group/upload cursor-pointer shrink-0 ml-1 sm:ml-2 text-slate-400 hover:text-secondary duration-300"
                   title={isRTL ? "بحث بالصورة" : "Search by image"}
                   aria-label="Search by image"
                 >

@@ -40,7 +40,8 @@ export default function Stats() {
             <motion.div 
               className="grid grid-cols-1 md:grid-cols-3 gap-6"
               initial="hidden"
-              animate="visible"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
               variants={{
                 hidden: { opacity: 0 },
                 visible: {
@@ -51,23 +52,23 @@ export default function Stats() {
             >
               {/* Card 1 - Reunited */}
               <motion.div 
-                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow"
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
                 }}
               >
-                <div className="p-2.5 lg:p-3 bg-primary/20 rounded-full text-[#b89500] shrink-0">
+                <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
                   <HeartHandshake className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                 </div>
-                <div>
+                <div className="text-start flex flex-col">
                   <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
                     {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
                   </p>
                   <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
                     {isRTL ? '124 عائلة' : '124 Families'}
                   </p>
-                  <p className="text-[10px] lg:text-xs text-[#b89500] font-bold mt-0.5 whitespace-nowrap">
+                  <p className="text-[10px] lg:text-xs text-secondary font-bold mt-0.5 whitespace-nowrap">
                     {isRTL ? '+12% عن الشهر الماضي' : '+12% from last month'}
                   </p>
                 </div>
@@ -75,16 +76,16 @@ export default function Stats() {
 
               {/* Card 2 - Active Searches */}
               <motion.div 
-                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow"
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
                 }}
               >
-                <div className="p-2.5 lg:p-3 bg-primary/20 rounded-full text-[#b89500] shrink-0">
+                <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
                   <UserSearch className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                 </div>
-                <div>
+                <div className="text-start flex flex-col">
                   <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
                     {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
                   </p>
@@ -99,23 +100,23 @@ export default function Stats() {
 
               {/* Card 3 - Verified Matches */}
               <motion.div 
-                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow"
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
                 }}
               >
-                <div className="p-2.5 lg:p-3 bg-primary/20 rounded-full text-[#b89500] shrink-0">
+                <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
                   <ShieldCheck className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                 </div>
-                <div>
+                <div className="text-start flex flex-col">
                   <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
                     {isRTL ? 'عمليات تحقق موثقة' : 'Verified Matches'}
                   </p>
                   <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
                     {isRTL ? '+18.5k مسجل' : '18.5k+ Users'}
                   </p>
-                  <p className="text-[10px] lg:text-xs text-[#b89500] font-bold mt-0.5 whitespace-nowrap">
+                  <p className="text-[10px] lg:text-xs text-secondary font-bold mt-0.5 whitespace-nowrap">
                     {isRTL ? 'مدعوم بالذكاء الاصطناعي' : 'Powered by AI'}
                   </p>
                 </div>

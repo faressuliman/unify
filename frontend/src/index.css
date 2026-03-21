@@ -3,20 +3,24 @@
 @theme {
   --color-background: #ffffff;
   --color-foreground: #1c190d;
-  --color-primary: #F5D63D;
-  --color-primary-foreground: #1a1a1a;
-  --color-primary-50: #FEFCE8;
-  --color-primary-100: #FEF9C3;
-  --color-primary-200: #FEF08A;
-  --color-primary-300: #FDE047;
-  --color-primary-400: #F5D63D;
-  --color-primary-500: #EAB308;
-  --color-primary-600: #CA8A04;
+  --color-primary: #fdf6d8;
+  --color-primary-foreground: #1c190d;
+  --color-primary-50: #ffffff;
+  --color-primary-100: #fefce8;
+  --color-primary-200: #fdf6d8;
+  --color-primary-300: #fcf1b8;
+  --color-primary-400: #fbef9e;
+  --color-primary-500: #F5D63D;
+  --color-primary-600: #dcb822;
   --color-primary-700: #A16207;
-  --color-secondary: #172554;
-  --color-secondary-foreground: #ffffff;
-  --color-secondary-light: #1e3a8a;
-  --color-secondary-dark: #0f172a;
+  --color-secondary: #b89500;
+  --color-secondary-foreground: #1c190d;
+  --color-secondary-light: #ffffff;
+  --color-secondary-dark: #e8e4d3;
+  --color-tertiary: #172554;
+  --color-tertiary-foreground: #ffffff;
+  --color-tertiary-light: #1e3a8a;
+  --color-tertiary-dark: #0f172a;
 }
 
 
