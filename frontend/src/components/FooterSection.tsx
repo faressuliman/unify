@@ -127,11 +127,14 @@ export default function FooterSection() {
             <p className="text-xs md:text-sm text-tertiary/70 font-semibold">
                 {t.rights}
             </p>
-            <div className="group flex items-center gap-2 sm:gap-3 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200 cursor-pointer transition-all duration-300">
+            <div className="group flex items-center gap-1.5 sm:gap-2 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200 cursor-pointer transition-all duration-500 hover:bg-red-50 shadow-sm hover:shadow-md">
                 <Phone className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
                 <span className="font-bold text-red-600 whitespace-nowrap">{t.emergencyTitle}</span>
-                <div className="max-w-xs md:max-w-0 overflow-hidden md:group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap">
-                  <span className="font-semibold text-tertiary tracking-wider" dir="ltr">: {t.emergencyNumber}</span>
+                <div className="flex items-center md:grid md:grid-cols-[0fr] md:group-hover:grid-cols-[1fr] transition-[grid-template-columns] duration-500 ease-in-out">
+                  <div className="overflow-hidden flex flex-row items-center gap-1.5 whitespace-nowrap md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 ease-in-out">
+                    <span className="font-bold text-red-600">:</span>
+                    <span className="font-bold text-tertiary tracking-wider" dir="ltr">{t.emergencyNumber}</span>
+                  </div>
                 </div>
             </div>
         </div>
