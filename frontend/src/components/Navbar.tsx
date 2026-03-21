@@ -90,13 +90,14 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
       }
       dir={isRTL ? 'rtl' : 'ltr'}
     >
-      <div className={`w-full max-w-400 mx-auto flex h-20 items-center justify-between px-6 lg:px-12 transition-all duration-300 pointer-events-auto
-        ${isScrolled 
-          ? '2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-[2rem]' 
-          : '2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none'
-        }`}>
-        {/* Left: Logo */}
-        <div className="flex items-center shrink-0">
+      <div className="w-full max-w-400 mx-auto px-6 lg:px-12 pointer-events-auto">
+        <div className={`w-full flex h-20 items-center justify-between transition-all duration-300
+          ${isScrolled 
+            ? '2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6' 
+            : '2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none'
+          }`}>
+          {/* Left: Logo */}
+          <div className="flex items-center shrink-0">
           <button
             onClick={() => onNavigate('landing')}
             className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
@@ -420,6 +421,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
             </SheetContent>
           </Sheet>
         </div>
+      </div>
       </div>
     </motion.header>
   );
