@@ -68,7 +68,7 @@ export const ar = {
         email: "support@unify.eg",
         phone: "+20 100 123 4567",
         location: "الإسكندرية، مصر",
-        emergencyTitle: "الخط الساخن للطوارئ:",
+        emergencyTitle: "الخط الساخن للطوارئ",
         emergencyDesc: "متاح على مدار الساعة للحالات الطارئة:",
         emergencyNumber: "12345",
         rights: "© " + new Date().getFullYear() + " يونيفاي. جميع الحقوق محفوظة."

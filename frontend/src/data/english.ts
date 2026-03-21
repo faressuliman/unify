@@ -68,7 +68,7 @@ export const en = {
         email: "support@unify.eg",
         phone: "+20 100 123 4567",
         location: "Alexandria, Egypt",
-        emergencyTitle: "Emergency Hotline:",
+        emergencyTitle: "Emergency Hotline",
         emergencyDesc: "Available 24/7 for urgent cases:",
         emergencyNumber: "12345",
         rights: "© " + new Date().getFullYear() + " Unify. All rights reserved."

@@ -35,13 +35,13 @@ export default function Stats() {
 
   useEffect(() => {
     if (!isReady) return;
-    
-    const interval = setInterval(() => {
+
+    const timer = setTimeout(() => {
       setCurrentSlide((prev) => (prev + 1) % 3);
     }, 3000);
-    
-    return () => clearInterval(interval);
-  }, [isReady]);
+
+    return () => clearTimeout(timer);
+  }, [isReady, currentSlide]);
 
   const handlePrevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + 3) % 3);
@@ -79,12 +79,12 @@ export default function Stats() {
                   </button>
 
                   {/* Carousel Content */}
-                  <div className="flex-1 overflow-hidden px-3">
+                  <div className="flex-1 overflow-hidden px-3 flex justify-center">
                     <AnimatePresence mode="wait">
                       {currentSlide === 0 && (
                         <motion.div 
                           key="slide-0"
-                          className="flex items-center justify-start gap-3"
+                          className="flex items-center justify-center gap-3"
                           initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
@@ -93,7 +93,7 @@ export default function Stats() {
                           <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
                             <HeartHandshake className="w-6 h-6" strokeWidth={2} />
                           </div>
-                          <div className="text-start flex flex-col">
+                          <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
                               {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
                             </p>
@@ -109,7 +109,7 @@ export default function Stats() {
                       {currentSlide === 1 && (
                         <motion.div 
                           key="slide-1"
-                          className="flex items-center justify-start gap-3"
+                          className="flex items-center justify-center gap-3"
                           initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
@@ -118,7 +118,7 @@ export default function Stats() {
                           <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
                             <UserSearch className="w-6 h-6" strokeWidth={2} />
                           </div>
-                          <div className="text-start flex flex-col">
+                          <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
                               {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
                             </p>
@@ -134,7 +134,7 @@ export default function Stats() {
                       {currentSlide === 2 && (
                         <motion.div 
                           key="slide-2"
-                          className="flex items-center justify-start gap-3"
+                          className="flex items-center justify-center gap-3"
                           initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
@@ -143,7 +143,7 @@ export default function Stats() {
                           <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
                             <ShieldCheck className="w-6 h-6" strokeWidth={2} />
                           </div>
-                          <div className="text-start flex flex-col">
+                          <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
                               {isRTL ? 'عمليات تحقق موثقة' : 'Verified Matches'}
                             </p>
@@ -199,7 +199,7 @@ export default function Stats() {
                   <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
                     <HeartHandshake className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                   </div>
-                  <div className="text-start flex flex-col">
+                  <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
                       {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
                     </p>
@@ -223,7 +223,7 @@ export default function Stats() {
                   <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
                     <UserSearch className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                   </div>
-                  <div className="text-start flex flex-col">
+                  <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
                       {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
                     </p>
@@ -247,7 +247,7 @@ export default function Stats() {
                   <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
                     <ShieldCheck className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                   </div>
-                  <div className="text-start flex flex-col">
+                  <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
                       {isRTL ? 'عمليات تحقق موثقة' : 'Verified Matches'}
                     </p>

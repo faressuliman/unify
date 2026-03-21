@@ -127,10 +127,12 @@ export default function FooterSection() {
             <p className="text-xs md:text-sm text-tertiary/70 font-semibold">
                 {t.rights}
             </p>
-            <div className="flex items-center gap-2 sm:gap-3 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200">
+            <div className="group flex items-center gap-2 sm:gap-3 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200 cursor-pointer transition-all duration-300">
                 <Phone className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
-                <span className="font-bold text-red-600">{t.emergencyTitle}</span>
-                <span className="font-bold text-tertiary tracking-wider" dir="ltr">{t.emergencyNumber}</span>
+                <span className="font-bold text-red-600 whitespace-nowrap">{t.emergencyTitle}</span>
+                <div className="max-w-xs md:max-w-0 overflow-hidden md:group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap">
+                  <span className="font-semibold text-tertiary tracking-wider" dir="ltr">: {t.emergencyNumber}</span>
+                </div>
             </div>
         </div>
       </div>
