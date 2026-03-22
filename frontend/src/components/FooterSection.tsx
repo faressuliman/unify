@@ -44,7 +44,7 @@ export default function FooterSection() {
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 lg:px-12 pt-4 sm:pt-4 md:pt-6 pb-24 sm:pb-24 md:pb-24 border-b border-tertiary/10">
+      <div className="relative z-10 mx-auto w-full max-w-350 px-6 lg:px-12 pt-4 sm:pt-4 md:pt-6 pb-24 sm:pb-24 md:pb-24 border-b border-tertiary/10">
         <div className="grid gap-8 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-3">
           {/* Column 1 - Company Info */}
           <motion.div
@@ -123,7 +123,7 @@ export default function FooterSection() {
 
       {/* Bottom Footer Section for Copyright and Emergency */}
       <div className="absolute bottom-0 left-0 right-0 z-10 w-full bg-white/50 backdrop-blur-md border-t border-tertiary/5">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-6 lg:px-12 py-4 md:flex-row">
+        <div className="mx-auto flex w-full max-w-350 flex-col items-center justify-between gap-4 px-6 lg:px-12 py-4 md:flex-row">
             <p className="text-xs md:text-sm text-tertiary/70 font-semibold">
                 {t.rights}
             </p>
