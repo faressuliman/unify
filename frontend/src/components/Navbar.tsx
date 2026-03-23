@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Bell, Menu, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, X, LogIn, UserPlus } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from './AuthContext';
@@ -14,35 +15,43 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from './ui/sheet';
 import { useState, useEffect } from 'react';
 import unifyLogo from '../assets/unify.png';
 
-interface IProps {
-  onNavigate: (page: string) => void;
-  currentPage: string;
-}
-
-export function Navbar({ onNavigate, currentPage }: IProps) {
+export function Navbar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const [notificationCount] = useState(2);
   const [hasActiveChats] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  // Helper to determine current page from path
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path === '/') return 'landing';
+    if (path === '/search') return 'search';
+    return path.substring(1); // remove leading slash
+  };
+
+  const currentPage = getCurrentPage();
+
   const handleLogout = () => {
     logout();
-    onNavigate('landing');
+    navigate('/');
     setSheetOpen(false);
   };
 
   const handleNotificationClick = () => {
     if (currentPage === 'notifications') {
-      onNavigate('search');
+      navigate('/search');
     } else {
-      onNavigate('notifications');
+      navigate('/notifications');
     }
   };
 
-  // Handle navigation - allow all pages without login requirement
+  // Handle navigation
   const handleNavClick = (page: string) => {
-    onNavigate(page);
+    if (page === 'landing') navigate('/');
+    else navigate(`/${page}`);
     setSheetOpen(false);
   };
 
@@ -99,7 +108,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
           {/* Left: Logo */}
           <div className="flex items-center shrink-0">
           <button
-            onClick={() => onNavigate('landing')}
+            onClick={() => handleNavClick('landing')}
             className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
           >
             <img src={unifyLogo} alt="Unify" className="h-14 w-auto" />
@@ -183,7 +192,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
 
               {/* Messages */}
               <button
-                onClick={() => onNavigate('chat')}
+                onClick={() => handleNavClick('chat')}
                 className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                 aria-label="Messages"
               >
@@ -223,7 +232,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                     <p className="text-xs text-gray-600">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => onNavigate('profile')} onSelect={() => onNavigate('profile')} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => handleNavClick('profile')} onSelect={() => handleNavClick('profile')} className="cursor-pointer">
                     <User className="me-2 h-4 w-4 text-primary-600" />
                     <span className="font-medium">{t('nav.profile')}</span>
                   </DropdownMenuItem>
@@ -246,13 +255,13 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
               </button>
               <Button
                 variant="ghost"
-                onClick={() => onNavigate('login')}
+                onClick={() => handleNavClick('login')}
                 className="rounded-full px-6 font-medium hover:bg-gray-100 cursor-pointer"
               >
                 {t('nav.login')}
               </Button>
               <Button
-                onClick={() => onNavigate('register')}
+                onClick={() => handleNavClick('register')}
                 className="rounded-full px-6 font-medium bg-primary hover:bg-[#e6dcaf] shadow-lg shadow-primary/30 hover:shadow-xl transition-colors duration-300 cursor-pointer text-primary-foreground"
               >
                 {t('nav.register')}
@@ -353,7 +362,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                     </div>
                     <div className="space-y-0">
                       <button
-                        onClick={() => { onNavigate('login'); setSheetOpen(false); }}
+                        onClick={() => handleNavClick('login')}
                         className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none hover:ps-8 ${
                           currentPage === 'login'
                             ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
@@ -364,7 +373,7 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                         <span className="font-medium">{t('nav.login')}</span>
                       </button>
                       <button
-                        onClick={() => { onNavigate('register'); setSheetOpen(false); }}
+                        onClick={() => handleNavClick('register')}
                         className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none hover:ps-8 ${
                           currentPage === 'register'
                             ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
@@ -387,21 +396,21 @@ export function Navbar({ onNavigate, currentPage }: IProps) {
                     </div>
                     <div className="space-y-0 pb-6">
                       <button
-                        onClick={() => { onNavigate('profile'); setSheetOpen(false); }}
+                        onClick={() => handleNavClick('profile')}
                         className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
                         <User className="h-5 w-5 shrink-0" />
                         <span className="font-medium">{t('nav.profile')}</span>
                       </button>
                       <button
-                        onClick={() => { onNavigate('notifications'); setSheetOpen(false); }}
+                        onClick={() => handleNavClick('notifications')}
                         className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
                         <Bell className="h-5 w-5 shrink-0" />
                         <span className="font-medium">{t('nav.notifications')}</span>
                       </button>
                       <button
-                        onClick={() => { onNavigate('chat'); setSheetOpen(false); }}
+                        onClick={() => handleNavClick('chat')}
                         className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                       >
                         <Mail className="h-5 w-5 shrink-0" />

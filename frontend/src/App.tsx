@@ -1,31 +1,16 @@
-import { useState } from 'react'
 import './App.css'
 import { Navbar } from './components/Navbar'
-import Index from './pages/Index'
 import LoadingScreen from './components/LoadingScreen'
 import ScrollToTopButton from './components/ScrollToTopButton'
+import { Outlet } from 'react-router-dom'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('landing')
-
-  const handleNavigate = (page: string) => {
-    setCurrentPage(page)
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-clip">
       <LoadingScreen />
-      <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
+      <Navbar />
       <ScrollToTopButton />
-      {currentPage === 'landing' ? (
-        <Index />
-      ) : (
-        <main className="container max-w-7xl mx-auto px-4 py-8">
-          <p className="text-gray-500 text-center mt-20">
-            Current page: <span className="font-semibold text-gray-900">{currentPage}</span>
-          </p>
-        </main>
-      )}
+      <Outlet />
     </div>
   )
 }
