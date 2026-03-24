@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloudArrowUp, faDownload } from '@fortawesome/free-solid-svg-icons';
 
@@ -208,14 +208,11 @@ const Poster = () => {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     // Capture the exact DOM node content using optimal settings for high-resolution matching
-    const canvas = await html2canvas(previewRef.current, {
-      scale: 3, // High quality 3x scaler
-      useCORS: true, // Crucial for loading image URLs safely
+    const imgData = await toJpeg(previewRef.current, {
+      quality: 1.0,
+      pixelRatio: 3,
       backgroundColor: '#ffffff',
-      logging: true, // Enable logging temporarily to help debug if it fails
     });
-
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
     // Auto-calculating properly for printing exactly to A4
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
