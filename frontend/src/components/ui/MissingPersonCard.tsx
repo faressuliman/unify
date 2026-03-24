@@ -23,11 +23,7 @@ export default function MissingPersonCard({ profile, idx, isRTL }: MissingPerson
       className="flex-none w-[calc(85%-0.5rem)] md:w-[calc(45%-1rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm"
     >
       <div className="relative h-48 sm:h-52 overflow-hidden bg-[#faf9f5]">
-        <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} z-10`}>
-          <div className={`bg-primary text-[#1c190d] text-[10px] sm:text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 uppercase tracking-widest shadow-sm ${isRTL ? 'rounded-br-lg' : 'rounded-bl-lg'}`}>
-            {profile.status}
-          </div>
-        </div>
+        {/* Removed status label */}
         
         {/* Blurred Identity Placeholder */}
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden">

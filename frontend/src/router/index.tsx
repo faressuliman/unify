@@ -6,7 +6,7 @@ import LoadingScreen from "../components/LoadingScreen";
 
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));
-const SearchPage = lazy(() => import("../pages/SearchPage"));
+const Search = lazy(() => import("../pages/Search"));
 
 export const router = createBrowserRouter([
   {
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
         path: "search",
         element: (
           <Suspense fallback={<LoadingScreen />}>
-            <SearchPage />
+            <Search />
           </Suspense>
         ),
       },

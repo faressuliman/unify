@@ -62,7 +62,7 @@ export default function Stats() {
                 className="md:hidden w-full"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.8 }}
               >
                 <div className="bg-white rounded-xl border border-gray-100 flex items-center justify-between px-3 py-5 hover:shadow-md transition-shadow">
                   {/* Left Arrow */}
@@ -179,7 +179,7 @@ export default function Stats() {
                 className="hidden md:grid grid-cols-3 gap-6"
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true, amount: 0.1 }}
+                viewport={{ once: true, amount: 0.8 }}
                 variants={{
                   hidden: { opacity: 0 },
                   visible: {

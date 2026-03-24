@@ -17,7 +17,7 @@ export default function PageHeader({ navigatedTo, title, subtitle, showArrow }: 
     <div className="mb-8 w-full max-w-400 mx-auto px-6 lg:px-12">
       {navigatedTo && (
         <nav className="flex items-center space-x-2 rtl:space-x-reverse text-sm mb-4">
-          <a href="/" className="text-slate-500 hover:text-secondary-dark flex items-center gap-1 transition-colors">
+          <a href="/" className="text-slate-500 hover:text-secondary flex items-center gap-1 transition-colors">
             <Home className="w-4 h-4" />
             <span className="hidden sm:inline">{isRTL ? 'الرئيسية' : 'Home'}</span>
           </a>
@@ -26,7 +26,7 @@ export default function PageHeader({ navigatedTo, title, subtitle, showArrow }: 
           ) : (
             <ChevronRight className="w-4 h-4 text-slate-400" />
           )}
-          <span className="text-secondary-dark font-medium">{navigatedTo}</span>
+          <span className="text-secondary font-medium">{navigatedTo}</span>
         </nav>
       )}
       
@@ -37,7 +37,7 @@ export default function PageHeader({ navigatedTo, title, subtitle, showArrow }: 
         className="flex flex-col items-start gap-1"
       >
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-tertiary tracking-tight uppercase">
+          <h1 className={`text-2xl sm:text-3xl md:text-4xl font-extrabold text-tertiary uppercase ${isRTL ? 'tracking-tight' : 'tracking-wide'}`}>
             {title}
           </h1>
           {showArrow && (

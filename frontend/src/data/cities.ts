@@ -1,6 +1,6 @@
 export const EGYPTIAN_CITIES = [
   'Cairo', 'Alexandria', 'Giza', 'Shubra El Kheima', 'Port Said', 'Suez', 'Mansoura', 'El Mahalla El Kubra', 
-  'Tanta', 'Tanta', 'Asyut', 'Ismailia', 'Fayyum', 'Zagazig', 'Aswan', 'Damietta', 'Damanhur', 'Minya', 
+  'Tanta', 'Asyut', 'Ismailia', 'Fayyum', 'Zagazig', 'Aswan', 'Damietta', 'Damanhur', 'Minya', 
   'Beni Suef', 'Qena', 'Sohag', 'Hurghada', '6th of October', 'Shibin El Kom', 'Banha', 'Kafr El Sheikh', 
   'Arish', 'Mallawi', '10th of Ramadan', 'Bilbais', 'Marsa Matruh', 'Idfu', 'Mit Ghamr', 'Al Hamamidiyah', 
   'Desouk', 'Qalyub', 'Abu Kabir', 'Kafr El Dawwar', 'Girga', 'Akhmim', 'Matareya', 'Quesna', 'Safaga', 

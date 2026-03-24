@@ -46,15 +46,19 @@ export default function ErrorFallback() {
           className="max-w-md"
         >
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {language === 'ar' ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred'}
+            {error?.status === 404
+              ? (language === 'ar' ? 'الصفحة غير موجودة' : 'Page Not Found')
+              : (language === 'ar' ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')}
           </h2>
           <p className="text-gray-500 mb-6">
-            {error?.message || (language === 'ar' ? 'نعتذر عن هذا الخلل. يرجى المحاولة مرة أخرى لاحقاً.' : 'We apologize for the inconvenience. Please try again later.')}
+            {error?.status === 404
+              ? (language === 'ar' ? 'عذراً، الصفحة التي تبحث عنها غير موجودة.' : 'Sorry, the page you are looking for does not exist.')
+              : error?.message || (language === 'ar' ? 'نعتذر عن هذا الخلل. يرجى المحاولة مرة أخرى لاحقاً.' : 'We apologize for the inconvenience. Please try again later.')}
           </p>
 
           <button
             onClick={handleGoHome}
-             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-white font-medium hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 hover:shadow-xl hover:-translate-y-0.5"
+             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-white font-medium hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
           >
             <Home className="w-5 h-5" />
             <span>{language === 'ar' ? 'العودة للصفحة الرئيسية' : 'Go to Home Page'}</span>

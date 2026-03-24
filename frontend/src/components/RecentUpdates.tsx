@@ -57,7 +57,7 @@ export default function RecentUpdates() {
         <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.85 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="mb-8 flex flex-col items-start gap-1"
         >
@@ -80,7 +80,7 @@ export default function RecentUpdates() {
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.85 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
@@ -92,7 +92,7 @@ export default function RecentUpdates() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.85 }}
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-8 text-center"
         >
