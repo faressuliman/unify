@@ -211,13 +211,12 @@ const Poster = () => {
     const canvas = await html2canvas(previewRef.current, {
       scale: 3, // High quality 3x scaler
       useCORS: true, // Crucial for loading image URLs safely
-      allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false,
+      logging: true, // Enable logging temporarily to help debug if it fails
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 1.0);
-    
+
     // Auto-calculating properly for printing exactly to A4
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -247,10 +246,10 @@ const Poster = () => {
     setPdfStatus('done');
     setPdfMessage('Generate done, downloading...');
     setTimeout(() => setPdfStatus('idle'), 3000);
-  } catch (error) {
+  } catch (error: any) {
     console.error('PDF generation error', error);
     setPdfStatus('error');
-    setPdfMessage('Unable to generate PDF. Please try again.');
+    setPdfMessage(`Unable to generate PDF: ${error.message || 'Error occurred'}. Check console.`);
   }
 }}            >
               <FontAwesomeIcon icon={faDownload} />
