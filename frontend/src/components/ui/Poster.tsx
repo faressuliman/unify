@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
 import { toJpeg } from 'html-to-image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCloudArrowUp, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faCloudArrowUp, faDownload, faTrash, faImage } from '@fortawesome/free-solid-svg-icons';
 
 const Poster = () => {
   const [photo, setPhoto] = useState<File | null>(null);
@@ -101,33 +101,76 @@ const Poster = () => {
               </h2>
 
               <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-                <div className="mb-3 flex items-center justify-center text-3xl text-slate-500">
-                  <FontAwesomeIcon icon={faCloudArrowUp} />
-                </div>
-                <p className="mb-2 text-sm font-semibold text-slate-700">Drag and drop recent photo</p>
-                <p className="mb-4 text-xs text-slate-500">JPG, PNG up to 10MB. High resolution preferred.</p>
+                {photoDataUrl ? (
+                  <div className="space-y-4">
+                    <div className="mx-auto h-32 w-32 overflow-hidden rounded-lg border-2 border-white shadow-md">
+                      <img src={photoDataUrl} alt="Preview" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100">
+                        <FontAwesomeIcon icon={faImage} />
+                        <span>Browse another image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+                            setPhoto(file);
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                setPhotoDataUrl(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhoto(null);
+                          setPhotoDataUrl('');
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition hover:bg-red-100"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                        <span>Remove image</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-3 flex items-center justify-center text-3xl text-slate-500">
+                      <FontAwesomeIcon icon={faCloudArrowUp} />
+                    </div>
+                    <p className="mb-2 text-sm font-semibold text-slate-700">Drag and drop recent photo</p>
+                    <p className="mb-4 text-xs text-slate-500">JPG, PNG up to 10MB. High resolution preferred.</p>
 
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100">
-                  <span>Browse Files</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setPhoto(file);
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          setPhotoDataUrl(reader.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      } else {
-                        setPhotoDataUrl('');
-                      }
-                    }}
-                    className="hidden"
-                  />
-                </label>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100">
+                      <span>Browse Files</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          setPhoto(file);
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setPhotoDataUrl(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          } else {
+                            setPhotoDataUrl('');
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </>
+                )}
               </div>
             </div>
 
