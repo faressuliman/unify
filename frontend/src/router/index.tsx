@@ -7,6 +7,7 @@ import LoadingScreen from "../components/LoadingScreen";
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));
 const Search = lazy(() => import("../pages/Search"));
+const PosterBuilder = lazy(() => import("../pages/PosterBuilder"));
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <Search />
+          </Suspense>
+        ),
+      },
+      {
+        path: "poster-builder",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <PosterBuilder />
           </Suspense>
         ),
       },
