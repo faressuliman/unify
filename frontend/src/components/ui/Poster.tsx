@@ -52,8 +52,13 @@ const Poster = () => {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     value={age}
-                    onChange={(e) => setAge(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Years"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      if (val === '' || Number(val) <= 100) {
+                        setAge(val);
+                      }
+                    }}
+                    placeholder="Max 100"
                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
@@ -65,8 +70,13 @@ const Poster = () => {
                       inputMode="decimal"
                       pattern="[0-9]*"
                       value={height}
-                      onChange={(e) => setHeight(e.target.value.replace(/[^0-9.]/g, ''))}
-                      placeholder="e.g., 175"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        if (val === '' || Number(val) <= 200) {
+                          setHeight(val);
+                        }
+                      }}
+                      placeholder="Max 200"
                       className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 pr-14 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                     />
                     <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-slate-500">cm</span>
