@@ -161,7 +161,13 @@ const Poster = () => {
                 type={contactType === 'email' ? 'email' : 'tel'}
                 inputMode={contactType === 'mobile' ? 'tel' : 'email'}
                 value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                onChange={(e) => {
+                  if (contactType === 'mobile') {
+                    setContact(e.target.value.replace(/[^\d+]/g, ''));
+                  } else {
+                    setContact(e.target.value);
+                  }
+                }}
                 placeholder={contactType === 'email' ? 'Police department or emergency phone number' : '+201234567890'}
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
