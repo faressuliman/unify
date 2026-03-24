@@ -38,7 +38,7 @@ export const defaultSearchFilters: SearchFilters = {
 };
 
 interface SearchFiltersPanelProps {
-  onApplyFilters: (values: SearchFilters) => void;
+  onApplyFilters: (values: SearchFilters, shouldScroll?: boolean) => void;
 }
 
 export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPanelProps) {
@@ -120,12 +120,12 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
   const clearFieldAndApply = (field: keyof SearchFilters) => {
     const nextValues = { ...getValues(), [field]: '' };
     setValue(field, '', { shouldDirty: true, shouldTouch: true });
-    onApplyFilters(nextValues);
+    onApplyFilters(nextValues, false);
   };
 
   const clearAllAndReset = () => {
     reset(defaultSearchFilters);
-    onApplyFilters(defaultSearchFilters);
+    onApplyFilters(defaultSearchFilters, false);
     clearSearchImage();
     setSubmitError('');
   };
@@ -276,6 +276,12 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
               placeholder={t('search.ageMinPlaceholder') || 'Min age'}
               className={inputClass}
               labelClassName={labelClass}
+              inputMode="numeric"
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               {...register('ageMin')}
             />
             <FormInput
@@ -285,6 +291,12 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
               placeholder={t('search.ageMaxPlaceholder') || 'Max age'}
               className={inputClass}
               labelClassName={labelClass}
+              inputMode="numeric"
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               {...register('ageMax')}
             />
           </div>

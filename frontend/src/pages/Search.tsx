@@ -68,12 +68,14 @@ export default function Search() {
     return applyFilters(postsByType, appliedFilters);
   }, [activeTab, appliedFilters]);
 
-  const handleApplyFilters = (values: SearchFilters) => {
+  const handleApplyFilters = (values: SearchFilters, shouldScroll = true) => {
     setAppliedFilters(values);
 
-    requestAnimationFrame(() => {
-      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    if (shouldScroll) {
+      requestAnimationFrame(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   };
 
   return (
