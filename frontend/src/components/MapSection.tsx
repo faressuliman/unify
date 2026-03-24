@@ -18,7 +18,7 @@ export default function MapSection() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, amount: 0.85 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="mb-8 flex flex-col items-center text-center gap-1"
                 >
@@ -40,12 +40,12 @@ export default function MapSection() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, amount: 0.85 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                     className="w-full relative shadow-sm rounded-2xl bg-white border border-slate-200"
                 >
                     <Suspense fallback={
-                        <div className="w-full h-[500px] flex flex-col items-center justify-center rounded-2xl bg-slate-100 border-2 border-primary-300 gap-4 text-tertiary">
+                        <div className="w-full h-125 flex flex-col items-center justify-center rounded-2xl bg-slate-100 border-2 border-primary-300 gap-4 text-tertiary">
                             <MapPin className="w-10 h-10 animate-pulse text-secondary" />
                             <p className="font-bold text-sm tracking-widest uppercase">{t.loading}</p>
                         </div>

@@ -73,13 +73,13 @@ export default function HowUnifyWorks() {
                 <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
-                    viewport={{ once: true, amount: 0.25 }}
+                    viewport={{ once: true, amount: 0.8 }}
                     transition={{ duration: 0.4 }}
                 >
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: true, amount: 0.9 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
                         className="mb-8 flex flex-col items-start gap-1"
                     >

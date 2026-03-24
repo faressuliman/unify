@@ -1,44 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { en } from '../data/english';
+import { ar } from '../data/arabic';
 
 type Language = 'en' | 'ar';
 
 const translations: Record<Language, Record<string, string>> = {
-  en: {
-    'nav.search': 'Search',
-    'nav.createPost': 'Create Post',
-    'nav.posterBuilder': 'Poster Builder',
-    'nav.map': 'Map',
-    'nav.login': 'Login',
-    'nav.register': 'Register',
-    'nav.profile': 'Profile',
-    'nav.logout': 'Logout',
-    'nav.notifications': 'Notifications',
-    'nav.messages': 'Messages',
-    'nav.navigationMenu': 'Navigation Menu',
-    'nav.browseFeatures': 'Browse all features and pages',
-    'nav.quickActions': 'Quick Actions',
-    'nav.changeLanguage': 'Language',
-    'nav.getStarted': 'Get Started',
-    'nav.account': 'Account',
-  },
-  ar: {
-    'nav.search': 'بحث',
-    'nav.createPost': 'إنشاء منشور',
-    'nav.posterBuilder': 'مصمم الملصقات',
-    'nav.map': 'الخريطة',
-    'nav.login': 'تسجيل الدخول',
-    'nav.register': 'إنشاء حساب',
-    'nav.profile': 'الملف الشخصي',
-    'nav.logout': 'تسجيل الخروج',
-    'nav.notifications': 'الإشعارات',
-    'nav.messages': 'الرسائل',
-    'nav.navigationMenu': 'قائمة التنقل',
-    'nav.browseFeatures': 'تصفح جميع الميزات والصفحات',
-    'nav.quickActions': 'إجراءات سريعة',
-    'nav.changeLanguage': 'اللغة',
-    'nav.getStarted': 'ابدأ الآن',
-    'nav.account': 'الحساب',
-  },
+  en: en.translations,
+  ar: ar.translations,
 };
 
 interface LanguageContextType {
