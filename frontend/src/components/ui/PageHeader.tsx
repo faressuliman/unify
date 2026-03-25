@@ -36,8 +36,8 @@ export default function PageHeader({ navigatedTo, title, subtitle, showArrow }: 
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="flex flex-col items-start gap-1"
       >
-        <div className="flex items-center gap-4">
-          <h1 className={`text-2xl sm:text-3xl md:text-4xl font-extrabold text-tertiary uppercase ${isRTL ? 'tracking-tight' : 'tracking-wide'}`}>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <h1 className={`text-lg sm:text-2xl md:text-3xl font-extrabold text-tertiary uppercase leading-tight whitespace-nowrap ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
             {title}
           </h1>
           {showArrow && (
@@ -48,7 +48,7 @@ export default function PageHeader({ navigatedTo, title, subtitle, showArrow }: 
             )
           )}
         </div>
-        <p className="text-gray-500 mt-1 text-sm md:text-base max-w-2xl text-start">
+        <p className="text-gray-500 mt-1 text-sm max-w-2xl text-start">
           {subtitle}
         </p>
       </motion.div>

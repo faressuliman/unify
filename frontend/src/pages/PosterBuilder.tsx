@@ -1,17 +1,10 @@
 
-
-
-
-import Poster from "@/components/ui/poster";
-import FooterSection from "../components/FooterSection";
+import Poster from "@/components/ui/Poster";
 
 const PosterBuilder = () => {
     return (
-        <div className="bg-gray-50 flex flex-col">
-            <main className="grow">
-                <Poster />
-            </main>
-            <FooterSection />
+        <div className="bg-gray-50">
+            <Poster />
         </div>
     );
 };

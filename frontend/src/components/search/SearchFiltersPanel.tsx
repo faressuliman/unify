@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { FileSearch, ImagePlus, Search, X } from 'lucide-react';
-import { Button } from '../ui/button';
+import { motion } from 'framer-motion';
 import FormInput from '../ui/FormInput';
 import SelectMenu from '../ui/SelectMenu';
 import LocalizedDateInput from '../ui/LocalizedDateInput';
@@ -405,14 +405,15 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
           </div>
         </div>
 
-        <Button
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
           type="submit"
-          className="w-full bg-secondary hover:bg-secondary/90 text-white font-semibold cursor-pointer transition-colors duration-300 py-6 text-base shadow-md"
-          size="lg"
+          className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-secondary text-white shadow-2xl shadow-secondary/20 text-lg font-black transition-all hover:bg-secondary/90 disabled:opacity-50 cursor-pointer font-sans"
         >
-          <Search className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0" />
+          <Search className="h-5 w-5" />
           {t('search.searchButton') || 'Search'}
-        </Button>
+        </motion.button>
         <ErrorMessage msg={submitError} />
 
         <div className="p-4 bg-primary/20 border border-primary/40 rounded-lg flex items-start gap-3">

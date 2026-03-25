@@ -76,7 +76,7 @@ export const en = {
         'poster.clothingDesc': 'Clothing Description',
         'poster.clothingPlaceholder': 'Tattoos, scars, glasses, clothing worn when last seen...',
         'poster.contactTips': 'Contact for Tips',
-        'poster.mobile': 'Mobile',
+        'poster.mobile': 'Phone Number',
         'poster.email': 'Email',
         'poster.emailPlaceholder': 'email@example.com',
         'poster.mobilePlaceholder': '+20 123 456 7890',
@@ -97,7 +97,8 @@ export const en = {
         'poster.years': 'years',
         'poster.descClothing': 'Description & Clothing',
         'poster.noDesc': 'No description provided.',
-        'poster.contactAuth': 'CONTACT AUTHORITIES',
+        'poster.contactAuth': 'CONTACT INFO',
+        'poster.notProvided': 'Unknown',
         'poster.unknown': 'Unknown',
     },
     hero: {

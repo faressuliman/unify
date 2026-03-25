@@ -76,7 +76,7 @@ export const ar = {
         'poster.clothingDesc': 'وصف الملابس',
         'poster.clothingPlaceholder': 'وشوم، ندبات، نظارات، الملابس التي كان يرتديها...',
         'poster.contactTips': 'للتواصل مع أي معلومات',
-        'poster.mobile': 'جوال',
+        'poster.mobile': 'رقم الهاتف',
         'poster.email': 'إيميل',
         'poster.emailPlaceholder': 'mail@example.com',
         'poster.mobilePlaceholder': '+20 123 456 7890',
@@ -97,7 +97,8 @@ export const ar = {
         'poster.years': 'سنة',
         'poster.descClothing': 'الوصف والملابس',
         'poster.noDesc': 'لا يوجد وصف متاح.',
-        'poster.contactAuth': 'تواصل مع السلطات',
+        'poster.contactAuth': 'معلومات التواصل',
+        'poster.notProvided': 'غير معروف',
         'poster.unknown': 'غير معروف',
     },
     hero: {

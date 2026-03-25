@@ -1,52 +1,69 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { Phone, Mail, MapPin, ScanFace, FileSearch } from "lucide-react";
 import { useLanguage } from "./LanguageContext";
 import { en } from "../data/english";
 import { ar } from "../data/arabic";
-import unifyLogo from '../assets/unify.png';
+import unifyLogo from "../assets/unify.png";
 
-export default function FooterSection() {
+export default function Footer() {
   const { language } = useLanguage();
-  const isRTL = language === 'ar';
+  const isRTL = language === "ar";
   const t = isRTL ? ar.footer : en.footer;
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
   return (
-    <section className="relative flex snap-start items-center justify-center bg-primary-dark pt-8 pb-12 md:pt-8 md:pb-12 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'} style={{ isolation: "isolate", zIndex: 1 }}>
-      {/* Grid Pattern Overlay */}
+    <motion.section
+      ref={sectionRef}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+      className="relative flex snap-start items-center justify-center bg-primary-dark pt-8 pb-12 md:pt-8 md:pb-12 overflow-hidden"
+      dir={isRTL ? "rtl" : "ltr"}
+      style={{ isolation: "isolate", zIndex: 1 }}
+    >
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: "linear-gradient(rgba(0, 0, 0, 1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 1) 1px, transparent 1px)",
+          backgroundImage:
+            "linear-gradient(rgba(0, 0, 0, 1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 1) 1px, transparent 1px)",
           backgroundSize: "50px 50px",
         }}
       />
 
-      {/* Floating Background Icons */}
       <motion.div
         className="absolute left-10 top-20 text-tertiary/5 rtl:right-10 rtl:left-auto"
-        animate={{
-          rotate: [0, 360],
-          y: [0, -30, 0],
-        }}
+        animate={
+          isInView
+            ? {
+                rotate: [0, 360],
+                y: [0, -30, 0],
+              }
+            : { rotate: 0, y: 0 }
+        }
         transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
       >
         <ScanFace size={200} />
       </motion.div>
       <motion.div
         className="absolute right-10 bottom-20 text-tertiary/5 rtl:left-10 rtl:right-auto"
-        animate={{
-          rotate: [360, 0],
-          y: [0, 30, 0],
-        }}
+        animate={
+          isInView
+            ? {
+                rotate: [360, 0],
+                y: [0, 30, 0],
+              }
+            : { rotate: 360, y: 0 }
+        }
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
       >
         <FileSearch size={180} />
       </motion.div>
 
-      {/* Content */}
       <div className="relative z-10 mx-auto w-full max-w-350 px-6 lg:px-12 pt-4 sm:pt-4 md:pt-6 pb-24 sm:pb-24 md:pb-24 border-b border-tertiary/10">
         <div className="grid gap-8 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-3">
-          {/* Column 1 - Company Info */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -55,16 +72,11 @@ export default function FooterSection() {
           >
             <div className="mb-3 sm:mb-3 md:mb-4 flex items-center gap-2">
               <img src={unifyLogo} alt="Unify" className="h-14 w-auto drop-shadow-sm brightness-0" />
-              <h3 className="text-lg font-extrabold tracking-normal text-tertiary">
-                {t.brand}
-              </h3>
+              <h3 className="text-lg font-extrabold tracking-normal text-tertiary">{t.brand}</h3>
             </div>
-            <p className="text-sm md:text-base text-tertiary/80 leading-relaxed text-start max-w-xs">
-              {t.description}
-            </p>
+            <p className="text-sm md:text-base text-tertiary/80 leading-relaxed text-start max-w-xs">{t.description}</p>
           </motion.div>
 
-          {/* Column 2 - Links (Centered on desktop, left on mobile) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -86,7 +98,6 @@ export default function FooterSection() {
             </div>
           </motion.div>
 
-          {/* Column 3 - Contact (Aligned to end on desktop, left on mobile) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -121,24 +132,21 @@ export default function FooterSection() {
         </div>
       </div>
 
-      {/* Bottom Footer Section for Copyright and Emergency */}
       <div className="absolute bottom-0 left-0 right-0 z-10 w-full bg-white/50 backdrop-blur-md border-t border-tertiary/5">
         <div className="mx-auto flex w-full max-w-350 flex-col items-center justify-between gap-4 px-6 lg:px-12 py-4 md:flex-row">
-            <p className="text-xs md:text-sm text-tertiary/70 font-semibold">
-                {t.rights}
-            </p>
-            <div className="group flex items-center gap-1.5 sm:gap-2 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200 cursor-pointer transition-all duration-500 hover:bg-red-50 shadow-sm hover:shadow-md">
-                <Phone className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
-                <span className="font-bold text-red-600 whitespace-nowrap">{t.emergencyTitle}</span>
-                <div className="flex items-center md:grid md:grid-cols-[0fr] md:group-hover:grid-cols-[1fr] transition-[grid-template-columns] duration-500 ease-in-out">
-                  <div className="overflow-hidden flex flex-row items-center gap-1.5 whitespace-nowrap md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 ease-in-out">
-                    <span className="font-bold text-red-600">:</span>
-                    <span className="font-bold text-tertiary tracking-wider" dir="ltr">{t.emergencyNumber}</span>
-                  </div>
-                </div>
+          <p className="text-xs md:text-sm text-tertiary/70 font-semibold">{t.rights}</p>
+          <div className="group flex items-center gap-1.5 sm:gap-2 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200 cursor-pointer transition-all duration-500 hover:bg-red-50 shadow-sm hover:shadow-md">
+            <Phone className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
+            <span className="font-bold text-red-600 whitespace-nowrap">{t.emergencyTitle}</span>
+            <div className="flex items-center md:grid md:grid-cols-[0fr] md:group-hover:grid-cols-[1fr] transition-[grid-template-columns] duration-500 ease-in-out">
+              <div className="overflow-hidden flex flex-row items-center gap-1.5 whitespace-nowrap md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 ease-in-out">
+                <span className="font-bold text-red-600">:</span>
+                <span className="font-bold text-tertiary tracking-wider" dir="ltr">{t.emergencyNumber}</span>
+              </div>
             </div>
+          </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
