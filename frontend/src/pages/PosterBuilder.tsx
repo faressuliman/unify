@@ -1,7 +1,8 @@
 
 
 
-import Poster from "@/components/ui/Poster";
+
+import Poster from "@/components/ui/poster";
 import FooterSection from "../components/FooterSection";
 
 const PosterBuilder = () => {
