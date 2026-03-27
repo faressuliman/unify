@@ -29,6 +29,56 @@ const Poster = () => {
 
   const previewImage = photoDataUrl || (photo ? URL.createObjectURL(photo) : '');
 
+  const handleDownloadAction = async () => {
+    const errors: string[] = [];
+    if (!photoDataUrl) errors.push(t('poster.photoReq'));
+    if (!fullName.trim()) errors.push(t('poster.nameReq'));
+    if (!age) errors.push(t('poster.ageReq'));
+    if (!height) errors.push(t('poster.heightReq'));
+    if (!lastSeen.trim()) errors.push(t('poster.locReq'));
+    if (!clothing.trim()) errors.push(t('poster.clothReq'));
+    if (!contact.trim()) errors.push(t('poster.contactReq'));
+
+    if (errors.length > 0) {
+      setPdfStatus('error');
+      setPdfMessage(errors[0]);
+      setTimeout(() => setPdfStatus('idle'), 3000);
+      return;
+    }
+
+    try {
+      setPdfStatus('processing');
+      setPdfMessage(t('poster.genPdf'));
+      if (!previewRef.current) return;
+      await new Promise(r => setTimeout(r, 400));
+      const imgData = await toJpeg(previewRef.current, { quality:1.0, pixelRatio:3 });
+      const pdf = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
+      
+      const imgProps = pdf.getImageProperties(imgData);
+      let pdfWidth = 210;
+      let pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      if (pdfHeight > 297) {
+        pdfHeight = 297;
+        pdfWidth = (imgProps.width * pdfHeight) / imgProps.height;
+      }
+      
+      const x = (210 - pdfWidth) / 2;
+      const y = (297 - pdfHeight) / 2;
+      
+      pdf.addImage(imgData, 'JPEG', x, y, pdfWidth, pdfHeight, undefined, 'FAST');
+      const fileName = fullName.trim() !== '' ? `${fullName.trim()}.pdf` : 'Missing_Person_Poster.pdf';
+      pdf.save(fileName);
+      setPdfStatus('done');
+      setPdfMessage(t('poster.downloadStarted'));
+      setTimeout(() => setPdfStatus('idle'), 3000);
+    } catch (e) {
+      setPdfStatus('error');
+      setPdfMessage(t('poster.errorOccurred'));
+      setTimeout(() => setPdfStatus('idle'), 3000);
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -288,41 +338,7 @@ const Poster = () => {
               type="button"
               className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-secondary text-white shadow-2xl shadow-secondary/20 text-lg font-black transition-all hover:bg-secondary/90 disabled:opacity-50 cursor-pointer font-sans"
               disabled={pdfStatus === 'processing'}
-              onClick={async () => {
-                const errors: string[] = [];
-                if (!photoDataUrl) errors.push(t('poster.photoReq'));
-                if (!fullName.trim()) errors.push(t('poster.nameReq'));
-                if (!age) errors.push(t('poster.ageReq'));
-                if (!height) errors.push(t('poster.heightReq'));
-                if (!lastSeen.trim()) errors.push(t('poster.locReq'));
-                if (!clothing.trim()) errors.push(t('poster.clothReq'));
-                if (!contact.trim()) errors.push(t('poster.contactReq'));
-
-                if (errors.length > 0) {
-                  setPdfStatus('error');
-                  setPdfMessage(errors[0]);
-                  setTimeout(() => setPdfStatus('idle'), 3000);
-                  return;
-                }
-
-                try {
-                  setPdfStatus('processing');
-                  setPdfMessage(t('poster.genPdf'));
-                  if (!previewRef.current) return;
-                  await new Promise(r => setTimeout(r, 400));
-                  const imgData = await toJpeg(previewRef.current, { quality:1.0, pixelRatio:3 });
-                  const pdf = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
-                  pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
-                  pdf.save(`Missing_Person_${fullName.replace(/\s+/g, '_')}.pdf`);
-                  setPdfStatus('done');
-                  setPdfMessage(t('poster.downloadStarted'));
-                  setTimeout(() => setPdfStatus('idle'), 3000);
-                } catch (e) {
-                  setPdfStatus('error');
-                  setPdfMessage(t('poster.errorOccurred'));
-                  setTimeout(() => setPdfStatus('idle'), 3000);
-                }
-              }}
+              onClick={handleDownloadAction}
             >
               <FontAwesomeIcon icon={faDownload} />
               <span>{t('poster.downloadBtn')}</span>
@@ -347,12 +363,12 @@ const Poster = () => {
 
           {/* Preview Column */}
           <motion.div 
-            className="flex bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner   h-fit lg:sticky lg:top-24"
+            className="hidden lg:flex bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24"
             variants={itemVariants}
           >
             <div 
               ref={previewRef} 
-              className="w-full  mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
+              className="w-full mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
             >
               {/* Header */}
               <div className="bg-red-700 py-6 text-center">
