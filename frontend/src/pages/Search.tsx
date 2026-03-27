@@ -6,7 +6,7 @@ import MissingPersonCard from '../components/ui/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
 import FoundPersonCard from '../components/ui/FoundPersonCard';
 import { motion } from 'framer-motion';
-import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/search/SearchFiltersPanel';
+import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/SearchFiltersPanel';
 
 const extractAge = (details: string): number | null => {
   const match = details.match(/(\d+)/);
