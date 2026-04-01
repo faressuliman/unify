@@ -51,6 +51,7 @@ export function Navbar() {
   // Handle navigation
   const handleNavClick = (page: string) => {
     if (page === 'landing') navigate('/');
+    else if (page === 'register') navigate('/signup');
     else navigate(`/${page}`);
     setSheetOpen(false);
   };
