@@ -87,14 +87,14 @@ export function Navbar() {
     }
   }, []);
 
-  const isScrolledActive = isScrolled && currentPage !== 'login' && currentPage !== 'signup';
+  const isScrolledActive = isScrolled && currentPage !== 'login' && currentPage !== 'signup' && currentPage !== 'register';
 
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
       animate={isReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`${currentPage === 'login' || currentPage === 'signup' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
+      className={`${currentPage === 'login' || currentPage === 'signup' || currentPage === 'register' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
         ${isScrolledActive 
           ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none' 
           : 'bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto'
