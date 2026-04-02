@@ -187,7 +187,7 @@ export default function LocalizedDateInput({
           id={id}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="peer h-10 w-full rounded-md border-0 bg-gray-50/50 ps-3 pe-12 text-sm text-slate-700 focus:outline-none transition duration-300 flex items-center justify-start text-start cursor-pointer"
+          className="peer h-10 w-full rounded-md border border-gray-300 bg-gray-50/50 ps-3 pe-12 text-sm text-slate-700 focus:outline-none transition duration-300 flex items-center justify-start text-start cursor-pointer"
           aria-haspopup="dialog"
           aria-expanded={isOpen}
         >

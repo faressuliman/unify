@@ -26,7 +26,7 @@ export function Navbar() {
 
   // Helper to determine current page from path
   const getCurrentPage = () => {
-    const path = location.pathname;
+    const path = location.pathname.toLowerCase();
     if (path === '/') return 'landing';
     if (path === '/search') return 'search';
     return path.substring(1); // remove leading slash
@@ -51,7 +51,7 @@ export function Navbar() {
   // Handle navigation
   const handleNavClick = (page: string) => {
     if (page === 'landing') navigate('/');
-    else if (page === 'register') navigate('/signup');
+    else if (page === 'register') navigate('/register');
     else navigate(`/${page}`);
     setSheetOpen(false);
   };
@@ -87,13 +87,15 @@ export function Navbar() {
     }
   }, []);
 
+  const isScrolledActive = isScrolled && currentPage !== 'login' && currentPage !== 'signup';
+
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
       animate={isReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`sticky top-0 z-50 w-full transition-all duration-300 
-        ${isScrolled 
+      className={`${currentPage === 'login' || currentPage === 'signup' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
+        ${isScrolledActive 
           ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none' 
           : 'bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto'
         }`
@@ -102,7 +104,7 @@ export function Navbar() {
     >
       <div className="w-full max-w-400 mx-auto px-6 lg:px-12 pointer-events-auto">
         <div className={`w-full flex h-20 items-center justify-between transition-all duration-300
-          ${isScrolled 
+          ${isScrolledActive 
             ? '2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6' 
             : '2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none'
           }`}>

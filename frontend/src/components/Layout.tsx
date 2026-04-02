@@ -11,6 +11,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { pathname } = useLocation()
+  const normalizedPathname = pathname.toLowerCase()
 
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
@@ -22,13 +23,16 @@ export function Layout({ children }: LayoutProps) {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [pathname])
 
+  const authPages = ['/login', '/signup', '/register'];
+  const isAuthPage = authPages.includes(normalizedPathname);
+
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-clip">
       <LoadingScreen />
       <Navbar />
       <ScrollToTopButton />
       {children}
-      <Footer />
+      {!isAuthPage && <Footer />}
     </div>
   )
 }

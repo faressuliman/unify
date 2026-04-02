@@ -7,19 +7,20 @@ interface PageHeaderProps {
   title: string;
   subtitle: string;
   showArrow?: boolean;
+  className?: string;
 }
 
-export default function PageHeader({ navigatedTo, title, subtitle, showArrow }: PageHeaderProps) {
+export default function PageHeader({ navigatedTo, title, subtitle, showArrow, className = "mb-8 w-full max-w-400 mx-auto px-6 lg:px-12" }: PageHeaderProps) {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
 
   return (
-    <div className="mb-8 w-full max-w-400 mx-auto px-6 lg:px-12">
+    <div className={className}>
       {navigatedTo && (
         <nav className="flex items-center space-x-2 rtl:space-x-reverse text-sm mb-4">
           <a href="/" className="text-slate-500 hover:text-secondary flex items-center gap-1 transition-colors">
             <Home className="w-4 h-4" />
-            <span className="hidden sm:inline">{isRTL ? 'الرئيسية' : 'Home'}</span>
+            <span>{isRTL ? 'الرئيسية' : 'Home'}</span>
           </a>
           {isRTL ? (
             <ChevronLeft className="w-4 h-4 text-slate-400" />

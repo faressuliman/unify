@@ -10,7 +10,7 @@ type FormTextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
 const FormTextArea = React.forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
   ({ label, id, className = '', labelClassName, ...props }, ref) => {
     const baseTextAreaClass =
-      'peer w-full rounded-md border-0 bg-gray-50/50 px-3 py-2 text-sm text-slate-700 ring-offset-background placeholder:text-muted-foreground transition duration-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
+      'peer w-full rounded-md border border-gray-300 bg-gray-50/50 px-3 py-2 text-sm text-slate-700 ring-offset-background placeholder:text-muted-foreground transition duration-300 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary disabled:cursor-not-allowed disabled:opacity-50 resize-none';
 
     return (
       <div className="space-y-2 text-start">
@@ -21,7 +21,6 @@ const FormTextArea = React.forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
         ) : null}
         <div className="relative">
           <textarea id={id} ref={ref} className={`${baseTextAreaClass} ${className}`.trim()} {...props} />
-          <div className="pointer-events-none absolute inset-0 rounded-md border-2 border-secondary opacity-0 peer-focus:opacity-100 transition-opacity duration-300" />
         </div>
       </div>
     );

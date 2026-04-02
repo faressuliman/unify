@@ -43,7 +43,7 @@ export default function SelectMenu({ id, label, value, options, onChange, isRTL 
           id={id}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`peer w-full h-10 rounded-md border-0 bg-gray-50/50 ps-3 pe-10 text-sm text-slate-700 focus:outline-none transition duration-300 cursor-pointer flex items-center justify-start ${isOpen ? 'focus-visible:ring-0' : ''}`}
+          className={`peer w-full h-10 rounded-md border border-gray-300 bg-gray-50/50 ps-3 pe-10 text-sm text-slate-700 focus:outline-none transition duration-300 cursor-pointer flex items-center justify-start ${isOpen ? 'focus-visible:ring-0' : ''}`}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
         >

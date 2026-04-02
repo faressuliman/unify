@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SubmitButton from '@/components/ui/SubmitButton';
@@ -11,6 +8,7 @@ import { Mail, Lock, ArrowUpRight, ArrowUpLeft } from 'lucide-react';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import { loginSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
+import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { useLanguage } from '../components/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
@@ -25,14 +23,12 @@ const Login = () => {
         password: '',
     });
     
-    // State to hold validation errors
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
-        // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -41,12 +37,10 @@ const Login = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validate form using Zod safely
         const validationResult = loginSchema.safeParse(formData);
         
         if (!validationResult.success) {
             const formattedErrors: { [key: string]: string } = {};
-            // Safely iterate through the Zod issues
             validationResult.error.issues.forEach((err) => {
                 if (err.path[0]) {
                     formattedErrors[err.path[0].toString()] = err.message;
@@ -56,22 +50,19 @@ const Login = () => {
             return;
         }
 
-        setErrors({}); // clear errors
-        
+        setErrors({}); 
         console.log('Login submission:', formData);
-        // Add actual submit logic here later
     };
 
     return (
         <div className={`flex min-h-[calc(100vh-80px)] bg-[#f8fafc] font-sans text-gray-900 relative overflow-hidden ${isRTL ? 'dir-rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-            {/* Left Section: Form */}
             <div className="w-full lg:w-1/2 flex flex-col justify-start pt-8 lg:pt-12 pb-12 z-10 relative">
-                <div className={`w-full max-w-200 px-6 lg:px-12 flex flex-col items-start text-start ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+                <div className={`w-full lg:max-w-200 px-6 lg:px-12 flex flex-col items-start text-start ${isRTL ? 'lg:mr-auto' : 'lg:ml-auto'}`}>
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="w-full max-w-150"
+                        className="w-full lg:max-w-150"
                     >
                         <PageHeader
                             showArrow={true}
@@ -127,8 +118,10 @@ const Login = () => {
                         </div>
                     </form>
 
+                    <PrivacyBadge />
+
                     <p className="text-center text-sm text-gray-500 mt-8 font-medium">
-                        {content.noAccount} <Link to="/signup" className={`text-tertiary font-bold hover:underline hover:decoration-secondary transition-all ${isRTL ? 'mr-1' : 'ml-1'}`}>{content.signUp} {isRTL ? <ArrowUpLeft className="w-4 h-4 text-secondary inline-block align-middle ml-1" /> : <ArrowUpRight className="w-4 h-4 text-secondary inline-block align-middle ml-1" />}</Link>
+                        {content.noAccount} <Link to="/register" className={`text-tertiary font-bold hover:underline hover:decoration-secondary transition-all ${isRTL ? 'mr-1' : 'ml-1'}`}>{content.signUp} {isRTL ? <ArrowUpLeft className="w-4 h-4 text-secondary inline-block align-middle ml-1" /> : <ArrowUpRight className="w-4 h-4 text-secondary inline-block align-middle ml-1" />}</Link>
                     </p>
                     </motion.div>
                 </div>
@@ -136,7 +129,6 @@ const Login = () => {
 
             {/* Right Section: Creative Visuals */}
             <div className="hidden lg:flex w-1/2 relative bg-slate-900 items-center justify-center p-12 overflow-hidden">
-                {/* Background Image with Overlay */}
                 <div 
                     className="absolute inset-0 bg-cover bg-center opacity-30"
                     style={{ backgroundImage: `url(${compassImg})` }}
@@ -144,7 +136,6 @@ const Login = () => {
                 <div className="absolute inset-0 bg-linear-to-tr from-slate-900/90 via-slate-800/80 to-secondary/30"></div>
                 <div className="absolute inset-0 bg-grid-slate-800/[0.04] bg-position-[bottom_1px_center] mask-[linear-gradient(to_bottom,transparent,black)]"></div>
                 
-                {/* Content Container */}
                 <div className="relative z-10 w-full max-w-lg text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

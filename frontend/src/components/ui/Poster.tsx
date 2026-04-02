@@ -2,13 +2,15 @@
 import jsPDF from 'jspdf';
 import { toJpeg } from 'html-to-image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCloudArrowUp, faDownload, faTrash, faImage } from '@fortawesome/free-solid-svg-icons';
+import { faCloudArrowUp, faDownload, faImage } from '@fortawesome/free-solid-svg-icons';
 import { UserCircle, Camera, FileText } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageHeader from './PageHeader';
 import FormInput from './FormInput';
 import FormTextArea from './FormTextArea';
+import SubmitButton from './SubmitButton';
+import ImageUpload from './ImageUpload';
 
 const Poster = () => {
   const { language, t } = useLanguage();
@@ -26,6 +28,17 @@ const Poster = () => {
   const [pdfStatus, setPdfStatus] = useState<'idle' | 'processing' | 'done' | 'error'>('idle');
   const [pdfMessage, setPdfMessage] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const handleImageChange = (file: File | null) => {
+    setPhoto(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setPhotoDataUrl(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setPhotoDataUrl('');
+    }
+  };
 
   const previewImage = photoDataUrl || (photo ? URL.createObjectURL(photo) : '');
 
@@ -191,85 +204,16 @@ const Poster = () => {
                 {t('poster.uploadPhoto')}
               </h2>
 
-              <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-                <AnimatePresence mode="wait">
-                  {photoDataUrl ? (
-                    <motion.div 
-                      key="preview"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="space-y-4"
-                    >
-                      <div className="mx-auto h-40 w-40 overflow-hidden rounded-2xl border-4 border-white shadow-xl">
-                        <img src={photoDataUrl} alt="Preview" className="h-full w-full object-cover" />
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-3 font-sans">
-                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm border border-slate-200 transition-all hover:bg-slate-50 active:scale-95">
-                          <FontAwesomeIcon icon={faImage} className="text-slate-400" />
-                          <span>{t('poster.changePhoto')}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] ?? null;
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = () => setPhotoDataUrl(reader.result as string);
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPhoto(null);
-                            setPhotoDataUrl('');
-                          }}
-                          className="inline-flex items-center gap-2 hover:cursor-pointer rounded-xl bg-red-50 px-5 py-2.5 text-sm font-bold text-red-600 transition-all hover:bg-red-100 active:scale-95"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                          <span>{t('poster.remove')}</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="upload"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <div className="mb-4 flex items-center justify-center">
-                        <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-sm">
-                          <FontAwesomeIcon icon={faCloudArrowUp} className="text-2xl text-black" />
-                        </span>
-                      </div>
-                      <p className="mb-1 text-base font-bold text-slate-700 font-sans">{t('poster.dragDrop')}</p>
-                      <p className="mb-6 text-xs text-slate-400 font-sans">{t('poster.uploadHint')}</p>
-
-                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-bold text-black shadow-lg shadow-primary/30 transition-all hover:bg-[#e6dcaf] hover:scale-[1.02] active:scale-95">
-                        <span>{t('poster.browseFiles')}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] ?? null;
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = () => setPhotoDataUrl(reader.result as string);
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                          className="hidden"
-                        />
-                      </label>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <ImageUpload 
+                onImageChange={handleImageChange}
+                initialImage={photoDataUrl}
+                title={t('poster.uploadPhoto')}
+                dragDropText={t('poster.dragDrop')}
+                subtitle={t('poster.uploadHint')} 
+                buttonText={t('poster.browseFiles')} 
+                changeText={t('poster.changePhoto')}
+                removeText={t('poster.remove')}
+              />
             </div>
 
             {/* Additional Info Card */}
@@ -332,17 +276,14 @@ const Poster = () => {
               </div>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
+            <SubmitButton
               type="button"
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-secondary text-white shadow-2xl shadow-secondary/20 text-lg font-black transition-all hover:bg-secondary/90 disabled:opacity-50 cursor-pointer font-sans"
               disabled={pdfStatus === 'processing'}
               onClick={handleDownloadAction}
             >
               <FontAwesomeIcon icon={faDownload} />
               <span>{t('poster.downloadBtn')}</span>
-            </motion.button>
+            </SubmitButton>
 
             <AnimatePresence>
               {pdfStatus !== 'idle' && (
