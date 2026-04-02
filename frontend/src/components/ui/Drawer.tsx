@@ -23,7 +23,7 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-75 sm:w-87.5 flex flex-col p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <SheetContent side={language === 'ar' ? 'left' : 'right'} className="w-75 sm:w-87.5 flex flex-col p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         {/* Header row: title + close button on same line */}
         <div className="flex items-start justify-between px-6 pt-6 pb-2 shrink-0">
           <div className="flex flex-col gap-1">

@@ -11,6 +11,7 @@ import FormInput from './FormInput';
 import FormTextArea from './FormTextArea';
 import SubmitButton from './SubmitButton';
 import ImageUpload from './ImageUpload';
+import SegmentedControl from './SegmentedControl';
 
 const Poster = () => {
   const { language, t } = useLanguage();
@@ -238,22 +239,15 @@ const Poster = () => {
 
                 <div>
                   <label id="contactTips" className="mb-4 block text-start text-sm font-bold text-slate-600 font-sans">{t('poster.contactTips')}</label>
-                  <div className="mb-4 flex gap-3 font-sans">
-                    <button
-                      type="button"
-                      onClick={() => { setContactType('mobile'); setContact(''); }}
-                      className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-300 cursor-pointer ${contactType === 'mobile' ? 'bg-primary text-secondary shadow-lg shadow-primary/30' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                    >
-                      {t('poster.mobile')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setContactType('email'); setContact(''); }}
-                      className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-300 cursor-pointer ${contactType === 'email' ? 'bg-primary text-secondary shadow-lg shadow-primary/30' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                    >
-                      {t('poster.email')}
-                    </button>
-                  </div>
+                  <SegmentedControl 
+                    className="mb-4"
+                    value={contactType}
+                    onChange={(val) => { setContactType(val as 'mobile' | 'email'); setContact(''); }}
+                    options={[
+                      { value: 'mobile', label: t('poster.mobile') },
+                      { value: 'email', label: t('poster.email') }
+                    ]}
+                  />
                   <div className="space-y-2 text-start">
                     <FormInput
                       id="contact"

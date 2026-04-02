@@ -17,6 +17,9 @@ const Login = () => {
     const { language } = useLanguage();
     const content = language === 'ar' ? ar.login : en.login;
     const isRTL = language === 'ar';
+    const localizeError = (message: string) => {
+        return content.validation[message as keyof typeof content.validation] ?? message;
+    };
 
     const [formData, setFormData] = useState({
         email: '',
@@ -45,7 +48,7 @@ const Login = () => {
             const formattedErrors: { [key: string]: string } = {};
             validationResult.error.issues.forEach((err) => {
                 if (err.path[0]) {
-                    formattedErrors[err.path[0].toString()] = err.message;
+                    formattedErrors[err.path[0].toString()] = localizeError(err.message);
                 }
             });
             setErrors(formattedErrors);
@@ -100,7 +103,7 @@ const Login = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? '!pl-11' : '!pr-11'}`}
+                                className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
                                 suffix={
                                     <button
                                         type="button"
