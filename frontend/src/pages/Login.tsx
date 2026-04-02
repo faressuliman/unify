@@ -4,7 +4,7 @@ import SubmitButton from '@/components/ui/SubmitButton';
 import FormInput from '@/components/ui/FormInput';
 import compassImg from '../assets/compass.jpg';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowUpRight, ArrowUpLeft } from 'lucide-react';
+import { Mail, Lock, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import { loginSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
@@ -23,6 +23,8 @@ const Login = () => {
         password: '',
     });
     
+    const [showPassword, setShowPassword] = useState(false);
+
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,13 +94,22 @@ const Login = () => {
                             <FormInput 
                                 label={content.password}
                                 icon={<Lock className="w-4 h-4" />}
-                                type="password" 
+                                type={showPassword ? "text" : "password"} 
                                 name="password"
                                 placeholder={content.password} 
                                 value={formData.password}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
+                                className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? '!pl-11' : '!pr-11'}`}
+                                suffix={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className={`absolute flex items-center justify-center ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 w-8 h-8 rounded-md hover:bg-gray-100 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors z-10 cursor-pointer`}
+                                    >
+                                        {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                    </button>
+                                }
                             />
                             <ErrorMessage msg={errors.password} className="text-[11px] sm:text-xs" />
                         </div>

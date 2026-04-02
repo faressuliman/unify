@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
 export default function FeatureCard({ icon, title, desc, className = '' }: { icon: ReactNode, title: string, desc: string, className?: string }) {

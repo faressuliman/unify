@@ -75,6 +75,14 @@ const Register = () => {
         if (name === 'age' || name === 'phoneNumber') {
             parsedValue = value.replace(/\D/g, ''); 
         }
+
+        if (name === 'age') {
+            if (parseInt(parsedValue) > 90) return;
+        }
+
+        if (name === 'phoneNumber' && parsedValue.length > 11) {
+            return;
+        }
         
         setFormData(prev => ({
             ...prev,
@@ -166,6 +174,7 @@ const Register = () => {
                                     placeholder={content.age} 
                                     value={formData.age}
                                     onChange={handleChange}
+                                    maxLength={2}
                                     isRTL={isRTL}
                                     className={errors.age ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
                                 />
@@ -180,6 +189,7 @@ const Register = () => {
                                     placeholder={content.phone} 
                                     value={formData.phoneNumber}
                                     onChange={handleChange}
+                                    maxLength={11}
                                     isRTL={isRTL}
                                     className={`${errors.phoneNumber ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'text-right placeholder:text-right' : ''}`}
                                 />
