@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Calendar, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft } from 'lucide-react';
+import { User, Mail, Calendar, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
 import { signUpSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -69,6 +69,8 @@ const Register = () => {
     });
     
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [showPasswords, setShowPasswords] = useState(false);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         let parsedValue = value;
@@ -200,14 +202,23 @@ const Register = () => {
                         <div>
                             <FormInput 
                                 icon={<Lock className="w-4 h-4" />}
-                                type="password" 
+                                type={showPasswords ? 'text' : 'password'} 
                                 name="password"
                                 label={content.password}
                                 placeholder={content.password} 
                                 value={formData.password}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
+                                className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
+                                suffix={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswords(!showPasswords)}
+                                        className={`absolute flex items-center justify-center ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 w-8 h-8 rounded-md hover:bg-gray-100 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors z-10 cursor-pointer`}
+                                    >
+                                        {showPasswords ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                    </button>
+                                }
                             />
                             {formData.password && (
                                 <div className="mt-2.5 px-1 font-sans">
@@ -234,14 +245,23 @@ const Register = () => {
                         <div>
                             <FormInput 
                                 icon={<Lock className="w-4 h-4" />}
-                                type="password" 
+                                type={showPasswords ? 'text' : 'password'} 
                                 name="confirmPassword"
                                 label={content.confirmPassword}
                                 placeholder={content.confirmPassword} 
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={errors.confirmPassword ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
+                                className={`${errors.confirmPassword ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
+                                suffix={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswords(!showPasswords)}
+                                        className={`absolute flex items-center justify-center ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 w-8 h-8 rounded-md hover:bg-gray-100 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors z-10 cursor-pointer`}
+                                    >
+                                        {showPasswords ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                    </button>
+                                }
                             />
                             <ErrorMessage msg={errors.confirmPassword} className="text-[11px] sm:text-xs" />
                         </div>
