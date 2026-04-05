@@ -1,0 +1,60 @@
+name: Build and Deploy Unify
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install and build backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build --if-present
+
+      - name: Prepare deployment bundle
+        run: |
+          mkdir -p deploy_bundle/frontend deploy_bundle/backend
+          cp -r frontend/dist deploy_bundle/frontend/
+          cp backend/package*.json deploy_bundle/backend/
+          cp -r backend/src deploy_bundle/backend/
+          tar -czf deploy_bundle.tar.gz -C deploy_bundle .
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 51.91.243.6 >> ~/.ssh/known_hosts
+
+      - name: Upload bundle to server
+        run: |
+          scp -i ~/.ssh/deploy_key deploy_bundle.tar.gz deploy@51.91.243.6:/tmp/deploy_bundle.tar.gz
+
+      - name: Deploy on server
+        run: |
+          ssh -i ~/.ssh/deploy_key deploy@51.91.243.6 '
+            set -e
+            mkdir -p /var/www/unify
+            tar -xzf /tmp/deploy_bundle.tar.gz -C /var/www/unify
+            rm -f /tmp/deploy_bundle.tar.gz
+          '
