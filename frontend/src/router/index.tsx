@@ -1,8 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import App from "../App";
-import ErrorFallback from "../components/ErrorFallback";
-import LoadingScreen from "../components/LoadingScreen";
+import ErrorFallback from "../components/ui/ErrorFallback";
+import LoadingScreen from "../components/ui/LoadingScreen";
 
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { HeartHandshake, UserSearch, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguage } from './LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 type UnifyWindow = Window & {
   __unifyLoadingComplete?: boolean;

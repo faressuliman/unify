@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react';
-import { useLanguage } from './LanguageContext';
-import { en } from '../data/english';
-import { ar } from '../data/arabic';
+import { useLanguage } from '../../context/LanguageContext';
+import { en } from '../../data/english';
+import { ar } from '../../data/arabic';
 import { MapPin, ArrowDownRight, ArrowDownLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 

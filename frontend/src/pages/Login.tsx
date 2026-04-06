@@ -9,7 +9,7 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 import { loginSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
-import { useLanguage } from '../components/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 

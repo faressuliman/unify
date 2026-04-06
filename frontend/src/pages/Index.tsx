@@ -1,8 +1,8 @@
-import Hero from "../components/Hero";
-import Stats from "../components/Stats";
-import HowUnifyWorks from "../components/HowUnifyWorks";
-import RecentUpdates from "../components/RecentUpdates";
-import MapSection from "@/components/MapSection";
+import Hero from "../components/home/Hero";
+import Stats from "../components/home/Stats";
+import HowUnifyWorks from "../components/home/HowUnifyWorks";
+import RecentUpdates from "../components/home/RecentUpdates";
+import MapSection from "@/components/home/MapSection";
 
 const Index = () => {
     return (

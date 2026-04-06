@@ -1,8 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail } from 'lucide-react';
-import { Button } from './ui/button';
-import { useAuth } from './AuthContext';
-import { useLanguage } from './LanguageContext';
+import { Button } from '../ui/button';
+import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { motion } from 'framer-motion';
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import { Drawer } from './ui/Drawer';
+} from '../ui/dropdown-menu';
+import { Drawer } from '../ui/Drawer';
 import { useState, useEffect } from 'react';
-import unifyLogo from '../assets/unify.png';
+import unifyLogo from '../../assets/unify.png';
 
 export function Navbar() {
   const navigate = useNavigate();

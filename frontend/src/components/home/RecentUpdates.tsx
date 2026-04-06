@@ -1,7 +1,7 @@
-import { useLanguage } from './LanguageContext';
-import PersonCard from './ui/PersonCard';
-import { en } from '../data/english';
-import { ar } from '../data/arabic';
+import { useLanguage } from '../../context/LanguageContext';
+import PersonCard from './PersonCard';
+import { en } from '../../data/english';
+import { ar } from '../../data/arabic';
 import { motion } from 'framer-motion';
 import { ArrowDownRight, ArrowDownLeft } from 'lucide-react';
 

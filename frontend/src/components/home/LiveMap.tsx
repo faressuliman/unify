@@ -2,9 +2,9 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { divIcon } from 'leaflet';
 import { ShieldCheck, AlertTriangle, Info } from 'lucide-react';
-import { useLanguage } from './LanguageContext';
-import { en } from '../data/english';
-import { ar } from '../data/arabic';
+import { useLanguage } from '../../context/LanguageContext';
+import { en } from '../../data/english';
+import { ar } from '../../data/arabic';
 import { renderToString } from 'react-dom/server';
 
 // Fix leafet default icon issue

@@ -1,12 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
 import { mockPosts, type MissingPerson } from '../data/mockData';
-import { useLanguage } from '../components/LanguageContext';
-import MissingPersonCard from '../components/ui/MissingPersonCard';
+import { useLanguage } from '../context/LanguageContext';
+import MissingPersonCard from '../components/search/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
-import FoundPersonCard from '../components/ui/FoundPersonCard';
+import FoundPersonCard from '../components/search/FoundPersonCard';
 import { motion } from 'framer-motion';
-import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/SearchFiltersPanel';
+import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/search/SearchFiltersPanel';
 
 const extractAge = (details: string): number | null => {
   const match = details.match(/(\d+)/);

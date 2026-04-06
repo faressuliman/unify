@@ -5,7 +5,7 @@ import { User, Mail, Calendar, Phone, Lock, Fingerprint, BellRing, ArrowUpRight,
 import { signUpSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
 import ErrorMessage from '@/components/ui/ErrorMessage';
-import { useLanguage } from '../components/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import SubmitButton from '@/components/ui/SubmitButton';

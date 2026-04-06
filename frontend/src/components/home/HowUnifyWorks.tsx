@@ -11,10 +11,10 @@ import {
   MessageSquare, 
   Heart 
 } from 'lucide-react';
-import { useLanguage } from './LanguageContext';
-import HomeFeatureCard from './ui/HomeFeatureCard';
-import { en } from '../data/english';
-import { ar } from '../data/arabic';
+import { useLanguage } from '../../context/LanguageContext';
+import HomeFeatureCard from './HomeFeatureCard';
+import { en } from '../../data/english';
+import { ar } from '../../data/arabic';
 
 const icons = [UserPlus, Search, ClipboardCheck, ShieldCheck, MessageSquare, Heart];
 

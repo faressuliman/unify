@@ -7,19 +7,19 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { renderToString } from 'react-dom/server';
 import { ListFilter, Search, Info, X, UserCircle } from 'lucide-react';
 import { SheetClose } from '../components/ui/sheet';
-import { useLanguage } from '../components/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import { mockPosts, type MissingPerson } from '../data/mockData';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
-import MapDrawer from '../components/MapDrawer';
+import MapDrawer from '../components/map/MapDrawer';
 import PageHeader from '../components/ui/PageHeader';
 import FormInput from '../components/ui/FormInput';
 import SelectMenu from '../components/ui/SelectMenu';
 import LocalizedDateInput from '../components/ui/LocalizedDateInput';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import SubmitButton from '../components/ui/SubmitButton';
-import MapPopup from '../components/MapPopup';
+import MapPopup from '../components/map/MapPopup';
 
 L.Marker.prototype.options.icon = L.icon({ iconUrl: icon, shadowUrl: iconShadow });
 

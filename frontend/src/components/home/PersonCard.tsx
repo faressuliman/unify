@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import { MapPin, Clock, User, Eye } from 'lucide-react';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';

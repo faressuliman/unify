@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useLanguage } from "./LanguageContext";
-import unifyLogo from "../assets/unify.png";
+import { useLanguage } from "../../context/LanguageContext";
+import unifyLogo from "../../assets/unify.png"
 
 type UnifyWindow = Window & {
   __unifyLoadingComplete?: boolean;

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useMap } from 'react-leaflet';
 import { X } from 'lucide-react';
-import type { MissingPerson } from '../data/mockData';
+import type { MissingPerson } from '../../data/mockData';
 
 const extractAge = (details: string): string => {
   const match = details.match(/(\d+)/);

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useLanguage } from "./LanguageContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { AlertCircle, Home } from "lucide-react";
 import { useRouteError, useNavigate } from "react-router-dom";
 

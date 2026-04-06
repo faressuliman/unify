@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Phone, Mail, MapPin, ScanFace, FileSearch } from "lucide-react";
-import { useLanguage } from "./LanguageContext";
-import { en } from "../data/english";
-import { ar } from "../data/arabic";
-import unifyLogo from "../assets/unify.png";
+import { useLanguage } from "../../context/LanguageContext";
+import { en } from "../../data/english";
+import { ar } from "../../data/arabic";
+import unifyLogo from "../../assets/unify.png";
 
 export default function Footer() {
   const { language } = useLanguage();

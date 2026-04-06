@@ -1,5 +1,5 @@
 
-import Poster from "@/components/ui/Poster";
+import Poster from "@/components/posterbuilder/Poster";
 
 const PosterBuilder = () => {
     return (

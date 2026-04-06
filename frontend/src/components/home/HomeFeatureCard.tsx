@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { memo } from "react";
-import { useLanguage } from "../LanguageContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface HomeFeatureCardProps {
   icon: LucideIcon;

@@ -1,8 +1,8 @@
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from './sheet';
 import { Button } from './button';
 import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Bell, Mail, LogOut, Menu } from 'lucide-react';
-import { useLanguage } from '../LanguageContext';
-import { useAuth } from '../AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface DrawerProps {
   isOpen: boolean;

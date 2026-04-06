@@ -4,14 +4,14 @@ import { toJpeg } from 'html-to-image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloudArrowUp, faDownload, faImage } from '@fortawesome/free-solid-svg-icons';
 import { UserCircle, Camera, FileText } from 'lucide-react';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import PageHeader from './PageHeader';
-import FormInput from './FormInput';
-import FormTextArea from './FormTextArea';
-import SubmitButton from './SubmitButton';
-import ImageUpload from './ImageUpload';
-import SegmentedControl from './SegmentedControl';
+import PageHeader from '../ui/PageHeader';
+import FormInput from '../ui/FormInput';
+import FormTextArea from '../ui/FormTextArea';
+import SubmitButton from '../ui/SubmitButton';
+import ImageUpload from '../ui/ImageUpload';
+import SegmentedControl from '../ui/SegmentedControl';
 
 const Poster = () => {
   const { language, t } = useLanguage();
