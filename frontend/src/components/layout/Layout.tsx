@@ -2,8 +2,8 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Navbar } from './Navbar'
-import LoadingScreen from './LoadingScreen'
-import ScrollToTopButton from './ScrollToTopButton'
+import LoadingScreen from '../ui/LoadingScreen'
+import ScrollToTopButton from '../ui/ScrollToTopButton'
 import Footer from './Footer'
 
 interface LayoutProps {

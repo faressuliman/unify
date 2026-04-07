@@ -2,9 +2,9 @@ import { useRef, useState, useEffect } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Search, ImagePlus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguage } from './LanguageContext';
-import { en } from '../data/english';
-import { ar } from '../data/arabic';
+import { useLanguage } from '../../context/LanguageContext';
+import { en } from '../../data/english';
+import { ar } from '../../data/arabic';
 
 type UnifyWindow = Window & {
   __unifyLoadingComplete?: boolean;

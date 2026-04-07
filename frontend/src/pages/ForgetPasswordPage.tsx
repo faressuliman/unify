@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Lock, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import ErrorMessage from '@/components/ui/ErrorMessage';
-import { useLanguage } from '../components/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import SubmitButton from '@/components/ui/SubmitButton';
@@ -118,7 +118,7 @@ const ForgetPasswordPage = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? '!pl-11' : '!pr-11'}`}
+                                className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
                                 suffix={
                                     <button
                                         type="button"
@@ -161,7 +161,7 @@ const ForgetPasswordPage = () => {
                                 value={formData.confirm_password}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={`${errors.confirm_password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? '!pl-11' : '!pr-11'}`}
+                                className={`${errors.confirm_password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
                                 suffix={
                                     <button
                                         type="button"

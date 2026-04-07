@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { FileSearch, Search } from 'lucide-react';
-import FormInput from './ui/FormInput';
-import FormTextArea from './ui/FormTextArea';
-import SelectMenu from './ui/SelectMenu';
-import LocalizedDateInput from './ui/LocalizedDateInput';
-import ErrorMessage from './ui/ErrorMessage';
-import SubmitButton from './ui/SubmitButton';
-import ImageUpload from './ui/ImageUpload';
-import { useLanguage } from './LanguageContext';
-import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
+import { FileSearch, Info, Search } from 'lucide-react';
+import FormInput from '../ui/FormInput';
+import FormTextArea from '../ui/FormTextArea';
+import SelectMenu from '../ui/SelectMenu';
+import LocalizedDateInput from '../ui/LocalizedDateInput';
+import ErrorMessage from '../ui/ErrorMessage';
+import SubmitButton from '../ui/SubmitButton';
+import ImageUpload from '../ui/ImageUpload';
+import { useLanguage } from '../../context/LanguageContext';
+import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../../data/cities';
 
 export interface SearchFilters {
   firstName: string;
@@ -169,6 +169,14 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
         </h3>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-6 space-y-6">
+        <div className="p-4 bg-primary/20 border border-primary/40 rounded-lg flex items-start gap-3">
+          <Info className="h-5 w-5 text-secondary mt-0.5 shrink-0" aria-hidden="true" />
+          <p className="text-sm text-slate-700 text-start mt-0.5 leading-relaxed">
+            <strong>{t('search.tipLabel') || 'Pro Tip:'}</strong>{' '}
+            {t('search.tipText') || 'Providing multiple filters helps narrow down the results effectively.'}
+          </p>
+        </div>
+
         <div className="space-y-3">
           <ImageUpload
             label={t('search.uploadImage') || 'Upload Image for AI Recognition'}
@@ -357,14 +365,6 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
           {t('search.searchButton') || 'Search'}
         </SubmitButton>
         <ErrorMessage msg={submitError} />
-
-        <div className="p-4 bg-primary/20 border border-primary/40 rounded-lg flex items-start gap-3">
-          <span className="text-xl">💡</span>
-          <p className="text-sm text-slate-700 text-start mt-0.5 leading-relaxed">
-            <strong>{t('search.tipLabel') || 'Pro Tip:'}</strong>{' '}
-            {t('search.tipText') || 'Providing multiple filters helps narrow down the results effectively.'}
-          </p>
-        </div>
       </form>
     </div>
   );

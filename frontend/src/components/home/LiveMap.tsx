@@ -2,9 +2,9 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { divIcon } from 'leaflet';
 import { ShieldCheck, AlertTriangle, Info } from 'lucide-react';
-import { useLanguage } from './LanguageContext';
-import { en } from '../data/english';
-import { ar } from '../data/arabic';
+import { useLanguage } from '../../context/LanguageContext';
+import { en } from '../../data/english';
+import { ar } from '../../data/arabic';
 import { renderToString } from 'react-dom/server';
 
 // Fix leafet default icon issue
@@ -74,34 +74,45 @@ export default function LiveMap() {
     const t = isRTL ? ar.liveMap : en.liveMap;
     
     return (
-        <div className="w-full h-125 rounded-2xl overflow-hidden border-2 border-primary-dark shadow-sm relative z-0">
-            <MapContainer center={[27.8206, 30.8025]} zoom={6} scrollWheelZoom={false} className="w-full h-full z-10 custom-map-tiles">
-                <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                />
-                
-                {mapLocations.map((loc) => (
-                    <Marker 
-                        key={loc.id} 
-                        position={loc.pos} 
-                        icon={createCustomIcon(loc.type, loc.cases)}
-                    >
-                        <Popup className="custom-popup">
-                            <div className="font-sans flex flex-col gap-1 p-1 rtl:text-right" dir={isRTL ? 'rtl' : 'ltr'}>
-                                <h3 className="font-bold text-tertiary text-sm m-0">{loc.city}</h3>
-                                <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                                    <span className={`w-2 h-2 rounded-full ${
-                                        loc.type === 'danger' ? 'bg-red-500' : 
-                                        loc.type === 'alert' ? 'bg-secondary' : 'bg-green-500'
-                                    }`}></span>
-                                    <span className="font-medium">{loc.cases} {t.cases}</span>
+        <div className="w-full h-100 md:h-125 rounded-2xl overflow-hidden border-2 border-primary-dark shadow-sm relative z-0">
+            <div className="absolute inset-0 z-0">
+                <MapContainer
+                    center={[27.8206, 30.8025]}
+                    zoom={6}
+                    scrollWheelZoom={false}
+                    dragging={true}
+                    touchZoom={true}
+                    doubleClickZoom={true}
+                    style={{ width: '100%', height: '100%' }}
+                    className="w-full h-full z-10 custom-map-tiles"
+                >
+                    <TileLayer
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    />
+                    
+                    {mapLocations.map((loc) => (
+                        <Marker 
+                            key={loc.id} 
+                            position={loc.pos} 
+                            icon={createCustomIcon(loc.type, loc.cases)}
+                        >
+                            <Popup className="custom-popup">
+                                <div className="font-sans flex flex-col gap-1 p-1 rtl:text-right" dir={isRTL ? 'rtl' : 'ltr'}>
+                                    <h3 className="font-bold text-tertiary text-sm m-0">{loc.city}</h3>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                                        <span className={`w-2 h-2 rounded-full ${
+                                            loc.type === 'danger' ? 'bg-red-500' : 
+                                            loc.type === 'alert' ? 'bg-secondary' : 'bg-green-500'
+                                        }`}></span>
+                                        <span className="font-medium">{loc.cases} {t.cases}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </Popup>
-                    </Marker>
-                ))}
-            </MapContainer>
+                            </Popup>
+                        </Marker>
+                    ))}
+                </MapContainer>
+            </div>
         </div>
     );
 }

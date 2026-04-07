@@ -1,5 +1,5 @@
 import { Home, ChevronRight, ChevronLeft, ArrowDownRight, ArrowDownLeft } from 'lucide-react';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { motion } from 'framer-motion';
 
 interface PageHeaderProps {

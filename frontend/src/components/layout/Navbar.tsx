@@ -1,8 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail } from 'lucide-react';
-import { Button } from './ui/button';
-import { useAuth } from './AuthContext';
-import { useLanguage } from './LanguageContext';
+import { Button } from '../ui/button';
+import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { motion } from 'framer-motion';
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import { Drawer } from './ui/Drawer';
+} from '../ui/dropdown-menu';
+import { Drawer } from '../ui/Drawer';
 import { useState, useEffect } from 'react';
-import unifyLogo from '../assets/unify.png';
+import unifyLogo from '../../assets/unify.png';
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -26,10 +26,11 @@ export function Navbar() {
 
   // Helper to determine current page from path
   const getCurrentPage = () => {
-    const path = location.pathname.toLowerCase();
-    if (path === '/') return 'landing';
-    if (path === '/search') return 'search';
-    return path.substring(1); // remove leading slash
+    const normalizedPath = location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+    if (normalizedPath === '/') return 'landing';
+
+    const [, firstSegment] = normalizedPath.split('/');
+    return firstSegment || 'landing';
   };
 
   const currentPage = getCurrentPage();
@@ -87,14 +88,18 @@ export function Navbar() {
     }
   }, []);
 
-  const isScrolledActive = isScrolled && currentPage !== 'login' && currentPage !== 'signup' && currentPage !== 'register';
-
+  const isScrolledActive =
+    isScrolled &&
+    currentPage !== 'login' &&
+    currentPage !== 'signup' &&
+    currentPage !== 'register' &&
+    currentPage !== 'map';
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
       animate={isReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`${currentPage === 'login' || currentPage === 'signup' || currentPage === 'register' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
+      className={`${currentPage === 'login' || currentPage === 'signup' || currentPage === 'register' || currentPage === 'map' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
         ${isScrolledActive 
           ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none' 
           : 'bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto'

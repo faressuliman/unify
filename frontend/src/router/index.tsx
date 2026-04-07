@@ -1,16 +1,18 @@
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import App from "../App";
-import ErrorFallback from "../components/ErrorFallback";
-import LoadingScreen from "../components/LoadingScreen";
+import ErrorFallback from "../components/ui/ErrorFallback";
+import LoadingScreen from "../components/ui/LoadingScreen";
 
 
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));
 const Search = lazy(() => import("../pages/Search"));
 const PosterBuilder = lazy(() => import("../pages/PosterBuilder"));
+const Map = lazy(() => import("../pages/Map"));
 const Login = lazy(() => import("../pages/Login"));
 const SignUp = lazy(() => import("../pages/Register"));
+const Profile = lazy(() => import("../pages/Profile"));
 const ForgetPasswordPage = lazy(() => import("../pages/ForgetPasswordPage"));
 const ContactPage = lazy(() => import("../pages/ContactPage"));
 
@@ -45,6 +47,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "map",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <Map />
+          </Suspense>
+        ),
+      },
+      {
         path: "login",
         element: (
           <Suspense fallback={<LoadingScreen />}>
@@ -61,7 +71,15 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "ForgetPasswordPage",
+        path: "profile",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <Profile />
+          </Suspense>
+        ),
+      },
+      {
+        path: "forgot-password",
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <ForgetPasswordPage />
@@ -69,7 +87,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "ContactPage",
+        path: "contact",
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <ContactPage />

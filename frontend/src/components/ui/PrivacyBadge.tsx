@@ -1,5 +1,5 @@
 import { ShieldCheck } from 'lucide-react';
-import { useLanguage } from '../LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function PrivacyBadge() {
     const { language } = useLanguage();

@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import './index.css'
 import { router } from './router'
-import { AuthProvider } from './components/AuthContext.tsx'
-import { LanguageProvider } from './components/LanguageContext.tsx'
+import { AuthProvider } from './context/AuthContext.tsx'
+import { LanguageProvider } from './context/LanguageContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

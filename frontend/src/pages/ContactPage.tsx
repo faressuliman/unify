@@ -5,7 +5,7 @@ import FormInput from '@/components/ui/FormInput';
 import FormTextArea from '@/components/ui/FormTextArea';
 import SubmitButton from '@/components/ui/SubmitButton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
-import { useLanguage } from '../components/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import compassImg from '../assets/compass.jpg';
 
 const ContactCard = ({ icon, title, detail, delay, href }: { icon: React.ReactNode, title: string, detail: string, delay: number, href?: string }) => {
