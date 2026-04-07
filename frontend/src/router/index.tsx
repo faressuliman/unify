@@ -10,6 +10,7 @@ const Search = lazy(() => import("../pages/Search"));
 const PosterBuilder = lazy(() => import("../pages/PosterBuilder"));
 const Login = lazy(() => import("../pages/Login"));
 const SignUp = lazy(() => import("../pages/Register"));
+const ForgetPasswordPage = lazy(() => import("../pages/ForgetPasswordPage"));
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +55,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <SignUp />
+          </Suspense>
+        ),
+      },
+      {
+        path: "ForgetPasswordPage",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <ForgetPasswordPage />
           </Suspense>
         ),
       },

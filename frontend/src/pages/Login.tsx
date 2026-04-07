@@ -119,7 +119,7 @@ const Login = () => {
                                 <input type="checkbox" id="remember" className="rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer" />
                                 <label htmlFor="remember" className="text-sm text-gray-600 font-bold cursor-pointer">{content.rememberMe}</label>
                             </div>
-                            <Link to="/forgot-password" className="text-sm font-bold text-tertiary hover:underline hover:decoration-secondary transition-all">{content.forgotPassword}</Link>
+                            <Link to="/ForgetPasswordPage" className="text-sm font-bold text-tertiary hover:underline hover:decoration-secondary transition-all">{content.forgotPassword}</Link>
                         </div>
 
                         <div className="pt-6">
