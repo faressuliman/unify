@@ -7,6 +7,7 @@ import PageHeader from '../components/ui/PageHeader';
 import FoundPersonCard from '../components/search/FoundPersonCard';
 import { motion } from 'framer-motion';
 import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/search/SearchFiltersPanel';
+import UnderlineTabSelector from '../components/ui/UnderlineTabSelector';
 
 const extractAge = (details: string): number | null => {
   const match = details.match(/(\d+)/);
@@ -106,37 +107,15 @@ export default function Search() {
             viewport={{ once: true, amount: 0.8 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 mb-6">
-              <button
-                onClick={() => setActiveTab('missing')}
-                className={`py-3 px-8 text-sm sm:text-base font-bold transition-all duration-300 relative cursor-pointer ${
-                  activeTab === 'missing' ? 'text-tertiary' : 'text-gray-500 hover:text-gray-800'
-                }`}
-              >
-                {t('search.missingReports') || 'Missing Reports'}
-                {activeTab === 'missing' && (
-                  <motion.div
-                    layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-secondary rounded-t-full"
-                  />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('found')}
-                className={`py-3 px-8 text-sm sm:text-base font-bold transition-all duration-300 relative cursor-pointer ${
-                  activeTab === 'found' ? 'text-tertiary' : 'text-gray-500 hover:text-gray-800'
-                }`}
-              >
-                {t('search.foundPersons') || 'Found Persons'}
-                {activeTab === 'found' && (
-                  <motion.div
-                    layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-secondary rounded-t-full"
-                  />
-                )}
-              </button>
-            </div>
+            <UnderlineTabSelector
+              options={[
+                { value: 'missing', label: t('search.missingReports') || 'Missing Reports' },
+                { value: 'found', label: t('search.foundPersons') || 'Found Persons' },
+              ]}
+              value={activeTab}
+              onChange={(value) => setActiveTab(value as 'missing' | 'found')}
+              indicatorLayoutId="activeTabIndicatorSearch"
+            />
 
             {/* Cards Slider Display */}
             {filteredPosts.length > 0 ? (

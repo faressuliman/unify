@@ -11,6 +11,7 @@ const PosterBuilder = lazy(() => import("../pages/PosterBuilder"));
 const Map = lazy(() => import("../pages/Map"));
 const Login = lazy(() => import("../pages/Login"));
 const SignUp = lazy(() => import("../pages/Register"));
+const Profile = lazy(() => import("../pages/Profile"));
 
 export const router = createBrowserRouter([
   {
@@ -63,6 +64,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <SignUp />
+          </Suspense>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <Profile />
           </Suspense>
         ),
       },

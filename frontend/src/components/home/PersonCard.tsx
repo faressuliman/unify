@@ -1,5 +1,5 @@
 ﻿import { motion } from 'framer-motion';
-import { MapPin, Clock, User, Eye } from 'lucide-react';
+import { MapPin, Clock, User } from 'lucide-react';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 
@@ -72,11 +72,7 @@ export default function PersonCard({ profile, idx, isRTL }: PersonCardProps) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 mt-auto">
-          <button className="w-full bg-primary text-[#1c190d] py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-[#e6dcaf] transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap">
-            <Eye className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            {t.buttons.seen}
-          </button>
+        <div className="flex flex-col mt-auto">
           <button className="w-full bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap">
             {t.buttons.details}
           </button>

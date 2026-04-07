@@ -50,5 +50,15 @@ export const mockPosts: MissingPerson[] = [
     timeAgo: '3 days ago',
     details: 'Female, 16 years old',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMRvtSFBN7-X6hhu8w-12Ygaqpv-gyqC92kTjK7uAtwJamac0x_5PFmOFpcHK7tfCbNWUT2RHWw6fIIK5-R00XWeGhnQictj8Zyuxbckh17PiTWP0YJnwa0wAm3lOgT9qzHO1MujT3_ULi1zBPnUKaOa4GBCdzBc5fLtsggGGCBC4HH1DZUHWe4K_25s5LQA8Oa3LA7Bkn6MrTuffwIcoa04hoXCsr2oZMF-aB94jzTLfEGE3lConDVOajuSzjT3jfhXM00iR1CGS2'
+  },
+  {
+    id: '8825',
+    name: 'Mariam Salah',
+    type: 'missing',
+    status: 'Needs Follow-up',
+    location: 'Nasr City, Cairo',
+    timeAgo: '6 hours ago',
+    details: 'Female, 14 years old',
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80'
   }
 ];
