@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { Phone, Mail, MapPin, ScanFace, FileSearch } from "lucide-react";
 import { useLanguage } from "./LanguageContext";
@@ -12,6 +13,8 @@ export default function Footer() {
   const t = isRTL ? ar.footer : en.footer;
   const sectionRef = useRef<HTMLElement | null>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+
+  const quickLinkPaths = ["/search", "/poster-builder", "#", "/ContactPage", "#"];
 
   return (
     <motion.section
@@ -89,9 +92,9 @@ export default function Footer() {
               <ul className="space-y-2 md:space-y-3 text-start">
                 {t.quickLinks.map((link, idx) => (
                   <li key={idx}>
-                    <a href="#" className="text-sm md:text-base text-tertiary/80 hover:text-tertiary transition-colors duration-200 font-medium">
+                    <Link to={quickLinkPaths[idx]} className="text-sm md:text-base text-tertiary/80 hover:text-tertiary transition-colors duration-200 font-medium">
                       {link}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
