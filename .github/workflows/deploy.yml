@@ -44,15 +44,15 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H 51.91.243.6 >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Upload bundle to server
         run: |
-          scp -i ~/.ssh/deploy_key deploy_bundle.tar.gz deploy@51.91.243.6:/tmp/deploy_bundle.tar.gz
+          scp -i ~/.ssh/deploy_key deploy_bundle.tar.gz deploy@${{ secrets.SERVER_IP }}:/tmp/deploy_bundle.tar.gz
 
       - name: Deploy on server
         run: |
-          ssh -i ~/.ssh/deploy_key deploy@51.91.243.6 '
+          ssh -i ~/.ssh/deploy_key deploy@${{ secrets.SERVER_IP }} '
             set -e
             mkdir -p /var/www/unify
             tar -xzf /tmp/deploy_bundle.tar.gz -C /var/www/unify
