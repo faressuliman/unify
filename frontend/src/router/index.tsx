@@ -5,6 +5,7 @@ import ErrorFallback from "../components/ui/ErrorFallback";
 import LoadingScreen from "../components/ui/LoadingScreen";
 
 
+
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));
 const Search = lazy(() => import("../pages/Search"));
@@ -13,8 +14,10 @@ const Map = lazy(() => import("../pages/Map"));
 const Login = lazy(() => import("../pages/Login"));
 const SignUp = lazy(() => import("../pages/Register"));
 const Profile = lazy(() => import("../pages/Profile"));
-const ForgetPasswordPage = lazy(() => import("../pages/ForgetPasswordPage"));
+const ResetPassword = lazy(() => import("../pages/ResetPassword"));
 const ContactPage = lazy(() => import("../pages/ContactPage"));
+const CreatePost = lazy(() => import("../pages/CreatePost"));
+const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 
 export const router = createBrowserRouter([
   {
@@ -79,10 +82,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "forgot-password",
+        path: "reset-password",
         element: (
           <Suspense fallback={<LoadingScreen />}>
-            <ForgetPasswordPage />
+            <ResetPassword />
           </Suspense>
         ),
       },
@@ -91,6 +94,22 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <ContactPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "create-post",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <CreatePost />
+          </Suspense>
+        ),
+      },
+      {
+        path: "forgot-password",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <ForgotPassword />
           </Suspense>
         ),
       },

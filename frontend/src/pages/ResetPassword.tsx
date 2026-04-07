@@ -43,7 +43,7 @@ const getPasswordStrength = (password: string, content: any) => {
     return { score, missing, color, textColor, text };
 };
 
-const ForgetPasswordPage = () => {
+const ResetPassword = () => {
     const { language } = useLanguage();
     const contentLogin = language === 'ar' ? ar.login : en.login;
     const contentSignup = language === 'ar' ? ar.signup : en.signup;
@@ -219,4 +219,4 @@ const ForgetPasswordPage = () => {
     );
 };
 
-export default ForgetPasswordPage;
+export default ResetPassword;

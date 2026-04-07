@@ -1,9 +1,19 @@
 import { ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
-export default function PrivacyBadge() {
+interface PrivacyBadgeProps {
+    title?: string;
+    description?: string;
+}
+
+export default function PrivacyBadge({ title, description }: PrivacyBadgeProps) {
     const { language } = useLanguage();
     const isRTL = language === 'ar';
+
+    const defaultTitle = isRTL ? 'خصوصيتك محمية' : 'Your Privacy is Protected';
+    const defaultDescription = isRTL 
+        ? 'نحن نتبع أعلى معايير الأمان والتشفير. لن يتم عرض معلوماتك الحساسة علناً.'
+        : 'We use industry-standard encryption to protect your sensitive data. Your information is never shared publicly.';
 
     return (
         <div className="mt-8 rounded-xl bg-slate-100/50 p-4 sm:p-5 border border-slate-200">
@@ -13,14 +23,12 @@ export default function PrivacyBadge() {
                         <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-secondary" />
                     </div>
                     <h4 className="text-sm font-bold text-tertiary">
-                        {isRTL ? 'خصوصيتك محمية' : 'Your Privacy is Protected'}
+                        {title || defaultTitle}
                     </h4>
                 </div>
                 <div className="text-start">
                     <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                        {isRTL 
-                            ? 'نحن نتبع أعلى معايير الأمان والتشفير. لن يتم عرض معلوماتك الحساسة علناً.'
-                            : 'We use industry-standard encryption to protect your sensitive data. Your information is never shared publicly.'}
+                        {description || defaultDescription}
                     </p>
                 </div>
             </div>
