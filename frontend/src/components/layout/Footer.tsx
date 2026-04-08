@@ -14,7 +14,7 @@ export default function Footer() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
-  const quickLinkPaths = ["/search", "/poster-builder", "#", "/contact", "#"];
+  const quickLinkPaths = ["/search", "/poster-builder", "#", "/contact", "/about-us"];
 
   return (
     <motion.section

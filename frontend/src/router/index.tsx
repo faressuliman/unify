@@ -18,6 +18,7 @@ const ResetPassword = lazy(() => import("../pages/ResetPassword"));
 const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
+const AboutUs = lazy(() => import("../pages/AboutUs"));
 
 export const router = createBrowserRouter([
   {
@@ -113,6 +114,14 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        path: "about-us",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <AboutUs />
+          </Suspense>
+        ),
+      }
     ],
   },
 ]);
