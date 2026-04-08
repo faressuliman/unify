@@ -5,7 +5,7 @@ import L, { divIcon } from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { renderToString } from 'react-dom/server';
-import { ListFilter, Search, Info, X, UserCircle } from 'lucide-react';
+import { ListFilter, Search, Info, X, UserCircle, MapPin, Calendar } from 'lucide-react';
 import { SheetClose } from '../components/ui/sheet';
 import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
@@ -225,25 +225,31 @@ export default function Map() {
   };
 
   const renderFiltersContent = (showCloseButton = false) => (
-    <form onSubmit={handleSubmitFilters} className="flex flex-col h-full bg-white font-sans">
-      <div className="p-5 border-b border-gray-100 flex items-start justify-between gap-3 shrink-0">
-        <div className="flex items-start gap-3">
-          <ListFilter className="w-5 h-5 text-secondary mt-0.5" />
-          <div className="space-y-1 text-start">
-            <h3 className="font-bold text-lg text-tertiary leading-tight">{t.filterCases}</h3>
-            <p className="text-sm font-semibold text-slate-500">{t.refineMarkers}</p>
+    <form onSubmit={handleSubmitFilters} className="flex flex-col h-full bg-white font-sans overflow-y-auto w-full">
+      <div className="p-6 pb-5 border-b border-slate-100 flex items-start justify-between gap-4 sticky top-0 bg-white z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+            <ListFilter className="w-5 h-5" />
+          </div>
+          <div className="text-start">
+            <h3 className="font-bold text-xl text-slate-800 leading-tight">{t.filterCases}</h3>
+            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase mt-0.5">{t.refineMarkers}</p>
           </div>
         </div>
         {showCloseButton && (
-          <SheetClose className="text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center shrink-0 cursor-pointer">
+          <SheetClose className="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-full w-9 h-9 flex items-center justify-center shrink-0 transition-colors shadow-sm">
             <X className="w-4 h-4"/>
           </SheetClose>
         )}
       </div>
-      <div className="p-5 flex flex-col gap-6 flex-1">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className={`text-xs font-bold text-gray-500 uppercase block text-start ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>{t.keyword}</label>
+      <div className="p-6 flex flex-col gap-6 flex-1 bg-slate-50/30">
+        
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+          <div className="flex items-center justify-between mb-3">
+            <label className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
+              <Search className="w-3.5 h-3.5 text-blue-500" />
+              {t.keyword}
+            </label>
             {renderClearFieldButton('keyword')}
           </div>
           <FormInput
@@ -252,14 +258,18 @@ export default function Map() {
             value={draftFilters.keyword}
             onChange={(e) => setDraftFilters((prev) => ({ ...prev, keyword: e.target.value }))}
             placeholder={t.searchName}
-            icon={<Search className="w-4 h-4" />}
+            icon={<Search className="w-4 h-4 text-slate-400" />}
             isRTL={isRTL}
+            className="bg-slate-50 border-0 focus:ring-2 focus:ring-blue-100 transition-shadow"
           />
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className={`text-xs font-bold text-gray-500 uppercase block text-start ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>{t.areaRegion}</label>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+          <div className="flex items-center justify-between mb-3">
+            <label className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
+              <MapPin className="w-3.5 h-3.5 text-rose-500" />
+              {t.areaRegion}
+            </label>
             {renderClearFieldButton('city')}
           </div>
           <SelectMenu
@@ -272,9 +282,12 @@ export default function Map() {
           />
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className={`text-xs font-bold text-gray-500 uppercase block text-start ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>{t.dateMissing}</label>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+          <div className="flex items-center justify-between mb-3">
+            <label className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
+              <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+              {t.dateMissing}
+            </label>
             {renderClearFieldButton('dateMissing')}
           </div>
           <LocalizedDateInput
@@ -287,21 +300,28 @@ export default function Map() {
           />
         </div>
 
-        <div className="pt-2 border-t border-gray-100">
-          <label className={`text-xs font-bold text-gray-500 uppercase block mb-2 mt-2 text-start ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>{t.showStatus}</label>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+          <label className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-4 ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
+            <Info className="w-3.5 h-3.5 text-amber-500" />
+            {t.showStatus}
+          </label>
           <SegmentedControl
             value={draftFilters.status}
             onChange={(value) => setDraftFilters((prev) => ({ ...prev, status: value as MapFilters['status'] }))}
             options={statusOptions}
-            className="w-full"
+            className="w-full bg-slate-50 p-1 rounded-xl"
           />
         </div>
 
-        <div className="mt-auto pt-2 flex flex-col gap-3">
-          <SubmitButton type="submit" className="h-12 text-base shadow-none text-tertiary">
-            {t.applyFilters}
-          </SubmitButton>
-        </div>
+      </div>
+      
+      <div className="pt-4 mb-8 pb-6 px-6 border-t border-slate-100 bg-white shrink-0 sticky bottom-0 z-10 w-full shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)]">
+        <SubmitButton 
+            type="submit" 
+            className="w-full h-14 text-base font-bold rounded-xl shadow-lg bg-amber-600 hover:bg-amber-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+        >
+          {t.applyFilters}
+        </SubmitButton>
       </div>
     </form>
   );
@@ -334,7 +354,7 @@ export default function Map() {
         </div>
 
         {/* Desktop Sidebar Filters */}
-        <aside className="hidden lg:block w-[320px] xl:w-87.5 shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
+        <aside className="hidden lg:block w-[360px] xl:w-[400px] shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
           {renderFiltersContent(false)}
         </aside>
 
