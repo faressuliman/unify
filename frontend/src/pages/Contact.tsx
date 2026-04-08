@@ -27,7 +27,7 @@ const ContactCard = ({ icon, title, detail, delay, href }: { icon: React.ReactNo
     );
 };
 
-const ContactPage = () => {
+const Contact = () => {
     const { language } = useLanguage();
     const isRTL = language === 'ar';
 
@@ -114,6 +114,7 @@ const ContactPage = () => {
         if (!formData.name.trim()) newErrors.name = isRTL ? 'الاسم مطلوب' : 'Name is required';
         if (!formData.email.trim()) newErrors.email = isRTL ? 'البريد الإلكتروني مطلوب' : 'Email is required';
         else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = isRTL ? 'تنسيق البريد الإلكتروني غير صالح' : 'Invalid email format';
+        if (!formData.subject.trim()) newErrors.subject = isRTL ? 'الموضوع مطلوب' : 'Subject is required';
         if (!formData.message.trim()) newErrors.message = isRTL ? 'الرسالة مطلوبة' : 'Message is required';
 
         if (Object.keys(newErrors).length > 0) {
@@ -233,7 +234,7 @@ const ContactPage = () => {
                                             value={formData.name}
                                             onChange={handleChange}
                                             isRTL={isRTL}
-                                            className={`transition-all shadow-sm ${errors.name ? 'border-red-400 bg-red-50/10 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200/80 bg-gray-50/50 focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:bg-white'}`}
+                                            className={`transition-all shadow-sm ${errors.name ? 'border-red-400 bg-red-50/10 focus:border-red-500 focus:ring-0' : 'border-gray-200/80 bg-gray-50/50 focus:border-secondary focus:ring-0 focus:bg-white'}`}
                                         />
                                         <ErrorMessage msg={errors.name} className="text-[12px] sm:text-sm mt-1" />
                                     </div>
@@ -247,7 +248,7 @@ const ContactPage = () => {
                                             value={formData.email}
                                             onChange={handleChange}
                                             isRTL={isRTL}
-                                            className={`transition-all shadow-sm ${errors.email ? 'border-red-400 bg-red-50/10 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200/80 bg-gray-50/50 focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:bg-white'}`}
+                                            className={`transition-all shadow-sm ${errors.email ? 'border-red-400 bg-red-50/10 focus:border-red-500 focus:ring-0' : 'border-gray-200/80 bg-gray-50/50 focus:border-secondary focus:ring-0 focus:bg-white'}`}
                                         />
                                         <ErrorMessage msg={errors.email} className="text-[12px] sm:text-sm mt-1" />
                                     </div>
@@ -263,8 +264,9 @@ const ContactPage = () => {
                                         value={formData.subject}
                                         onChange={handleChange}
                                         isRTL={isRTL}
-                                        className="border-gray-200/80 bg-gray-50/50 focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all shadow-sm"
+                                        className={`transition-all shadow-sm ${errors.subject ? 'border-red-400 bg-red-50/10 focus:border-red-500 focus:ring-0' : 'border-gray-200/80 bg-gray-50/50 focus:border-secondary focus:ring-0 focus:bg-white'}`}
                                     />
+                                    <ErrorMessage msg={errors.subject} className="text-[12px] sm:text-sm mt-1" />
                                 </div>
                                 
                                 <div>
@@ -276,7 +278,7 @@ const ContactPage = () => {
                                         value={formData.message}
                                         onChange={handleChange}
                                         rows={5}
-                                        className={`resize-none bg-gray-50/50 focus:bg-white transition-all shadow-sm focus:ring-2 ${errors.message ? 'border-red-400 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200/80 focus:ring-secondary/20 focus:border-secondary'}`}
+                                        className={`resize-none bg-gray-50/50 focus:bg-white transition-all shadow-sm focus:ring-0 ${errors.message ? 'border-red-400 focus:border-red-500' : 'border-gray-200/80 focus:border-secondary'}`}
                                     />
                                     <ErrorMessage msg={errors.message} className="text-[12px] sm:text-sm mt-1" />
                                 </div>
@@ -302,7 +304,7 @@ const ContactPage = () => {
                                     <motion.div 
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="mt-4 p-4 mt-6 rounded-xl bg-green-50 border border-green-200 text-green-800 font-bold text-sm text-center flex items-center justify-center gap-3"
+                                        className="p-4 mt-6 rounded-xl bg-green-50 border border-green-200 text-green-800 font-bold text-sm text-center flex items-center justify-center gap-3"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                                             <HeartHandshake className="w-4 h-4 text-green-600" />
@@ -315,7 +317,7 @@ const ContactPage = () => {
                     </div>
 
                     {/* Right Column: Creative Illustration Sub-Section */}
-                    <div className="order-1 lg:order-2 hidden lg:flex items-center justify-center relative w-full h-[500px]">
+                    <div className="order-1 lg:order-2 hidden lg:flex items-center justify-center relative w-full h-125">
                         <div className="relative w-full max-w-md aspect-square">
                             {/* Decorative Background Orbs (Vivid & Dark Glassy Feel) */}
                             <motion.div 
@@ -346,7 +348,7 @@ const ContactPage = () => {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ duration: 0.8 }}
-                                className="absolute inset-4 sm:inset-10 bg-slate-900/40 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/20 flex flex-col overflow-hidden relative z-10 p-6 md:p-8"
+                                className="absolute inset-4 sm:inset-10 bg-slate-900/40 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/20 flex flex-col overflow-hidden z-10 p-6 md:p-8"
                             >
                                 {/* Inner grain/texture overlay to simulate real frosted glass */}
                                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
@@ -412,4 +414,4 @@ const ContactPage = () => {
     );
 };
 
-export default ContactPage;
+export default Contact;

@@ -15,7 +15,7 @@ const Login = lazy(() => import("../pages/Login"));
 const SignUp = lazy(() => import("../pages/Register"));
 const Profile = lazy(() => import("../pages/Profile"));
 const ResetPassword = lazy(() => import("../pages/ResetPassword"));
-const ContactPage = lazy(() => import("../pages/ContactPage"));
+const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 
@@ -93,7 +93,7 @@ export const router = createBrowserRouter([
         path: "contact",
         element: (
           <Suspense fallback={<LoadingScreen />}>
-            <ContactPage />
+            <Contact />
           </Suspense>
         ),
       },

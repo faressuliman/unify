@@ -1,6 +1,5 @@
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from './sheet';
-import { Button } from './button';
-import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Bell, Mail, LogOut, Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetClose } from './sheet';
+import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Bell, Mail, LogOut } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,11 +17,6 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild className="2xl:hidden">
-        <Button variant="ghost" size="icon" aria-label="Open menu" className="cursor-pointer">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
       <SheetContent side={language === 'ar' ? 'left' : 'right'} className="w-75 sm:w-87.5 flex flex-col p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         {/* Header row: title + close button on same line */}
         <div className="flex items-start justify-between px-6 pt-6 pb-2 shrink-0">

@@ -13,122 +13,17 @@ import PageHeader from '@/components/ui/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
+import { en } from '../data/english';
+import { ar } from '../data/arabic';
+import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
+import { getEyeColorOptions, getHairColorOptions } from '../data/appearanceOptions';
 
 const CreatePost = () => {
     const { language } = useLanguage();
     const isRTL = language === 'ar';
     const navigate = useNavigate();
 
-    const t = isRTL ? {
-        title: 'إنشاء منشور',
-        heroTitle: 'إنشاء منشور جديد',
-        heroSubtitle: 'أبلغ عن شخص مفقود أو معثور عليه للمساعدة في لم شمل العائلات.',
-        personalDetails: 'المعلومات الأساسية',
-        appearanceDetails: 'المظهر والملابس',
-        lastSeenDetails: 'تفاصيل آخر ظهور',
-        uploadPhoto: 'رفع الصورة',
-        postType: 'نوع المنشور',
-        missingPerson: 'شخص مفقود',
-        foundPerson: 'شخص معثور عليه',
-        firstName: 'الاسم الأول',
-        firstNamePlaceholder: 'أدخل الاسم الأول',
-        lastName: 'اسم العائلة',
-        lastNamePlaceholder: 'أدخل اسم العائلة',
-        age: 'العمر',
-        agePlaceholder: 'العمر',
-        gender: 'الجنس',
-        selectGender: 'اختر الجنس...',
-        male: 'ذكر',
-        female: 'أنثى',
-        hairColor: 'لون الشعر',
-        selectColor: 'اختر...',
-        black: 'أسود',
-        brown: 'بني',
-        blonde: 'أشقر',
-        white: 'أبيض / رمادي',
-        eyeColor: 'لون العينين',
-        blue: 'أزرق',
-        green: 'أخضر',
-        hazel: 'عسلي',
-        clothing: 'وصف الملابس',
-        clothingPlaceholder: 'وصف الملابس',
-        city: 'المدينة',
-        selectCity: 'اختر المدينة...',
-        cairo: 'القاهرة',
-        alexandria: 'الإسكندرية',
-        giza: 'الجيزة',
-        lastSeenLocation: 'مكان آخر ظهور',
-        lastSeenLocationPlaceholder: 'مكان آخر ظهور',
-        lastSeenDate: 'تاريخ آخر ظهور',
-        lastSeenDatePlaceholder: 'تاريخ آخر ظهور',
-        photo: 'الصورة',
-        dragDropText: 'أو اسحب وأفلت',
-        photoSubtitle: 'يفضل الصور عالية الدقة (صيغة JPG أو PNG)',
-        browseFiles: 'تصفح الملفات',
-        changePhoto: 'تغيير الصورة',
-        removeText: 'إزالة',
-        photoWarning: 'تتم مراجعة جميع التقديمات من قبل فريقنا. سيتم حماية صور الأشخاص المفقودين وفقًا لسياسة الخصوصية الخاصة بنا.',
-        cancel: 'إلغاء',
-        submit: 'نشر',
-        success: 'تم إرسال المنشور للمراجعة بنجاح.',
-        requiredField: 'هذا الحقل مطلوب',
-        uploadHint: 'يفضل صورة واضحة للوجه'
-    } : {
-        title: 'Create Post',
-        heroTitle: 'Create New Post',
-        heroSubtitle: 'Report a missing or found person to help reunite families.',
-        personalDetails: 'Basic Information',
-        appearanceDetails: 'Appearance & Details',
-        lastSeenDetails: 'Last Seen Details',
-        uploadPhoto: 'Upload Photo',
-        postType: 'Post Type',
-        missingPerson: 'Missing Person',
-        foundPerson: 'Found Person',
-        firstName: 'First Name',
-        firstNamePlaceholder: 'Enter first name',
-        lastName: 'Last Name',
-        lastNamePlaceholder: 'Enter last name',
-        age: 'Age',
-        agePlaceholder: 'Age',
-        gender: 'Gender',
-        selectGender: 'Select...',
-        male: 'Male',
-        female: 'Female',
-        hairColor: 'Hair Color',
-        selectColor: 'Select...',
-        black: 'Black',
-        brown: 'Brown',
-        blonde: 'Blonde',
-        white: 'White/Gray',
-        eyeColor: 'Eye Color',
-        blue: 'Blue',
-        green: 'Green',
-        hazel: 'Hazel',
-        clothing: 'Clothing Description',
-        clothingPlaceholder: 'Clothing Description',
-        city: 'City',
-        selectCity: 'Select city...',
-        cairo: 'Cairo',
-        alexandria: 'Alexandria',
-        giza: 'Giza',
-        lastSeenLocation: 'Last Seen Location',
-        lastSeenLocationPlaceholder: 'Last Seen Location',
-        lastSeenDate: 'Last Seen Date',
-        lastSeenDatePlaceholder: 'Last Seen Date',
-        photo: 'Photo',
-        dragDropText: 'or drag and drop',
-        photoSubtitle: 'JPG, PNG up to 10MB. High resolution preferred.',
-        browseFiles: 'Browse Files',
-        changePhoto: 'Change Photo',
-        removeText: 'Remove',
-        photoWarning: 'All submissions are reviewed by our team. Photos of missing persons will be protected according to our privacy policy.',
-        photoWarningBadge: 'All submissions are reviewed by our team. Photos of missing persons will be protected according to our privacy policy.',
-        cancel: 'Cancel',
-        submit: 'Submit Post',
-        success: 'Your post has been submitted for review successfully.',
-        requiredField: 'This field is required',
-        uploadHint: 'Clear face photo preferred'
-    };
+    const t = language === 'ar' ? ar.createPost : en.createPost;
 
     const postTypeOptions = [
         { label: t.missingPerson, value: 'missing' },
@@ -143,26 +38,26 @@ const CreatePost = () => {
 
     const colorOptions = [
         { label: t.selectColor, value: '' },
-        { label: t.black, value: 'black' },
-        { label: t.brown, value: 'brown' },
-        { label: t.blonde, value: 'blonde' },
-        { label: t.white, value: 'white' }
+        ...getHairColorOptions(language)
     ];
 
     const eyeOptions = [
         { label: t.selectColor, value: '' },
-        { label: t.black, value: 'black' },
-        { label: t.brown, value: 'brown' },
-        { label: t.blue, value: 'blue' },
-        { label: t.green, value: 'green' },
-        { label: t.hazel, value: 'hazel' }
+        ...getEyeColorOptions(language)
     ];
 
     const cityOptions = [
         { label: t.selectCity, value: '' },
-        { label: t.cairo, value: 'cairo' },
-        { label: t.alexandria, value: 'alexandria' },
-        { label: t.giza, value: 'giza' }
+        ...(isRTL ? EGYPTIAN_CITIES_AR : EGYPTIAN_CITIES).map((city) => ({ value: city, label: city }))
+    ];
+
+    const affiliationOptions = [
+        { label: t.affiliationPlaceholder, value: '' },
+        { label: t.affiliationNone, value: 'none' },
+        { label: t.affiliationShelter, value: 'shelter' },
+        { label: t.affiliationHospital, value: 'hospital' },
+        { label: t.affiliationNonProfit, value: 'nonprofit' },
+        { label: t.affiliationGovernment, value: 'government' }
     ];
 
     const [formData, setFormData] = useState({
@@ -175,6 +70,10 @@ const CreatePost = () => {
         eyeColor: '',
         clothingDescription: '',
         city: '',
+        foundLocation: '',
+        affiliation: '',
+        organizationName: '',
+        reporterPhone: '',
         lastSeenLocation: '',
         lastSeenDate: '',
     });
@@ -193,9 +92,20 @@ const CreatePost = () => {
     };
 
     const handleSelectChange = (name: string, value: string) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            if (name === 'affiliation' && (value === '' || value === 'none')) {
+                return { ...prev, affiliation: value, organizationName: '' };
+            }
+
+            return { ...prev, [name]: value };
+        });
+
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+
+        if (name === 'affiliation' && errors.organizationName) {
+            setErrors(prev => ({ ...prev, organizationName: '' }));
         }
     };
 
@@ -207,7 +117,7 @@ const CreatePost = () => {
         if (!formData.firstName.trim()) newErrors.firstName = t.requiredField;
         if (!formData.lastName.trim()) newErrors.lastName = t.requiredField;
         if (!formData.age.trim()) newErrors.age = t.requiredField;
-        else if (Number(formData.age) < 1 || Number(formData.age) > 90) newErrors.age = isRTL ? 'يجب أن يكون العمر بين 1 و 90' : 'Age must be between 1 and 90';
+        else if (Number(formData.age) < 1 || Number(formData.age) > 90) newErrors.age = t.ageRangeError;
         if (!formData.gender) newErrors.gender = t.requiredField;
         if (!formData.hairColor) newErrors.hairColor = t.requiredField;
         if (!formData.eyeColor) newErrors.eyeColor = t.requiredField;
@@ -216,12 +126,24 @@ const CreatePost = () => {
         if (!formData.clothingDescription.trim()) {
             newErrors.clothingDescription = t.requiredField;
         } else if (descriptionWords.length < 20) {
-            newErrors.clothingDescription = isRTL ? 'يجب أن يكون الوصف 20 كلمة على الأقل' : 'Description must be at least 20 words';
+            newErrors.clothingDescription = t.minWordsError;
         }
         
         if (!formData.city) newErrors.city = t.requiredField;
-        if (!formData.lastSeenLocation.trim()) newErrors.lastSeenLocation = t.requiredField;
-        if (!formData.lastSeenDate) newErrors.lastSeenDate = t.requiredField;
+
+        if (formData.postType === 'missing') {
+            if (!formData.lastSeenLocation.trim()) newErrors.lastSeenLocation = t.requiredField;
+            if (!formData.lastSeenDate) newErrors.lastSeenDate = t.requiredField;
+        } else {
+            if (!formData.foundLocation.trim()) newErrors.foundLocation = t.requiredField;
+            if (formData.affiliation && formData.affiliation !== 'none' && !formData.organizationName.trim()) {
+                newErrors.organizationName = t.requiredField;
+            }
+            if (formData.reporterPhone.trim() && !/^\d{11}$/.test(formData.reporterPhone.trim())) {
+                newErrors.reporterPhone = t.phoneDigitsError;
+            }
+        }
+
         if (!photo) newErrors.photo = t.requiredField;
         
         if (Object.keys(newErrors).length > 0) {
@@ -366,7 +288,7 @@ const CreatePost = () => {
                             {/* Appearance & Details Card */}
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                                 <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
-                                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                                         <FileText className="w-5 h-5" />
                                     </span>
                                     {t.appearanceDetails}
@@ -417,45 +339,111 @@ const CreatePost = () => {
                             {/* Last Seen Information Card */}
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                                 <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
-                                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+                                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                                         <MapPin className="w-5 h-5" />
                                     </span>
-                                    {t.lastSeenDetails}
+                                    {formData.postType === 'missing' ? t.lastSeenDetails : t.foundDetails}
                                 </h2>
 
                                 <div className="space-y-4 font-sans">
-                                    <div>
-                                        <FormInput 
-                                            label={t.lastSeenLocation}
-                                            type="text" 
-                                            name="lastSeenLocation"
-                                            placeholder={t.lastSeenLocationPlaceholder} 
-                                            value={formData.lastSeenLocation}
-                                            onChange={handleChange}
-                                            isRTL={isRTL}
-                                            className={errors.lastSeenLocation ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
-                                        />
-                                        <ErrorMessage msg={errors.lastSeenLocation} className="text-[12px] mt-1 text-red-500" />
-                                    </div>
-                                    
-                                    <div>
-                                        <LocalizedDateInput
-                                            id="lastSeenDate"
-                                            label={t.lastSeenDate}
-                                            value={formData.lastSeenDate}
-                                            onChange={(val) => handleSelectChange('lastSeenDate', val)}
-                                            placeholder={t.lastSeenDatePlaceholder}
-                                            isRTL={isRTL}
-                                        />
-                                        <ErrorMessage msg={errors.lastSeenDate} className="text-[12px] mt-1 text-red-500" />
-                                    </div>
+                                    {formData.postType === 'missing' ? (
+                                        <>
+                                            <div>
+                                                <FormInput 
+                                                    label={t.lastSeenLocation}
+                                                    type="text" 
+                                                    name="lastSeenLocation"
+                                                    placeholder={t.lastSeenLocationPlaceholder} 
+                                                    value={formData.lastSeenLocation}
+                                                    onChange={handleChange}
+                                                    isRTL={isRTL}
+                                                    className={errors.lastSeenLocation ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
+                                                />
+                                                <ErrorMessage msg={errors.lastSeenLocation} className="text-[12px] mt-1 text-red-500" />
+                                            </div>
+
+                                            <div>
+                                                <LocalizedDateInput
+                                                    id="lastSeenDate"
+                                                    label={t.lastSeenDate}
+                                                    value={formData.lastSeenDate}
+                                                    onChange={(val) => handleSelectChange('lastSeenDate', val)}
+                                                    placeholder={t.lastSeenDatePlaceholder}
+                                                    isRTL={isRTL}
+                                                />
+                                                <ErrorMessage msg={errors.lastSeenDate} className="text-[12px] mt-1 text-red-500" />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div>
+                                                <FormInput 
+                                                    label={t.foundLocation}
+                                                    type="text" 
+                                                    name="foundLocation"
+                                                    placeholder={t.foundLocationPlaceholder} 
+                                                    value={formData.foundLocation}
+                                                    onChange={handleChange}
+                                                    isRTL={isRTL}
+                                                    className={errors.foundLocation ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
+                                                />
+                                                <ErrorMessage msg={errors.foundLocation} className="text-[12px] mt-1 text-red-500" />
+                                            </div>
+
+                                            <div className="rounded-xl border border-slate-200 p-4">
+                                                <SelectMenu
+                                                    id="affiliation"
+                                                    label={<span>{t.affiliatedQuestion} <span className="text-slate-500">{t.optional}</span></span>}
+                                                    value={formData.affiliation}
+                                                    options={affiliationOptions}
+                                                    onChange={(val) => handleSelectChange('affiliation', val)}
+                                                    isRTL={isRTL}
+                                                />
+
+                                                {formData.affiliation && formData.affiliation !== 'none' && (
+                                                    <div className="mt-4">
+                                                        <FormInput
+                                                            label={t.organizationName}
+                                                            type="text"
+                                                            name="organizationName"
+                                                            placeholder={t.organizationNamePlaceholder}
+                                                            value={formData.organizationName}
+                                                            onChange={handleChange}
+                                                            isRTL={isRTL}
+                                                            className={errors.organizationName ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
+                                                        />
+                                                        <ErrorMessage msg={errors.organizationName} className="text-[12px] mt-1 text-red-500" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <FormInput
+                                                    label={t.reporterPhone}
+                                                    type="tel"
+                                                    name="reporterPhone"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    placeholder={t.reporterPhonePlaceholder}
+                                                    value={formData.reporterPhone}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                                        handleSelectChange('reporterPhone', val);
+                                                    }}
+                                                    isRTL={isRTL}
+                                                    className={errors.reporterPhone ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
+                                                />
+                                                <ErrorMessage msg={errors.reporterPhone} className="text-[12px] mt-1 text-red-500" />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Photo Upload Card */}
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                                 <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
-                                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                                         <Camera className="w-5 h-5" />
                                     </span>
                                     {t.uploadPhoto}
@@ -477,12 +465,37 @@ const CreatePost = () => {
                                 />
                                 <ErrorMessage msg={errors.photo} className="text-[12px] mt-2 text-red-500" />
                             </div>
+
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row gap-3 w-full">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate(-1)}
+                                    className="order-2 sm:order-1 flex-1 w-full py-3.5 text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer text-sm font-bold rounded-xl transition-all"
+                                >
+                                    {t.cancel}
+                                </button>
+
+                                <SubmitButton
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="order-1 sm:order-2 flex-1 w-full py-3.5 bg-secondary hover:bg-secondary/90 text-white font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2"
+                                >
+                                    {isSubmitting ? (
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    ) : (
+                                        <>
+                                            <Send className="w-4 h-4" />
+                                            <span>{t.submit}</span>
+                                        </>
+                                    )}
+                                </SubmitButton>
+                            </div>
                         </motion.div>
 
                         {/* RIGHT COLUMN: Illustration & Action Buttons */}
-                        <motion.div variants={itemVariants} className="lg:sticky lg:top-24 space-y-6">
+                        <motion.div variants={itemVariants} className="hidden lg:block lg:sticky lg:top-24 space-y-6">
                             
-                            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col items-center justify-center overflow-hidden relative min-h-[400px] lg:min-h-[500px]">
+                            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col items-center justify-center overflow-hidden relative min-h-100 lg:min-h-125">
                                 
                                 {/* Animated UI Composition mimicking the user's illustration */}
                                 <div className={`relative w-full max-w-sm aspect-square transition-transform duration-500 ${formData.postType === 'found' ? 'scale-[1.02]' : ''}`}>
@@ -566,32 +579,8 @@ const CreatePost = () => {
                             
                                
                                 
-                                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row gap-3 w-full">
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate(-1)}
-                                        className="flex-1 w-full py-3.5 text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer text-sm font-bold rounded-xl transition-all"
-                                    >
-                                        {t.cancel}
-                                    </button>
-                                    
-                                    <SubmitButton 
-                                        type="submit" 
-                                        disabled={isSubmitting}
-                                        className="flex-1 w-full py-3.5 bg-secondary hover:bg-secondary/90 text-white font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {isSubmitting ? (
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        ) : (
-                                            <>
-                                                <Send className="w-4 h-4" />
-                                                <span>{t.submit}</span>
-                                            </>
-                                        )}
-                                    </SubmitButton>
-                                </div>
-
                         </motion.div>
+
                     </form>
                 </div>
             </motion.div>

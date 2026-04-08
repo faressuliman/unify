@@ -1,12 +1,11 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { en } from '../data/english';
-import { ar } from '../data/arabic';
 
 type Language = 'en' | 'ar';
 
 const translations: Record<Language, Record<string, string>> = {
   en: en.translations,
-  ar: ar.translations,
+  ar: {},
 };
 
 interface LanguageContextType {
@@ -22,6 +21,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('language');
     return saved === 'ar' ? 'ar' : 'en';
   });
+  const [arabicTranslations, setArabicTranslations] = useState<Record<string, string> | null>(null);
 
   const toggleLanguage = () => {
     setLanguage((prev) => {
@@ -37,8 +37,25 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('language', language);
   }, [language]);
 
+  useEffect(() => {
+    if (language !== 'ar' || arabicTranslations) {
+      return;
+    }
+
+    void import('../data/arabic').then(({ ar }) => {
+      setArabicTranslations(ar.translations);
+    });
+  }, [language, arabicTranslations]);
+
+  const activeTranslations = useMemo(() => {
+    if (language === 'ar') {
+      return arabicTranslations ?? translations.en;
+    }
+    return translations.en;
+  }, [language, arabicTranslations]);
+
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    return activeTranslations[key] || translations.en[key] || key;
   };
 
   return (

@@ -10,6 +10,7 @@ import SubmitButton from '../ui/SubmitButton';
 import ImageUpload from '../ui/ImageUpload';
 import { useLanguage } from '../../context/LanguageContext';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../../data/cities';
+import { getEyeColorOptions, getHairColorOptions } from '../../data/appearanceOptions';
 
 export interface SearchFilters {
   firstName: string;
@@ -57,28 +58,9 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
   const hasAtLeastOneInput = Object.values(watchedFilters).some((value) => value?.trim() !== '') || Boolean(searchImage);
   const hasActiveFilters = Object.values(watchedFilters).some((value) => value?.trim() !== '');
 
-  const hairColors = useMemo(
-    () => [
-      { value: 'Black', label: 'Black' },
-      { value: 'Brown', label: 'Brown' },
-      { value: 'Blonde', label: 'Blonde' },
-      { value: 'Red', label: 'Red' },
-      { value: 'Gray', label: 'Gray' },
-      { value: 'White', label: 'White' },
-    ],
-    []
-  );
+  const hairColors = useMemo(() => getHairColorOptions(language), [language]);
 
-  const eyeColors = useMemo(
-    () => [
-      { value: 'Brown', label: 'Brown' },
-      { value: 'Blue', label: 'Blue' },
-      { value: 'Green', label: 'Green' },
-      { value: 'Hazel', label: 'Hazel' },
-      { value: 'Gray', label: 'Gray' },
-    ],
-    []
-  );
+  const eyeColors = useMemo(() => getEyeColorOptions(language), [language]);
 
   const genderOptions = useMemo(
     () => [

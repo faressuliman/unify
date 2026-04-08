@@ -14,11 +14,15 @@ import compassImg from '../assets/compass.jpg';
 import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
+import { forgotPasswordSchema } from '../validation';
 
 const ForgetPassword = () => {
     const { language } = useLanguage();
     const content = language === 'ar' ? ar.login : en.login; // Using login strings as fallback
     const isRTL = language === 'ar';
+    const localizeError = (message: string) => {
+        return content.validation[message as keyof typeof content.validation] ?? message;
+    };
 
     const pageTitle = isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?';
     const pageSubtitle = isRTL 
@@ -33,14 +37,11 @@ const ForgetPassword = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (!email.trim()) {
-            setError(isRTL ? 'البريد الإلكتروني مطلوب' : 'Email is required');
-            return;
-        }
-        
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
-            setError(isRTL ? 'تنسيق البريد الإلكتروني غير صالح' : 'Invalid email format');
+        const validationResult = forgotPasswordSchema.safeParse({ email });
+
+        if (!validationResult.success) {
+            const firstIssue = validationResult.error.issues[0];
+            setError(localizeError(firstIssue?.message ?? ''));
             return;
         }
 

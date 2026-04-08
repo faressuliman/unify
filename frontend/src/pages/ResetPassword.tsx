@@ -48,6 +48,9 @@ const ResetPassword = () => {
     const contentLogin = language === 'ar' ? ar.login : en.login;
     const contentSignup = language === 'ar' ? ar.signup : en.signup;
     const isRTL = language === 'ar';
+    const localizeError = (message: string) => {
+        return contentSignup.validation[message as keyof typeof contentSignup.validation] ?? message;
+    };
 
     const pageTitle = isRTL ? 'إعادة ضبط كلمة المرور' : 'Reset Password';
     const pageSubtitle = isRTL ? 'أدخل كلمة المرور الجديدة لحسابك لتتمكن من تسجيل الدخول.' : 'Enter a new password for your account to sign in.';
@@ -78,7 +81,7 @@ const ResetPassword = () => {
             const formattedErrors: { [key: string]: string } = {};
             validationResult.error.issues.forEach((err) => {
                 if (err.path[0]) {
-                    formattedErrors[err.path[0].toString()] = err.message;
+                    formattedErrors[err.path[0].toString()] = localizeError(err.message);
                 }
             });
             setErrors(formattedErrors);

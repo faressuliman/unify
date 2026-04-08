@@ -92,6 +92,9 @@ export default function LoadingScreen() {
               <img
                 src={unifyLogo}
                 alt="Unify Logo"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="h-28 w-auto object-contain relative z-10 drop-shadow-2xl"
               />
             </motion.div>
