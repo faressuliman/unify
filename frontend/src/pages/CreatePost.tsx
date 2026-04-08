@@ -60,11 +60,19 @@ const CreatePost = () => {
         { label: t.affiliationGovernment, value: 'government' }
     ];
 
+    const ageUnitOptions = [
+        { label: language === 'ar' ? 'اختر وحدة العمر' : 'Select Age Unit', value: '' },
+        { label: language === 'ar' ? 'سنوات' : 'Years', value: 'years' },
+        { label: language === 'ar' ? 'أشهر' : 'Months', value: 'months' },
+        { label: language === 'ar' ? 'أيام' : 'Days', value: 'days' }
+    ];
+
     const [formData, setFormData] = useState({
         postType: 'missing',
         firstName: '',
         lastName: '',
         age: '',
+        ageUnit: '',
         gender: '',
         hairColor: '',
         eyeColor: '',
@@ -96,6 +104,9 @@ const CreatePost = () => {
             if (name === 'affiliation' && (value === '' || value === 'none')) {
                 return { ...prev, affiliation: value, organizationName: '' };
             }
+            if (name === 'ageUnit') {
+                return { ...prev, [name]: value, age: '' };
+            }
 
             return { ...prev, [name]: value };
         });
@@ -116,8 +127,22 @@ const CreatePost = () => {
         
         if (!formData.firstName.trim()) newErrors.firstName = t.requiredField;
         if (!formData.lastName.trim()) newErrors.lastName = t.requiredField;
-        if (!formData.age.trim()) newErrors.age = t.requiredField;
-        else if (Number(formData.age) < 1 || Number(formData.age) > 90) newErrors.age = t.ageRangeError;
+        
+        if (!formData.ageUnit) {
+            newErrors.ageUnit = t.requiredField;
+        } else if (!formData.age.trim()) {
+            newErrors.age = t.requiredField;
+        } else {
+            const ageNum = Number(formData.age);
+            if (formData.ageUnit === 'years' && (ageNum < 1 || ageNum > 90)) {
+                newErrors.age = t.ageRangeError;
+            } else if (formData.ageUnit === 'months' && (ageNum < 1 || ageNum > 11)) {
+                newErrors.age = language === 'ar' ? 'الأشهر يجب أن تكون بين 1 و 11' : 'Months must be between 1 and 11';
+            } else if (formData.ageUnit === 'days' && (ageNum < 1 || ageNum > 30)) {
+                newErrors.age = language === 'ar' ? 'الأيام يجب أن تكون بين 1 و 30' : 'Days must be between 1 and 30';
+            }
+        }
+        
         if (!formData.gender) newErrors.gender = t.requiredField;
         if (!formData.hairColor) newErrors.hairColor = t.requiredField;
         if (!formData.eyeColor) newErrors.eyeColor = t.requiredField;
@@ -239,24 +264,50 @@ const CreatePost = () => {
                                         </div>
                                     </div>
 
-                                    <div className="grid gap-4 sm:grid-cols-2 font-sans">
-                                        <div>
-                                            <FormInput 
-                                                label={t.age}
-                                                type="text" 
-                                                name="age"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
-                                                placeholder={t.agePlaceholder} 
-                                                value={formData.age}
-                                                onChange={(e) => {
-                                                    const val = e.target.value.replace(/\D/g, '');
-                                                    if (val === '' || Number(val) <= 90) handleSelectChange('age', val);
-                                                }}
-                                                isRTL={isRTL}
-                                                className={errors.age ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
-                                            />
-                                            <ErrorMessage msg={errors.age} className="text-[12px] mt-1 text-red-500" />
+                                    <div className="grid gap-4 sm:grid-cols-2 font-sans items-start">
+                                        <div className="flex flex-col gap-4">
+                                            <div>
+                                                <SelectMenu 
+                                                    id="ageUnit"
+                                                    label={language === 'ar' ? 'اختر وحدة العمر' : 'Select Age Unit'}
+                                                    value={formData.ageUnit}
+                                                    options={ageUnitOptions}
+                                                    onChange={(val) => handleSelectChange('ageUnit', val)}
+                                                    isRTL={isRTL}
+                                                />
+                                                <ErrorMessage msg={errors.ageUnit} className="text-[12px] mt-1 text-red-500" />
+                                            </div>
+                                            
+                                            {formData.ageUnit && (
+                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                                    <FormInput 
+                                                        label={
+                                                            formData.ageUnit === 'years' ? (language === 'ar' ? 'العمر (بالسنوات)' : 'Age (Years)') : 
+                                                            formData.ageUnit === 'months' ? (language === 'ar' ? 'العمر (بالأشهر)' : 'Age (Months)') : 
+                                                            (language === 'ar' ? 'العمر (بالأيام)' : 'Age (Days)')
+                                                        }
+                                                        type="text" 
+                                                        name="age"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        placeholder={t.agePlaceholder} 
+                                                        value={formData.age}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/\D/g, '');
+                                                            if (val !== '') {
+                                                                const num = Number(val);
+                                                                if (formData.ageUnit === 'years' && num > 90) return;
+                                                                if (formData.ageUnit === 'months' && num > 11) return;
+                                                                if (formData.ageUnit === 'days' && num > 30) return;
+                                                            }
+                                                            handleSelectChange('age', val);
+                                                        }}
+                                                        isRTL={isRTL}
+                                                        className={errors.age ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
+                                                    />
+                                                    <ErrorMessage msg={errors.age} className="text-[12px] mt-1 text-red-500" />
+                                                </motion.div>
+                                            )}
                                         </div>
                                         <div>
                                             <SelectMenu 

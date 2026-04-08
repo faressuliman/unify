@@ -12,6 +12,7 @@ import FormTextArea from '../ui/FormTextArea';
 import SubmitButton from '../ui/SubmitButton';
 import ImageUpload from '../ui/ImageUpload';
 import SegmentedControl from '../ui/SegmentedControl';
+import SelectMenu from '../ui/SelectMenu';
 
 const Poster = () => {
   const { language, t } = useLanguage();
@@ -21,6 +22,7 @@ const Poster = () => {
   const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
   const [fullName, setFullName] = useState('');
   const [age, setAge] = useState('');
+  const [ageUnit, setAgeUnit] = useState('');
   const [height, setHeight] = useState('');
   const [lastSeen, setLastSeen] = useState('');
   const [clothing, setClothing] = useState('');
@@ -29,6 +31,13 @@ const Poster = () => {
   const [pdfStatus, setPdfStatus] = useState<'idle' | 'processing' | 'done' | 'error'>('idle');
   const [pdfMessage, setPdfMessage] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const ageUnitOptions = [
+    { label: language === 'ar' ? 'اختر الوحدة' : 'Select Unit', value: '' },
+    { label: language === 'ar' ? 'سنوات' : 'Years', value: 'years' },
+    { label: language === 'ar' ? 'أشهر' : 'Months', value: 'months' },
+    { label: language === 'ar' ? 'أيام' : 'Days', value: 'days' }
+  ];
 
   const handleImageChange = (file: File | null) => {
     setPhoto(file);
@@ -47,6 +56,7 @@ const Poster = () => {
     const errors: string[] = [];
     if (!photoDataUrl) errors.push(t('poster.photoReq'));
     if (!fullName.trim()) errors.push(t('poster.nameReq'));
+    if (!ageUnit) errors.push(language === 'ar' ? 'الوحدة مطلوبة' : 'Age unit is required');
     if (!age) errors.push(t('poster.ageReq'));
     if (!height) errors.push(t('poster.heightReq'));
     if (!lastSeen.trim()) errors.push(t('poster.locReq'));
@@ -144,23 +154,50 @@ const Poster = () => {
                   className="font-sans"
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 font-sans">
-                  <FormInput
-                    id="age"
-                    label={t('poster.age')}
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={age}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      if (val === '' || Number(val) <= 100) {
-                        setAge(val);
-                      }
-                    }}
-                    placeholder={t('poster.agePlaceholder')}
-                    className="font-sans"
-                  />
+                <div className="grid gap-4 font-sans">
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <SelectMenu 
+                          id="ageUnit"
+                          label={language === 'ar' ? 'اختر وحدة العمر' : 'Select Age Unit'}
+                          value={ageUnit}
+                          options={ageUnitOptions}
+                          onChange={(val) => {
+                              setAgeUnit(val);
+                              setAge(''); // clear age when unit changes to match CreatePost behavior
+                          }}
+                          isRTL={isRTL}
+                      />
+                    </div>
+                    {ageUnit && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                        <FormInput
+                          id="age"
+                          label={
+                            ageUnit === 'years' ? (language === 'ar' ? 'العمر (بالسنوات)' : 'Age (Years)') : 
+                            ageUnit === 'months' ? (language === 'ar' ? 'العمر (بالأشهر)' : 'Age (Months)') : 
+                            (language === 'ar' ? 'العمر (بالأيام)' : 'Age (Days)')
+                          }
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={age}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            if (val !== '') {
+                                const num = Number(val);
+                                if (ageUnit === 'years' && num > 90) return;
+                                if (ageUnit === 'months' && num > 11) return;
+                                if (ageUnit === 'days' && num > 30) return;
+                            }
+                            setAge(val);
+                          }}
+                          placeholder={t('poster.agePlaceholder')}
+                          className="font-sans"
+                        />
+                      </motion.div>
+                    )}
+                  </div>
 
                   <FormInput
                     id="height"
@@ -353,7 +390,7 @@ const Poster = () => {
                   <div className="flex flex-col">
                     <span className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? 'tracking-none normal-case' : 'uppercase tracking-[0.2em]'}`}>{t('poster.age')}</span>
                     <span className="text-2xl font-black text-slate-900 leading-none" style={isRTL ? { letterSpacing: '0' } : {}}>
-                      {age ? `${age} ${t('poster.years')}` : t('poster.notProvided')}
+                      {age && ageUnit ? `${age} ${ageUnit === 'years' ? (language === 'ar' ? 'سنوات' : 'Years') : ageUnit === 'months' ? (language === 'ar' ? 'شهر' : 'Months') : (language === 'ar' ? 'يوم' : 'Days')}` : t('poster.notProvided')}
                     </span>
                   </div>
                   <div className="flex flex-col">
