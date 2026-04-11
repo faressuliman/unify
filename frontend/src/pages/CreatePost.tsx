@@ -214,7 +214,7 @@ const CreatePost = () => {
                     <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-2 lg:items-start mt-6">
                         
                         {/* LEFT COLUMN: Input Forms */}
-                        <motion.div className="space-y-6" variants={itemVariants}>
+                        <motion.div className="space-y-6 min-w-0" variants={itemVariants}>
                             
                             {/* Basic Information Card */}
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
@@ -441,10 +441,10 @@ const CreatePost = () => {
                                                 <ErrorMessage msg={errors.foundLocation} className="text-[12px] mt-1 text-red-500" />
                                             </div>
 
-                                            <div className="rounded-xl border border-slate-200 p-4">
+                                            <div className="rounded-xl border border-slate-200 p-4 min-w-0">
                                                 <SelectMenu
                                                     id="affiliation"
-                                                    label={<span>{t.affiliatedQuestion} <span className="text-slate-500">{t.optional}</span></span>}
+                                                    label={<span className="block whitespace-normal wrap-break-word leading-snug">{t.affiliatedQuestion} <span className="text-slate-500">{t.optional}</span></span>}
                                                     value={formData.affiliation}
                                                     options={affiliationOptions}
                                                     onChange={(val) => handleSelectChange('affiliation', val)}

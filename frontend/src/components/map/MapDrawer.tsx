@@ -31,10 +31,12 @@ export default function MapDrawer({
 
       <SheetContent
         side={isRTL ? 'right' : 'left'}
-        className="w-[85vw] sm:w-87.5 p-0"
+        className="w-[85vw] sm:w-87.5 p-0 overflow-hidden"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        {content}
+        <div className="h-full overflow-hidden">
+          {content}
+        </div>
       </SheetContent>
     </Sheet>
   );

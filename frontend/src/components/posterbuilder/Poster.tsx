@@ -129,6 +129,7 @@ const Poster = () => {
             title={t('poster.title')}
             subtitle={t('poster.subtitle')}
             showArrow={true}
+            titleClassName={!isRTL ? 'tracking-[0.08em] sm:tracking-widest' : ''}
           />
         </motion.div>
 

@@ -8,9 +8,10 @@ interface PageHeaderProps {
   subtitle: string;
   showArrow?: boolean;
   className?: string;
+  titleClassName?: string;
 }
 
-export default function PageHeader({ navigatedTo, title, subtitle, showArrow, className = "mb-8 w-full max-w-400 mx-auto px-6 lg:px-12" }: PageHeaderProps) {
+export default function PageHeader({ navigatedTo, title, subtitle, showArrow, className = "mb-8 w-full max-w-400 mx-auto px-6 lg:px-12", titleClassName = '' }: PageHeaderProps) {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
 
@@ -38,7 +39,7 @@ export default function PageHeader({ navigatedTo, title, subtitle, showArrow, cl
         className="flex flex-col items-start gap-1"
       >
         <div className="flex items-center gap-2 sm:gap-4">
-          <h1 className={`text-lg sm:text-2xl md:text-3xl font-extrabold text-tertiary uppercase leading-tight whitespace-nowrap ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
+          <h1 className={`text-lg sm:text-2xl md:text-3xl font-extrabold text-tertiary uppercase leading-tight whitespace-nowrap ${isRTL ? 'tracking-normal' : 'tracking-widest'} ${titleClassName}`}>
             {title}
           </h1>
           {showArrow && (

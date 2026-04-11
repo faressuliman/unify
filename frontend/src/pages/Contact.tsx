@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, User, MessageSquare, Send, HeartHandshake, Home, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Mail, Phone, MapPin, User, MessageSquare, Send, HeartHandshake, Home, ChevronRight, ChevronLeft, ArrowDownRight, ArrowDownLeft } from 'lucide-react';
 import FormInput from '@/components/ui/FormInput';
 import FormTextArea from '@/components/ui/FormTextArea';
 import SubmitButton from '@/components/ui/SubmitButton';
@@ -216,8 +216,13 @@ const Contact = () => {
                             className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 md:p-8 border border-gray-100"
                         >
                             <div className="mb-6 w-full text-start">
-                                <h2 className={`text-xl md:text-2xl font-extrabold text-tertiary uppercase leading-tight mb-2 ${isRTL ? 'tracking-normal' : 'tracking-widest'}`}>
-                                    {t.dropMessage}
+                                <h2 className={`text-xl md:text-2xl font-extrabold text-tertiary uppercase leading-tight mb-2 ${isRTL ? 'tracking-normal' : 'tracking-widest'} flex items-center gap-2`}>
+                                    <span>{t.dropMessage}</span>
+                                    {isRTL ? (
+                                        <ArrowDownLeft className="w-5 h-5 md:w-6 md:h-6 text-secondary shrink-0" />
+                                    ) : (
+                                        <ArrowDownRight className="w-5 h-5 md:w-6 md:h-6 text-secondary shrink-0" />
+                                    )}
                                 </h2>
                                 <p className="text-slate-500 font-medium text-sm md:text-base">{t.subtitle}</p>
                             </div>
@@ -293,8 +298,8 @@ const Contact = () => {
                                             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                         ) : (
                                             <>
-                                                <span>{t.send}</span>
                                                 <Send className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
+                                                <span>{t.send}</span>
                                             </>
                                         )}
                                     </SubmitButton>

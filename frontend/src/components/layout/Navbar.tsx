@@ -16,11 +16,16 @@ import unifyLogo from '../../assets/unify.png';
 
 const LazyDrawer = lazy(() => import('../ui/Drawer').then((module) => ({ default: module.Drawer })));
 
-const prefetchPrimaryRoutes = () => {
+const prefetchCoreRoutes = () => {
   void Promise.all([
     import('../../pages/Search'),
     import('../../pages/CreatePost'),
     import('../../pages/PosterBuilder'),
+  ]);
+};
+
+const prefetchAuthRoutes = () => {
+  void Promise.all([
     import('../../pages/Login'),
     import('../../pages/Register'),
   ]);
@@ -35,7 +40,8 @@ export function Navbar() {
   const [hasActiveChats] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isDrawerLoaded, setIsDrawerLoaded] = useState(false);
-  const hasPrefetchedRoutes = useRef(false);
+  const hasPrefetchedCoreRoutes = useRef(false);
+  const hasPrefetchedAuthRoutes = useRef(false);
   const hasBoundMobileGesturePrefetch = useRef(false);
 
   // Helper to determine current page from path
@@ -78,20 +84,30 @@ export function Navbar() {
     void import('../ui/Drawer');
   };
 
-  const preloadPrimaryRoutes = () => {
-    if (hasPrefetchedRoutes.current) {
+  const preloadCoreRoutes = () => {
+    if (hasPrefetchedCoreRoutes.current) {
       return;
     }
 
-    hasPrefetchedRoutes.current = true;
-    prefetchPrimaryRoutes();
+    hasPrefetchedCoreRoutes.current = true;
+    prefetchCoreRoutes();
+  };
+
+  const preloadAuthRoutes = () => {
+    if (hasPrefetchedAuthRoutes.current) {
+      return;
+    }
+
+    hasPrefetchedAuthRoutes.current = true;
+    prefetchAuthRoutes();
   };
 
   const handleOpenDrawer = () => {
     if (!isDrawerLoaded) {
       setIsDrawerLoaded(true);
     }
-    preloadPrimaryRoutes();
+    preloadCoreRoutes();
+    preloadAuthRoutes();
     setSheetOpen(true);
   };
 
@@ -146,7 +162,7 @@ export function Navbar() {
 
     const handleFirstMobileGesture = () => {
       preloadMobileDrawer();
-      preloadPrimaryRoutes();
+      preloadCoreRoutes();
       window.removeEventListener('touchstart', handleFirstMobileGesture);
       window.removeEventListener('scroll', handleFirstMobileGesture);
       window.removeEventListener('pointerdown', handleFirstMobileGesture);
@@ -163,6 +179,14 @@ export function Navbar() {
     };
   }, [isDrawerLoaded]);
 
+  useEffect(() => {
+    if (!sheetOpen) {
+      return;
+    }
+
+    preloadAuthRoutes();
+  }, [sheetOpen]);
+
   const isScrolledActive =
     isScrolled &&
     !isAuthLikePage &&
@@ -172,7 +196,10 @@ export function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={isReady ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      onMouseEnter={preloadPrimaryRoutes}
+      onMouseEnter={() => {
+        preloadCoreRoutes();
+        preloadAuthRoutes();
+      }}
       className={`${isAuthLikePage || currentPage === 'map' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
         ${isScrolledActive 
           ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none' 
@@ -359,15 +386,18 @@ export function Navbar() {
             onClick={handleOpenDrawer}
             onMouseEnter={() => {
               preloadMobileDrawer();
-              preloadPrimaryRoutes();
+              preloadCoreRoutes();
+              preloadAuthRoutes();
             }}
             onFocus={() => {
               preloadMobileDrawer();
-              preloadPrimaryRoutes();
+              preloadCoreRoutes();
+              preloadAuthRoutes();
             }}
             onTouchStart={() => {
               preloadMobileDrawer();
-              preloadPrimaryRoutes();
+              preloadCoreRoutes();
+              preloadAuthRoutes();
             }}
           >
             <Menu className="h-5 w-5" />

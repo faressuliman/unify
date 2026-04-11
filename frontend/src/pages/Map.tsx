@@ -224,8 +224,8 @@ export default function Map() {
     );
   };
 
-  const renderFiltersContent = (showCloseButton = false) => (
-    <form onSubmit={handleSubmitFilters} className="flex flex-col h-full bg-white font-sans overflow-y-auto w-full">
+  const renderFiltersContent = (showCloseButton = false, enableScroll = true) => (
+    <form onSubmit={handleSubmitFilters} className={`flex flex-col h-full bg-white font-sans w-full ${enableScroll ? 'overflow-y-auto' : 'overflow-hidden'}`}>
       <div className="p-6 pb-5 border-b border-slate-100 flex items-start justify-between gap-4 sticky top-0 bg-white z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
@@ -333,6 +333,7 @@ export default function Map() {
         title={t.title} 
         subtitle={t.subtitle} 
         showArrow={true}
+        className="mb-2 w-full max-w-400 mx-auto px-6 lg:px-12"
       />
       
       <div className="max-w-400 mx-auto w-full px-4 lg:px-8 mt-4 flex-1 flex flex-col lg:flex-row gap-6 relative">
@@ -344,7 +345,7 @@ export default function Map() {
             setIsOpen={setIsFilterOpen}
             isRTL={isRTL}
             triggerLabel={t.filterCases}
-            content={renderFiltersContent(true)}
+            content={renderFiltersContent(true, false)}
           />
 
           <span className="font-bold text-tertiary flex items-center gap-2">
@@ -354,8 +355,8 @@ export default function Map() {
         </div>
 
         {/* Desktop Sidebar Filters */}
-        <aside className="hidden lg:block w-[360px] xl:w-[400px] shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
-          {renderFiltersContent(false)}
+        <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
+          {renderFiltersContent(false, true)}
         </aside>
 
         {/* Main Map View */}
