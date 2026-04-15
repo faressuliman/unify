@@ -1,27 +1,44 @@
 import { useLanguage } from '../../context/LanguageContext';
-import PersonCard from './PersonCard';
+import PersonCard, { type ProfileData } from './PersonCard';
+import FoundPersonCard from '../search/FoundPersonCard';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import { motion } from 'framer-motion';
 import { ArrowDownRight, ArrowDownLeft } from 'lucide-react';
 
-const recentProfiles = [
+const recentProfiles: ProfileData[] = [
   {
     id: '8821',
     name: 'Ahmed Mansour',
-    status: 'Recently Spotted',
+    type: 'found',
+    status: 'Safe',
     location: 'Maadi, Cairo',
     timeAgo: '2 days ago',
     details: 'Male, 28 years old',
+    age: '28 years old',
+    physicalDescription: 'Black hair, Brown eyes, Medium skin tone',
+    clothingDescription: 'Blue shirt, dark jeans, black shoes',
+    foundLocationDetails: 'Near Maadi Metro Station, Cairo',
+    city: 'Cairo',
+    postedBy: 'Maadi District Unit',
+    reportDate: '04/12/2026',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA7n1uWiSEueENl4tMFJmMdBwUopwS2AP_7f7d56aK8v0DzAsHUgPWICRmQm3L29acCvv4wzikHc9Lk5oP_-GXJBiZ4NvMWODkwXQ31f-9yNqEXhAdQf8-IfXkSgW6gke-Xd46P2Bs0tifvwCQr1T194CCuqFKlG9o8PfsiDOZOctjkYewCBp6BmxBxD03pHtMRn-ojndOTzt88jRy5Iqd7mOB3Xj8YAbXA_olluPg58vafLfzxYPbGoEvPzHS_FzQW3_HHOflE7R_4'
   },
   {
     id: '8822',
     name: 'Sarah Jenkins',
-    status: 'Verified Search',
+    type: 'found',
+    status: 'At Hospital',
     location: 'Alexandria',
     timeAgo: '5 hours ago',
     details: 'Female, 24 years old',
+    age: '24 years old',
+    physicalDescription: 'Blonde hair, Green eyes, Fair skin tone',
+    clothingDescription: 'School uniform, backpack',
+    foundLocationDetails: 'Outside Central Station, Alexandria',
+    city: 'Alexandria',
+    postedBy: 'Alexandria General Hospital',
+    reportDate: '04/14/2026',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkRFWq-zWXPf77DHNZEhXhkhl9naa-RWCxmKIePY17BVk-XFFRjV7WnxD2k34LdQKbdcEDVPZyj8ymo_klYeoGJiOJ6_D9Ai6Uy60D4-NRowIX5LmOumM0wq5cs28ZIdwm4t3PdXaci2bWm7ApdULRmDBZ97DXPr7fA2e9MyZ53Bf6NmwUHO2H2Io8neUPjz3AJVUsgL7T5XuXyT-eL_IMM03MIYxoBBrMYABZavZ_FPRKYederogZi63wcfpwsqb_kg34G-xiyjUw'
   },
   {
@@ -85,7 +102,11 @@ export default function RecentUpdates() {
           className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {recentProfiles.map((profile, idx) => (
-            <PersonCard key={profile.id} profile={profile} idx={idx} isRTL={isRTL} />
+            profile.type === 'found' ? (
+              <FoundPersonCard key={profile.id} profile={profile} idx={idx} isRTL={isRTL} />
+            ) : (
+              <PersonCard key={profile.id} profile={profile} idx={idx} isRTL={isRTL} />
+            )
           ))}
         </motion.div>
 

@@ -8,6 +8,12 @@ export interface MissingPerson {
   details: string;
   image?: string;
   city?: string;
+  age?: string;
+  physicalDescription?: string;
+  clothingDescription?: string;
+  foundLocationDetails?: string;
+  postedBy?: string;
+  reportDate?: string;
 }
 
 export const mockPosts: MissingPerson[] = [
@@ -29,6 +35,13 @@ export const mockPosts: MissingPerson[] = [
     location: 'Alexandria',
     timeAgo: '5 hours ago',
     details: 'Female, ~24 years old',
+    age: '24 years old',
+    physicalDescription: 'Blonde hair, Green eyes, Fair skin tone',
+    clothingDescription: 'School uniform, backpack',
+    foundLocationDetails: 'Central Station, New York',
+    city: 'Cairo',
+    postedBy: 'Station Security',
+    reportDate: '10/12/2025',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkRFWq-zWXPf77DHNZEhXhkhl9naa-RWCxmKIePY17BVk-XFFRjV7WnxD2k34LdQKbdcEDVPZyj8ymo_klYeoGJiOJ6_D9Ai6Uy60D4-NRowIX5LmOumM0wq5cs28ZIdwm4t3PdXaci2bWm7ApdULRmDBZ97DXPr7fA2e9MyZ53Bf6NmwUHO2H2Io8neUPjz3AJVUsgL7T5XuXyT-eL_IMM03MIYxoBBrMYABZavZ_FPRKYederogZi63wcfpwsqb_kg34G-xiyjUw'
   },
   {
@@ -49,6 +62,13 @@ export const mockPosts: MissingPerson[] = [
     location: 'Mansoura',
     timeAgo: '3 days ago',
     details: 'Female, 16 years old',
+    age: '16 years old',
+    physicalDescription: 'Brown hair, Hazel eyes, Fair skin tone',
+    clothingDescription: 'Gray hoodie, black trousers, white shoes',
+    foundLocationDetails: 'Mansoura General Hospital entrance',
+    city: 'Dakahlia',
+    postedBy: 'Hospital Administration',
+    reportDate: '10/10/2025',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMRvtSFBN7-X6hhu8w-12Ygaqpv-gyqC92kTjK7uAtwJamac0x_5PFmOFpcHK7tfCbNWUT2RHWw6fIIK5-R00XWeGhnQictj8Zyuxbckh17PiTWP0YJnwa0wAm3lOgT9qzHO1MujT3_ULi1zBPnUKaOa4GBCdzBc5fLtsggGGCBC4HH1DZUHWe4K_25s5LQA8Oa3LA7Bkn6MrTuffwIcoa04hoXCsr2oZMF-aB94jzTLfEGE3lConDVOajuSzjT3jfhXM00iR1CGS2'
   },
   {

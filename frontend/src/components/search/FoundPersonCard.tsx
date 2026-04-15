@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, User } from 'lucide-react';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import type { ProfileData } from '../home/PersonCard';
+import FoundModal from '../ui/modals/FoundModal';
 
 interface FoundPersonCardProps {
   profile: ProfileData;
@@ -14,6 +16,7 @@ interface FoundPersonCardProps {
 
 export default function FoundPersonCard({ profile, idx, isRTL, showImage = false, className = '' }: FoundPersonCardProps) {
   const t = isRTL ? ar.recentUpdates : en.recentUpdates;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <motion.div 
@@ -72,11 +75,22 @@ export default function FoundPersonCard({ profile, idx, isRTL, showImage = false
         </div>
 
         <div className="flex flex-col mt-auto">
-          <button className="w-full bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="w-full bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap"
+          >
             {t.buttons.details}
           </button>
         </div>
       </div>
+
+      <FoundModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        profile={profile}
+        isRTL={isRTL}
+      />
     </motion.div>
   );
 }

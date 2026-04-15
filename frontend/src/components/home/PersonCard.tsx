@@ -6,11 +6,19 @@ import { ar } from '../../data/arabic';
 export interface ProfileData {
   id: string;
   name: string;
+  type?: 'missing' | 'found';
   status: string;
   location: string;
   timeAgo: string;
   details: string;
   image?: string;
+  age?: string;
+  physicalDescription?: string;
+  clothingDescription?: string;
+  foundLocationDetails?: string;
+  city?: string;
+  postedBy?: string;
+  reportDate?: string;
 }
 
 interface PersonCardProps {
