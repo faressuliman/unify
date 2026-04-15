@@ -55,10 +55,10 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, isR
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-slate-950/40 modal-overlay" />
         <DialogPrimitive.Content
-          className="fixed left-1/2 top-1/2 z-71 w-[calc(100%-1.25rem)] h-[95vh] sm:h-auto max-h-[95vh] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col focus:outline-hidden modal-pop"
+          className="fixed left-1/2 top-1/2 z-71 w-[calc(100%-1.25rem)] h-[95vh] max-h-[95vh] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col focus:outline-hidden modal-pop"
           dir={isRTL ? 'rtl' : 'ltr'}
         >
-          <div className="modal-panel flex h-full flex-col">
+          <div className="modal-panel flex h-full min-h-0 flex-col">
           {/* Header */}
           <div className="relative z-10 px-5 pt-7 pb-5 sm:px-8 border-b border-slate-100 bg-slate-50/50">
             <div className={`absolute top-5 ${isRTL ? 'left-5' : 'right-5'} z-20`}>
@@ -81,7 +81,7 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, isR
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6 p-5 sm:p-8">
               {/* Step 1 */}
               <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 sm:p-6 transition-colors hover:border-slate-200 focus-within:border-primary-200 focus-within:bg-white">
