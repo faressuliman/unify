@@ -36,6 +36,7 @@ jobs:
           mkdir -p deploy_bundle/frontend deploy_bundle/backend
           cp -r frontend/dist deploy_bundle/frontend/
           cp backend/package*.json deploy_bundle/backend/
+          cp backend/index.js deploy_bundle/backend/
           cp -r backend/src deploy_bundle/backend/
           tar -czf deploy_bundle.tar.gz -C deploy_bundle .
 
@@ -50,6 +51,12 @@ jobs:
         run: |
           scp -i ~/.ssh/deploy_key deploy_bundle.tar.gz deploy@${{ secrets.SERVER_IP }}:/tmp/deploy_bundle.tar.gz
 
+      - name: Upload backend env file
+        run: |
+          printf "%s" "${{ secrets.BACKEND_ENV_FILE }}" > backend.env
+          scp -i ~/.ssh/deploy_key backend.env deploy@${{ secrets.SERVER_IP }}:/tmp/unify_backend.env
+          rm -f backend.env
+
       - name: Deploy on server
         run: |
           ssh -i ~/.ssh/deploy_key deploy@${{ secrets.SERVER_IP }} '
@@ -57,4 +64,20 @@ jobs:
             mkdir -p /var/www/unify
             tar -xzf /tmp/deploy_bundle.tar.gz -C /var/www/unify
             rm -f /tmp/deploy_bundle.tar.gz
+
+            mv /tmp/unify_backend.env /var/www/unify/backend/.env
+            chmod 600 /var/www/unify/backend/.env
+
+            cd /var/www/unify/backend
+            npm ci --omit=dev
+
+            if ! command -v pm2 >/dev/null 2>&1; then
+              npm install -g pm2
+            fi
+
+            pm2 describe unify-backend >/dev/null 2>&1 && \
+              pm2 restart unify-backend --update-env || \
+              pm2 start index.js --name unify-backend
+
+            pm2 save
           '
