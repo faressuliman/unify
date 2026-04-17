@@ -1,3 +1,4 @@
+// Main entry point for the Unify backend server
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
