@@ -18,6 +18,7 @@ export interface ProfileData {
   age?: string;
   physicalDescription?: string;
   clothingDescription?: string;
+  lastSeenLocationDetails?: string;
   foundLocationDetails?: string;
   city?: string;
   postedBy?: string;

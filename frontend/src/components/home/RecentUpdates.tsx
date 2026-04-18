@@ -1,5 +1,5 @@
 import { useLanguage } from '../../context/LanguageContext';
-import PersonCard, { type ProfileData } from './PersonCard';
+import { type ProfileData } from './PersonCard';
 import FoundPersonCard from '../search/FoundPersonCard';
 import MissingPersonCard from '../search/MissingPersonCard';
 import { en } from '../../data/english';

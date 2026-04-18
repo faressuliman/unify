@@ -1,10 +1,11 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type ChangeEvent, type FormEvent, useMemo, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { X, ShieldCheck, Eye, ShieldAlert } from 'lucide-react';
+import { X, ShieldCheck, Eye } from 'lucide-react';
 import FormInput from '@/components/ui/FormInput';
 import FormTextArea from '@/components/ui/FormTextArea';
 import SelectMenu from '@/components/ui/SelectMenu';
 import SubmitButton from '@/components/ui/SubmitButton';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 import { en } from '../../../data/english';
 import { ar } from '../../../data/arabic';
 
@@ -37,7 +38,7 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
     onOpenChange(open);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -132,7 +133,7 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
                     onChange={(value) => setFormData(prev => ({ ...prev, confidence: value }))}
                     isRTL={isRTL}
                   />
-                  {errors.confidence && <p className="mt-1.5 text-xs font-bold text-red-500">{errors.confidence}</p>}
+                  <ErrorMessage msg={errors.confidence} className="text-xs" />
                 </div>
 
                 {/* Date/Time */}
@@ -145,8 +146,8 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
                     value={formData.date}
                     onChange={handleChange}
                     placeholder={t.datePlaceholder}
-                    error={errors.date}
                   />
+                  <ErrorMessage msg={errors.date} className="text-xs" />
                 </div>
 
                 {/* Location */}
@@ -159,8 +160,8 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
                     value={formData.location}
                     onChange={handleChange}
                     placeholder={t.locationPlaceholder}
-                    error={errors.location}
                   />
+                  <ErrorMessage msg={errors.location} className="text-xs" />
                 </div>
 
                 {/* What were they wearing */}
@@ -173,8 +174,8 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
                     value={formData.wearing}
                     onChange={handleChange}
                     placeholder={t.wearingPlaceholder}
-                    error={errors.wearing}
                   />
+                  <ErrorMessage msg={errors.wearing} className="text-xs" />
                 </div>
 
                 {/* Additional Details */}
@@ -193,26 +194,30 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 space-y-4">
                   <h4 className="font-bold text-slate-800 text-sm">Contact Info</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormInput
-                      id="sighting-contactName"
-                      name="contactName"
-                      type="text"
-                      label={t.contactNameLabel}
-                      value={formData.contactName}
-                      onChange={handleChange}
-                      placeholder={t.contactNamePlaceholder}
-                      error={errors.contactName}
-                    />
-                    <FormInput
-                      id="sighting-contactPhone"
-                      name="contactPhone"
-                      type="text"
-                      label={t.contactPhoneLabel}
-                      value={formData.contactPhone}
-                      onChange={handleChange}
-                      placeholder={t.contactPhonePlaceholder}
-                      error={errors.contactPhone}
-                    />
+                    <div>
+                      <FormInput
+                        id="sighting-contactName"
+                        name="contactName"
+                        type="text"
+                        label={t.contactNameLabel}
+                        value={formData.contactName}
+                        onChange={handleChange}
+                        placeholder={t.contactNamePlaceholder}
+                      />
+                      <ErrorMessage msg={errors.contactName} className="text-xs" />
+                    </div>
+                    <div>
+                      <FormInput
+                        id="sighting-contactPhone"
+                        name="contactPhone"
+                        type="text"
+                        label={t.contactPhoneLabel}
+                        value={formData.contactPhone}
+                        onChange={handleChange}
+                        placeholder={t.contactPhonePlaceholder}
+                      />
+                      <ErrorMessage msg={errors.contactPhone} className="text-xs" />
+                    </div>
                   </div>
                 </div>
               </div>
