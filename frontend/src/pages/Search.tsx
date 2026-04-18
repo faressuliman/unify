@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
-import { mockPosts, type MissingPerson } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
 import MissingPersonCard from '../components/search/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
@@ -8,28 +7,65 @@ import FoundPersonCard from '../components/search/FoundPersonCard';
 import { motion } from 'framer-motion';
 import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/search/SearchFiltersPanel';
 import UnderlineTabSelector from '../components/ui/UnderlineTabSelector';
+import { ApiError, type BackendPost, postApi } from '@/lib/api';
+import type { ProfileData } from '@/components/home/PersonCard';
 
-const extractAge = (details: string): number | null => {
-  const match = details.match(/(\d+)/);
-  return match ? Number(match[1]) : null;
+type SearchProfile = ProfileData & {
+  dateMissing?: string;
+  rawClothing?: string;
+  rawLocation?: string;
 };
 
-const applyFilters = (posts: MissingPerson[], filters: SearchFilters): MissingPerson[] => {
+const humanizeTimeAgo = (dateString?: string): string => {
+  if (!dateString) return 'Recently posted';
+
+  const now = Date.now();
+  const then = new Date(dateString).getTime();
+  const diffMs = Math.max(now - then, 0);
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffHours < 1) return 'Less than 1 hour ago';
+  if (diffHours < 24) return `${diffHours} hours ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays} days ago`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  return `${diffMonths} months ago`;
+};
+
+const mapBackendPostToCard = (post: BackendPost): SearchProfile => {
+  const ageWithUnit = post.age ? `${post.age} ${post.ageUnit ?? 'years'}` : 'Unknown age';
+  const gender = post.gender ? post.gender[0].toUpperCase() + post.gender.slice(1) : 'Unknown';
+
+  return {
+    id: post._id,
+    type: post.postType,
+    name: post.name,
+    status: post.status,
+    location: post.postType === 'missing' ? post.lastSeenLocation ?? post.city ?? 'Unknown location' : post.foundLocation ?? post.city ?? 'Unknown location',
+    timeAgo: humanizeTimeAgo(post.createdAt),
+    details: `${gender}, ${ageWithUnit}`,
+    image: post.postImages?.[0],
+    city: post.city,
+    age: post.age ? `${post.age} ${post.ageUnit ?? 'years'}` : undefined,
+    physicalDescription: [post.hairColour, post.eyeColour].filter(Boolean).join(', '),
+    clothingDescription: post.clothesDescription,
+    lastSeenLocationDetails: post.lastSeenLocation,
+    foundLocationDetails: post.foundLocation,
+    reportDate: post.createdAt ? new Date(post.createdAt).toLocaleDateString() : undefined,
+    rawClothing: post.clothesDescription?.toLowerCase(),
+    rawLocation: (post.postType === 'missing' ? post.lastSeenLocation : post.foundLocation)?.toLowerCase(),
+    dateMissing: post.lastSeenDate,
+  };
+};
+
+const applyLocalFilters = (posts: SearchProfile[], filters: SearchFilters): SearchProfile[] => {
   const normalize = (value: string) => value.trim().toLowerCase();
 
   return posts.filter((post) => {
-    const name = normalize(post.name);
-    const details = normalize(post.details);
     const location = normalize(post.location);
     const citySource = normalize(post.city ?? '');
-
-    if (filters.firstName && !name.includes(normalize(filters.firstName))) return false;
-    if (filters.lastName && !name.includes(normalize(filters.lastName))) return false;
-    if (filters.location && !location.includes(normalize(filters.location))) return false;
-    if (filters.clothing && !details.includes(normalize(filters.clothing))) return false;
-    if (filters.gender && !details.includes(normalize(filters.gender))) return false;
-    if (filters.eyeColor && !details.includes(normalize(filters.eyeColor))) return false;
-    if (filters.hairColor && !details.includes(normalize(filters.hairColor))) return false;
 
     if (filters.city) {
       const cityNeedle = normalize(filters.city);
@@ -37,20 +73,12 @@ const applyFilters = (posts: MissingPerson[], filters: SearchFilters): MissingPe
       if (!matchesCity) return false;
     }
 
-    if (filters.ageMin || filters.ageMax) {
-      const age = extractAge(post.details);
-      if (age === null) return false;
-
-      const min = filters.ageMin ? Number(filters.ageMin) : null;
-      const max = filters.ageMax ? Number(filters.ageMax) : null;
-
-      if (min !== null && age < min) return false;
-      if (max !== null && age > max) return false;
+    if (filters.location && !(post.rawLocation ?? '').includes(normalize(filters.location))) {
+      return false;
     }
 
-    if (filters.dateMissing) {
-      const postDate = (post as MissingPerson & { dateMissing?: string }).dateMissing;
-      if (postDate && postDate !== filters.dateMissing) return false;
+    if (filters.clothing && !(post.rawClothing ?? '').includes(normalize(filters.clothing))) {
+      return false;
     }
 
     return true;
@@ -63,11 +91,46 @@ export default function Search() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'missing' | 'found'>('missing');
   const [appliedFilters, setAppliedFilters] = useState<SearchFilters>(defaultSearchFilters);
+  const [posts, setPosts] = useState<SearchProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const response = await postApi.getPosts({
+          postType: activeTab,
+          status: 'active',
+          firstName: appliedFilters.firstName || undefined,
+          lastName: appliedFilters.lastName || undefined,
+          ageMin: appliedFilters.ageMin || undefined,
+          ageMax: appliedFilters.ageMax || undefined,
+          hairColour: appliedFilters.hairColor || undefined,
+          eyeColour: appliedFilters.eyeColor || undefined,
+          gender: appliedFilters.gender || undefined,
+          city: appliedFilters.city || undefined,
+          dateMissing: appliedFilters.dateMissing || undefined,
+          page: 1,
+          limit: 20,
+        });
+
+        setPosts(response.data.map(mapBackendPostToCard));
+      } catch (fetchErr) {
+        setError(fetchErr instanceof ApiError ? fetchErr.message : 'Failed to load search results.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void fetchPosts();
+  }, [activeTab, appliedFilters]);
 
   const filteredPosts = useMemo(() => {
-    const postsByType = mockPosts.filter((post) => post.type === activeTab);
-    return applyFilters(postsByType, appliedFilters);
-  }, [activeTab, appliedFilters]);
+    return applyLocalFilters(posts, appliedFilters);
+  }, [posts, appliedFilters]);
 
   const handleApplyFilters = (values: SearchFilters, shouldScroll = true) => {
     setAppliedFilters(values);
@@ -118,7 +181,15 @@ export default function Search() {
             />
 
             {/* Cards Slider Display */}
-            {filteredPosts.length > 0 ? (
+            {isLoading ? (
+              <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                <p>{isRTL ? 'جاري تحميل النتائج...' : 'Loading results...'}</p>
+              </div>
+            ) : error ? (
+              <div className="py-12 text-center text-red-600 bg-white rounded-xl border border-dashed border-red-300">
+                <p>{error}</p>
+              </div>
+            ) : filteredPosts.length > 0 ? (
               <motion.div 
                 key={activeTab}
                 initial={{ opacity: 0, x: -10 }}
@@ -147,7 +218,7 @@ export default function Search() {
             ) : (
                <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
                 <SearchIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-                <p>No {activeTab} reports found matching these criteria.</p>
+                <p>{isRTL ? `لا توجد بلاغات ${activeTab === 'missing' ? 'فقدان' : 'عثور'} بهذه المعايير.` : `No ${activeTab} reports found matching these criteria.`}</p>
               </div>
             )}
           </motion.div>

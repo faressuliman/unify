@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SubmitButton from '@/components/ui/SubmitButton';
 import FormInput from '@/components/ui/FormInput';
 import compassImg from '../assets/compass.jpg';
@@ -10,10 +10,14 @@ import { loginSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '@/lib/api';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { login } = useAuth();
     const { language } = useLanguage();
     const content = language === 'ar' ? ar.login : en.login;
     const isRTL = language === 'ar';
@@ -27,19 +31,22 @@ const Login = () => {
     });
     
     const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setSubmitError('');
 
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const validationResult = loginSchema.safeParse(formData);
@@ -55,8 +62,18 @@ const Login = () => {
             return;
         }
 
-        setErrors({}); 
-        console.log('Login submission:', formData);
+        setErrors({});
+        setSubmitError('');
+        setIsSubmitting(true);
+
+        try {
+            await login(formData.email, formData.password);
+            navigate('/');
+        } catch (error) {
+            setSubmitError(error instanceof ApiError ? error.message : 'Unable to log in right now.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -78,6 +95,7 @@ const Login = () => {
                         />
                     
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {submitError ? <ErrorMessage msg={submitError} className="text-sm" /> : null}
                         <div>
                             <FormInput 
                                 label={content.email}
@@ -126,8 +144,8 @@ const Login = () => {
                         </div>
 
                         <div className="pt-6">
-                            <SubmitButton type="submit">
-                                {content.signIn}
+                            <SubmitButton type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? 'Signing in...' : content.signIn}
                             </SubmitButton>
                         </div>
                     </form>

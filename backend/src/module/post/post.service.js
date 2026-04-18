@@ -114,7 +114,7 @@ export const getMapMarkers = async (req, res, next) => {
   if (dateMissing) filter.lastSeenDate = { $gte: new Date(dateMissing) };
 
   const posts = await Post.find(filter)
-    .select("name postType status city postImages locationId createdAt")
+    .select("name postType status city postImages locationId createdAt age lastSeenDate foundLocation")
     .populate("locationId", "latitude longitude address");
 
   const markers = posts
@@ -125,6 +125,10 @@ export const getMapMarkers = async (req, res, next) => {
       type: p.postType,
       status: p.status,
       city: p.city,
+      age: p.age,
+      lastSeenDate: p.lastSeenDate,
+      foundLocation: p.foundLocation,
+      createdAt: p.createdAt,
       image: p.postImages?.[0],
       lat: p.locationId.latitude,
       lng: p.locationId.longitude,

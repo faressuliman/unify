@@ -10,7 +10,6 @@ import { SheetClose } from '../components/ui/sheet';
 import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
-import { mockPosts, type MissingPerson } from '../data/mockData';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
 import MapDrawer from '../components/map/MapDrawer';
 import PageHeader from '../components/ui/PageHeader';
@@ -20,6 +19,7 @@ import LocalizedDateInput from '../components/ui/LocalizedDateInput';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import SubmitButton from '../components/ui/SubmitButton';
 import MapPopup from '../components/map/MapPopup';
+import { postApi } from '../lib/api';
 
 L.Marker.prototype.options.icon = L.icon({ iconUrl: icon, shadowUrl: iconShadow });
 
@@ -42,22 +42,6 @@ const CITY_COORDS: Record<string, [number, number]> = {
 };
 
 const DEFAULT_CENTER: [number, number] = [27.8206, 30.8025]; // Central Egypt
-
-// Generates persistent pseudo-random coords for mock posts so they don't jump around
-const getMockPosition = (post: MissingPerson): [number, number] => {
-  const hash = post.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  if (post.city && CITY_COORDS[post.city]) {
-    // Add small random offset around city
-    const offsetLat = ((hash % 10) - 5) * 0.01;
-    const offsetLng = (((hash * 3) % 10) - 5) * 0.01;
-    return [CITY_COORDS[post.city][0] + offsetLat, CITY_COORDS[post.city][1] + offsetLng];
-  }
-  
-  const lat = 24.0 + ((hash % 100) / 100) * 7.5; // Bounds within populated Egypt roughly
-  const lng = 29.0 + (((hash * 13) % 100) / 100) * 4.0;
-  return [lat, lng];
-};
 
 const createMarkerIcon = (type: 'missing' | 'found') => {
   const isMissing = type === 'missing';
@@ -176,21 +160,22 @@ export default function Map() {
   const mapCenterStr = appliedFilters.city && CITY_COORDS[appliedFilters.city] ? CITY_COORDS[appliedFilters.city] : DEFAULT_CENTER;
   const mapZoom = appliedFilters.city && CITY_COORDS[appliedFilters.city] ? 10 : 6;
 
-  const filteredPosts = useMemo(() => {
-    return mockPosts.filter(post => {
-      if (post.type !== appliedFilters.status) return false;
-      if (appliedFilters.city && post.city !== appliedFilters.city && !post.location.includes(appliedFilters.city)) return false;
-      if (appliedFilters.keyword) {
-        const kw = appliedFilters.keyword.toLowerCase();
-        if (!post.name.toLowerCase().includes(kw) && !post.id.toLowerCase().includes(kw)) return false;
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchMarkers = async () => {
+      try {
+        const response = await postApi.getMapMarkers(appliedFilters);
+        const fetchedMarkers = response.markers || [];
+        setPosts(fetchedMarkers.map(m => ({ ...m, position: [m.lat, m.lng] })));
+      } catch (error) {
+        console.error("Error fetching map markers:", error);
       }
-      if (appliedFilters.dateMissing) {
-        const postDate = (post as MissingPerson & { dateMissing?: string }).dateMissing;
-        if (postDate && postDate !== appliedFilters.dateMissing) return false;
-      }
-      return true;
-    }).map(post => ({ ...post, position: getMockPosition(post) }));
+    };
+    fetchMarkers();
   }, [appliedFilters]);
+
+  const filteredPosts = posts;
 
   const missingCount = filteredPosts.filter(p => p.type === 'missing').length;
   const foundCount = filteredPosts.filter(p => p.type === 'found').length;

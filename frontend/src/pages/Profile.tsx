@@ -1,24 +1,66 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
-import { MapPin, FileText, CheckCircle, ShieldCheck, Mail, Phone, Calendar, ArrowDownRight, ArrowDownLeft, ChevronRight, ChevronLeft, Pencil } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { userApi, type UserProfileInfo, type BackendPost } from '../lib/api';
+import type { ProfileData } from '../components/home/PersonCard';
+import { FileText, CheckCircle, ShieldCheck, Mail, Phone, Calendar, ArrowDownRight, ArrowDownLeft, ChevronRight, ChevronLeft, Pencil } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
-import { mockPosts } from '../data/mockData';
 import MissingPersonCard from '../components/search/MissingPersonCard';
 import FoundPersonCard from '../components/search/FoundPersonCard';
 import UnderlineTabSelector from '../components/ui/UnderlineTabSelector';
 
 export default function Profile() {
   const { t, language } = useLanguage();
+  const { token } = useAuth();
   const isRTL = language === 'ar';
   const [activeTab, setActiveTab] = useState<'missing' | 'found'>('missing');
   const cardsRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  
+  const [profileData, setProfileData] = useState<UserProfileInfo | null>(null);
+  const [posts, setPosts] = useState<BackendPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const response = await userApi.getProfile(token);
+        setProfileData(response.user);
+        setPosts(response.posts || []);
+      } catch (error) {
+        console.error("Failed to fetch profile info:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [token]);
 
   const filteredPosts = useMemo(() => {
-    return mockPosts.filter((post) => post.type === activeTab);
-  }, [activeTab]);
+    return posts.filter((post) => post.postType === activeTab).map((post) => {
+      const isMissing = post.postType === 'missing';
+      return {
+        id: post._id,
+        name: post.name || (isRTL ? 'غير معروف' : 'Unknown'),
+        type: post.postType,
+        status: post.status,
+        location: isMissing ? (post.lastSeenLocation || post.city || '') : (post.foundLocation || post.city || ''),
+        timeAgo: post.lastSeenDate || post.createdAt || new Date().toISOString(),
+        details: post.clothesDescription || '',
+        image: post.postImages?.[0],
+        age: post.age ? `${post.age} ${post.ageUnit || 'y'}` : undefined,
+        physicalDescription: `Hair: ${post.hairColour || 'Unknown'}, Eyes: ${post.eyeColour || 'Unknown'}`,
+        clothingDescription: post.clothesDescription,
+        reporterPhone: post.reporterPhone
+      } as ProfileData;
+    });
+  }, [activeTab, posts, isRTL]);
 
   const updateScrollControls = () => {
     if (!cardsRef.current) return;
@@ -32,6 +74,14 @@ export default function Profile() {
     window.addEventListener('resize', updateScrollControls);
     return () => window.removeEventListener('resize', updateScrollControls);
   }, [activeTab, filteredPosts.length]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-8 pb-12" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -57,24 +107,27 @@ export default function Profile() {
             <div className="relative shrink-0">
                 <div className="w-24 h-24 bg-[#faebd7] rounded-full flex items-center justify-center p-2">
                   <div 
-                    className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm" 
-                    style={{ backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuCMzzcyDv1VecMu2b3TptcTl6V-PG_pTPMT4YzAHdg5TJ4jweX5dnl9HbvVJpawn90saLwMTkyy0PFj4KkCaPT-KB_VD_4oG0BYEXzMK7eM4e_UrbrrTc-BWrYem17OJE7vPnbI3Y8pIQ4BAJ97GFCAcVV87wG6EOFgK0ikKoIWghhTxj8cDLyYedzp5jANG9Ey7Fcxq0bn1pV1gZQO_Ol7w8eAzY_1CVft0NSgBEboO6Ue26xGT194Pa8TsgfTc-k6SMbPeW13R2TT")` }}
-                  />
+                    className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl" 
+                    style={profileData?.idImagePath ? { backgroundImage: `url(${profileData.idImagePath})` } : {}}
+                  >
+                    {!profileData?.idImagePath && profileData?.name?.charAt(0).toUpperCase()}
+                  </div>
                 </div>
                 <div className="absolute bottom-0 right-0 bg-white rounded-full p-0.5 shadow-sm translate-x-1/4 translate-y-1/4">
-                    <CheckCircle className="w-5 h-5 text-secondary" />
+                    <CheckCircle className={`w-5 h-5 ${profileData?.isVerified ? 'text-secondary' : 'text-slate-300'}`} />
                 </div>
             </div>
 
             <div className="flex-1 text-center md:text-start w-full">
-              <h1 className="text-tertiary text-2xl font-bold mb-2 md:mb-3">Ahmed Hassan</h1>
+              <h1 className="text-tertiary text-2xl font-bold mb-2 md:mb-3">
+                {profileData?.name || (isRTL ? 'مستخدم مجهول' : 'Unknown User')}
+              </h1>
               <div className="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2">
-                <p className="text-slate-500 text-sm flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                  <Calendar className="w-4 h-4 text-secondary" /> Oct 2023
-                </p>
-                <p className="text-slate-500 text-sm flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                  <MapPin className="w-4 h-4 text-secondary" /> Cairo, Egypt
-                </p>
+                {profileData?.createdAt && (
+                  <p className="text-slate-500 text-sm flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                    <Calendar className="w-4 h-4 text-secondary" /> {new Date(profileData.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US', { month: 'short', year: 'numeric' })}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -112,7 +165,7 @@ export default function Profile() {
                     </div>
                     <div className="text-start min-w-0">
                       <p className="text-xs text-slate-500 font-medium mb-0.5">{isRTL ? 'البريد الإلكتروني' : 'Email Address'}</p>
-                      <p className="text-sm font-bold text-tertiary truncate">ahmed.hassan@example.com</p>
+                      <p className="text-sm font-bold text-tertiary truncate">{profileData?.email || (isRTL ? 'غير متوفر' : 'Not available')}</p>
                     </div>
                   </div>
                   <button className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer" aria-label={isRTL ? 'تعديل' : 'Edit'}>
@@ -126,7 +179,7 @@ export default function Profile() {
                     </div>
                     <div className="text-start min-w-0">
                       <p className="text-xs text-slate-500 font-medium mb-0.5">{isRTL ? 'رقم الهاتف' : 'Phone Number'}</p>
-                      <p className="text-sm font-bold text-tertiary">+20 120 000 0000</p>
+                      <p className="text-sm font-bold text-tertiary">{profileData?.phoneNumber || (isRTL ? 'لم يتم التحديد' : 'Not specified')}</p>
                     </div>
                   </div>
                   <button className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer" aria-label={isRTL ? 'تعديل' : 'Edit'}>
@@ -139,7 +192,11 @@ export default function Profile() {
                   </div>
                   <div className="text-start">
                     <p className="text-xs text-slate-500 font-medium mb-0.5">{isRTL ? 'حالة التوثيق' : 'Verification Status'}</p>
-                    <p className="text-sm font-bold text-tertiary">National ID Verified</p>
+                    <p className="text-sm font-bold text-tertiary">
+                      {profileData?.isVerified 
+                        ? (isRTL ? 'الهوية الوطنية موثقة' : 'National ID Verified')
+                        : (isRTL ? 'غير موثق' : 'Unverified')}
+                    </p>
                   </div>
                 </div>
               </div>

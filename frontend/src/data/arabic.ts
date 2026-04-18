@@ -270,7 +270,7 @@ export const ar = {
         requiredField: 'هذا الحقل مطلوب',
         uploadHint: 'يفضل صورة واضحة للوجه',
         ageRangeError: 'يجب أن يكون العمر بين 1 و 90',
-        minWordsError: 'يجب أن يكون الوصف 20 كلمة على الأقل',
+        minWordsError: 'يجب أن يكون الوصف 10 أحرف على الأقل',
         phoneDigitsError: 'رقم الهاتف يجب أن يكون 11 رقماً'
     },
     hero: {

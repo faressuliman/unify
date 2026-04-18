@@ -270,7 +270,7 @@ export const en = {
         requiredField: 'This field is required',
         uploadHint: 'Clear face photo preferred',
         ageRangeError: 'Age must be between 1 and 90',
-        minWordsError: 'Description must be at least 20 words',
+        minWordsError: 'Description must be at least 10 characters',
         phoneDigitsError: 'Phone number must be exactly 11 digits'
     },
     hero: {

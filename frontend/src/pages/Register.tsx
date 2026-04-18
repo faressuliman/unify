@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Calendar, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
 import { signUpSchema } from '../validation';
@@ -14,6 +14,8 @@ import ImageUpload from '@/components/ui/ImageUpload';
 import compassImg from '../assets/compass.jpg';
 import FeatureCard from '@/components/ui/FeatureCard';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '@/lib/api';
 
 const getPasswordStrength = (password: string, content: any) => {
     let score = 0;
@@ -46,6 +48,8 @@ const getPasswordStrength = (password: string, content: any) => {
 };
 
 const Register = () => {
+    const navigate = useNavigate();
+    const { register } = useAuth();
     const { language } = useLanguage();
     const content = language === 'ar' ? ar.signup : en.signup;
     const isRTL = language === 'ar';
@@ -73,6 +77,8 @@ const Register = () => {
     
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [showPasswords, setShowPasswords] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -93,13 +99,14 @@ const Register = () => {
             ...prev,
             [name]: parsedValue
         }));
+        setSubmitError('');
         
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const validationResult = signUpSchema.safeParse(formData);
@@ -115,8 +122,30 @@ const Register = () => {
             return;
         }
 
-        setErrors({}); 
-        console.log('Form submission:', formData);
+        setErrors({});
+        setSubmitError('');
+        setIsSubmitting(true);
+
+        const ageNumber = Number(formData.age);
+        const currentYear = new Date().getFullYear();
+        const birthDate = new Date(currentYear - ageNumber, 0, 1).toISOString();
+
+        try {
+            await register({
+                name: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+                confirmPassword: formData.confirmPassword,
+                phoneNumber: formData.phoneNumber,
+                birthDate,
+                idPicture: formData.idPicture,
+            });
+            navigate('/login');
+        } catch (error) {
+            setSubmitError(error instanceof ApiError ? error.message : 'Unable to create account right now.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -138,6 +167,7 @@ const Register = () => {
                             className="mb-8 w-full"
                         />
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {submitError ? <ErrorMessage msg={submitError} className="text-sm" /> : null}
                         <div>
                             <FormInput 
                                 icon={<User className="w-4 h-4" />}
@@ -286,8 +316,8 @@ const Register = () => {
                         </div>
                         
                         <div className="pt-6">
-                            <SubmitButton type="submit">
-                                {content.createAccount}
+                            <SubmitButton type="submit" isLoading={isSubmitting}>
+                                {isSubmitting ? 'Creating account...' : content.createAccount}
                             </SubmitButton>
                         </div>
                     </form>

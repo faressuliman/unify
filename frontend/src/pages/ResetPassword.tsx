@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
+import { Lock, ArrowUpRight, ArrowUpLeft, Eye, EyeOff, Mail, KeyRound } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,6 +12,7 @@ import FormInput from '@/components/ui/FormInput';
 import compassImg from '../assets/compass.jpg';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { resetPasswordSchema } from '../validation';
+import { authApi, ApiError } from '@/lib/api';
 
 const getPasswordStrength = (password: string, content: any) => {
     let score = 0;
@@ -56,23 +57,30 @@ const ResetPassword = () => {
     const pageSubtitle = isRTL ? 'أدخل كلمة المرور الجديدة لحسابك لتتمكن من تسجيل الدخول.' : 'Enter a new password for your account to sign in.';
 
     const [formData, setFormData] = useState({
+        email: '',
+        otp: '',
         password: '',
-        confirm_password: '',
+        confirmPassword: '',
     });
     
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [showPasswords, setShowPasswords] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+    const [submitSuccess, setSubmitSuccess] = useState('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setSubmitError('');
+        setSubmitSuccess('');
 
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const validationResult = resetPasswordSchema.safeParse(formData);
@@ -88,8 +96,24 @@ const ResetPassword = () => {
             return;
         }
 
-        setErrors({}); 
-        console.log('Reset Password submission:', formData);
+        setErrors({});
+        setSubmitError('');
+        setSubmitSuccess('');
+        setIsSubmitting(true);
+
+        try {
+            await authApi.resetPassword({
+                email: formData.email,
+                otp: formData.otp,
+                password: formData.password,
+                confirmPassword: formData.confirmPassword,
+            });
+            setSubmitSuccess(isRTL ? 'تمت إعادة تعيين كلمة المرور بنجاح.' : 'Password reset successfully.');
+        } catch (error) {
+            setSubmitError(error instanceof ApiError ? error.message : 'Unable to reset password right now.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -111,6 +135,40 @@ const ResetPassword = () => {
                         />
                     
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {submitError ? <ErrorMessage msg={submitError} className="text-sm" /> : null}
+                        {submitSuccess ? <p className="text-sm text-green-600 font-medium">{submitSuccess}</p> : null}
+                        <div>
+                            <FormInput
+                                label={isRTL ? 'البريد الإلكتروني' : 'Email'}
+                                icon={<Mail className="w-4 h-4" />}
+                                type="email"
+                                name="email"
+                                placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                                value={formData.email}
+                                onChange={handleChange}
+                                isRTL={isRTL}
+                                disabled={isSubmitting}
+                                className={errors.email ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
+                            />
+                            <ErrorMessage msg={errors.email} className="text-[11px] sm:text-xs" />
+                        </div>
+
+                        <div>
+                            <FormInput
+                                label={isRTL ? 'رمز OTP' : 'OTP Code'}
+                                icon={<KeyRound className="w-4 h-4" />}
+                                type="text"
+                                name="otp"
+                                placeholder={isRTL ? 'أدخل رمز OTP' : 'Enter OTP code'}
+                                value={formData.otp}
+                                onChange={handleChange}
+                                isRTL={isRTL}
+                                disabled={isSubmitting}
+                                className={errors.otp ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
+                            />
+                            <ErrorMessage msg={errors.otp} className="text-[11px] sm:text-xs" />
+                        </div>
+
                         <div>
                             <FormInput 
                                 label={contentSignup.password}
@@ -121,6 +179,7 @@ const ResetPassword = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 isRTL={isRTL}
+                                disabled={isSubmitting}
                                 className={`${errors.password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
                                 suffix={
                                     <button
@@ -159,12 +218,13 @@ const ResetPassword = () => {
                                 label={contentSignup.confirmPassword}
                                 icon={<Lock className="w-4 h-4" />}
                                 type={showPasswords ? "text" : "password"} 
-                                name="confirm_password"
+                                name="confirmPassword"
                                 placeholder={contentSignup.confirmPassword} 
-                                value={formData.confirm_password}
+                                value={formData.confirmPassword}
                                 onChange={handleChange}
                                 isRTL={isRTL}
-                                className={`${errors.confirm_password ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
+                                disabled={isSubmitting}
+                                className={`${errors.confirmPassword ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'} ${isRTL ? 'pl-11!' : 'pr-11!'}`}
                                 suffix={
                                     <button
                                         type="button"
@@ -175,12 +235,12 @@ const ResetPassword = () => {
                                     </button>
                                 }
                             />
-                            <ErrorMessage msg={errors.confirm_password} className="text-[11px] sm:text-xs" />
+                            <ErrorMessage msg={errors.confirmPassword} className="text-[11px] sm:text-xs" />
                         </div>
 
                         <div className="pt-6">
-                            <SubmitButton type="submit">
-                                {pageTitle}
+                            <SubmitButton type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? (isRTL ? 'جارٍ إعادة التعيين...' : 'Resetting...') : pageTitle}
                             </SubmitButton>
                         </div>
                     </form>

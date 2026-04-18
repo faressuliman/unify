@@ -17,8 +17,11 @@ import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
 import { getEyeColorOptions, getHairColorOptions } from '../data/appearanceOptions';
+import { ApiError, postApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 const CreatePost = () => {
+    const { token } = useAuth();
     const { language } = useLanguage();
     const isRTL = language === 'ar';
     const navigate = useNavigate();
@@ -89,10 +92,12 @@ const CreatePost = () => {
     const [photo, setPhoto] = useState<File | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setSubmitError('');
 
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
@@ -114,6 +119,8 @@ const CreatePost = () => {
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
+
+        setSubmitError('');
 
         if (name === 'affiliation' && errors.organizationName) {
             setErrors(prev => ({ ...prev, organizationName: '' }));
@@ -147,10 +154,10 @@ const CreatePost = () => {
         if (!formData.hairColor) newErrors.hairColor = t.requiredField;
         if (!formData.eyeColor) newErrors.eyeColor = t.requiredField;
         
-        const descriptionWords = formData.clothingDescription.trim().split(/\s+/).filter(word => word.length > 0);
+        const descriptionText = formData.clothingDescription.trim();
         if (!formData.clothingDescription.trim()) {
             newErrors.clothingDescription = t.requiredField;
-        } else if (descriptionWords.length < 20) {
+        } else if (descriptionText.length < 10) {
             newErrors.clothingDescription = t.minWordsError;
         }
         
@@ -176,10 +183,49 @@ const CreatePost = () => {
             return;
         }
 
+        if (!token) {
+            setSubmitError(isRTL ? 'يجب تسجيل الدخول أولاً لإنشاء بلاغ.' : 'You need to log in first to create a post.');
+            return;
+        }
+
+        setSubmitError('');
         setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        navigate('/');
+
+        try {
+            await postApi.createPost(
+                {
+                    postType: formData.postType as 'missing' | 'found',
+                    firstName: formData.firstName.trim(),
+                    lastName: formData.lastName.trim(),
+                    age: Number(formData.age),
+                    ageUnit: formData.ageUnit as 'years' | 'months' | 'days',
+                    gender: formData.gender as 'male' | 'female' | 'unknown',
+                    hairColour: formData.hairColor,
+                    eyeColour: formData.eyeColor,
+                    clothesDescription: formData.clothingDescription.trim(),
+                    city: formData.city,
+                    lastSeenLocation: formData.postType === 'missing' ? formData.lastSeenLocation.trim() : undefined,
+                    lastSeenDate: formData.postType === 'missing' ? formData.lastSeenDate : undefined,
+                    foundLocation: formData.postType === 'found' ? formData.foundLocation.trim() : undefined,
+                    affiliation: formData.postType === 'found' && formData.affiliation ? formData.affiliation : undefined,
+                    organizationName:
+                        formData.postType === 'found' && formData.affiliation && formData.affiliation !== 'none'
+                            ? formData.organizationName.trim()
+                            : undefined,
+                    reporterPhone: formData.postType === 'found' && formData.reporterPhone.trim()
+                        ? formData.reporterPhone.trim()
+                        : undefined,
+                    photos: photo ? [photo] : [],
+                },
+                token
+            );
+
+            navigate('/search');
+        } catch (error) {
+            setSubmitError(error instanceof ApiError ? error.message : (isRTL ? 'فشل إرسال البلاغ.' : 'Failed to submit post.'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const containerVariants = {
@@ -518,6 +564,11 @@ const CreatePost = () => {
                             </div>
 
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row gap-3 w-full">
+                                {submitError ? (
+                                    <div className="w-full sm:basis-full">
+                                        <ErrorMessage msg={submitError} className="text-sm" />
+                                    </div>
+                                ) : null}
                                 <button
                                     type="button"
                                     onClick={() => navigate(-1)}

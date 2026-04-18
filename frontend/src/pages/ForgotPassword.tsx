@@ -15,6 +15,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import { forgotPasswordSchema } from '../validation';
+import { authApi, ApiError } from '@/lib/api';
 
 const ForgetPassword = () => {
     const { language } = useLanguage();
@@ -34,8 +35,10 @@ const ForgetPassword = () => {
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const validationResult = forgotPasswordSchema.safeParse({ email });
 
@@ -46,8 +49,17 @@ const ForgetPassword = () => {
         }
 
         setError('');
-        setSuccess(true);
-        console.log('Sending reset link to:', email);
+        setSubmitError('');
+        setIsSubmitting(true);
+
+        try {
+            await authApi.forgotPassword({ email });
+            setSuccess(true);
+        } catch (submitErr) {
+            setSubmitError(submitErr instanceof ApiError ? submitErr.message : 'Failed to send reset OTP.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -72,6 +84,7 @@ const ForgetPassword = () => {
                     
                     {!success ? (
                         <form onSubmit={handleSubmit} className="space-y-6 flex-1">
+                            {submitError ? <ErrorMessage msg={submitError} className="text-sm" /> : null}
                             <div>
                                 <FormInput 
                                     label={isRTL ? 'البريد الإلكتروني' : 'Email'}
@@ -80,16 +93,17 @@ const ForgetPassword = () => {
                                     name="email"
                                     placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
                                     value={email}
-                                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                                    onChange={(e) => { setEmail(e.target.value); setError(''); setSubmitError(''); }}
                                     isRTL={isRTL}
+                                    disabled={isSubmitting}
                                     className={error ? 'border-red-400 focus:ring-red-500/50 flex-1 py-4 text-base' : 'border-gray-200/80 focus:border-secondary flex-1 py-4 text-base'}
                                 />
                                 <ErrorMessage msg={error} className="text-[11px] sm:text-xs mt-1" />
                             </div>
 
                             <div className="pt-2 lg:pt-6">
-                                <SubmitButton type="submit" className="py-4 text-base">
-                                    {isRTL ? 'إرسال رابط إعادة التعيين' : 'Send Reset Link'}
+                                <SubmitButton type="submit" className="py-4 text-base" disabled={isSubmitting}>
+                                    {isSubmitting ? (isRTL ? 'جارٍ الإرسال...' : 'Sending...') : (isRTL ? 'إرسال رابط إعادة التعيين' : 'Send Reset Link')}
                                 </SubmitButton>
                             </div>
                         </form>

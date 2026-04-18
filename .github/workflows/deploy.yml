@@ -19,11 +19,18 @@ jobs:
         with:
           node-version: 20
 
+      - name: Create frontend build env file
+        run: |
+          printf "%s" "${{ secrets.FRONTEND_ENV_FILE }}" > frontend/.env.production
+
       - name: Install and build frontend
         working-directory: frontend
         run: |
           npm ci
           npm run build
+
+      - name: Remove frontend build env file
+        run: rm -f frontend/.env.production
 
       - name: Install and build backend
         working-directory: backend

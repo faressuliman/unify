@@ -27,9 +27,15 @@ export const forgotPasswordSchema = z.object({
 })
 
 export const resetPasswordSchema = z.object({
-    password: z.string().trim().nonempty({ message: "Password is required" }).min(6, { message: "Password must be at least 6 characters" }),
-    confirm_password: z.string().trim().nonempty({ message: "Confirm Password is required" }),
-}).refine((data) => data.password === data.confirm_password, {
-    path: ["confirm_password"],
+    email: z.string().trim().nonempty({ message: "Email is required" }).email({ message: "Invalid email format" }),
+    otp: z.string().trim().nonempty({ message: "OTP is required" }),
+    password: z.string().trim()
+        .min(8, { message: "Password must be at least 8 characters" })
+        .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+        .regex(/[0-9]/, { message: "Password must contain at least one number" })
+        .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
+    confirmPassword: z.string().trim().nonempty({ message: "Confirm Password is required" }),
+}).refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
     message: "Passwords do not match",
 })
