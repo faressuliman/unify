@@ -1,6 +1,7 @@
 import { useLanguage } from '../../context/LanguageContext';
 import PersonCard, { type ProfileData } from './PersonCard';
 import FoundPersonCard from '../search/FoundPersonCard';
+import MissingPersonCard from '../search/MissingPersonCard';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import { motion } from 'framer-motion';
@@ -44,19 +45,35 @@ const recentProfiles: ProfileData[] = [
   {
     id: '8823',
     name: 'Omar Hassan',
+    type: 'missing',
     status: 'New Alert',
     location: 'Giza',
     timeAgo: '1 day ago',
     details: 'Male, 8 years old',
+    age: '8 years old',
+    physicalDescription: 'Black hair, Brown eyes, Medium skin tone',
+    clothingDescription: 'School uniform, white sneakers',
+    lastSeenLocationDetails: 'Near school, Giza',
+    city: 'Giza',
+    postedBy: 'Giza Police Unit',
+    reportDate: '04/17/2026',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAnhH0u1eryEHbN8R_jWVqwgToamhmVCEeSs5QXMLgRYUjquGarA1AQIxaqL_m18G4GmxoXEjNDkBLaNh_slI84bwTNXuvLkqTV-STaUATODmZ95N8eZ_2ksBgtzDahqzyzHcZrias9CIqaqEua5QOkQplgn8I9SGTh1deFH-gZpJJlIKrSB3zfzAkw0xRmXmhT8c7nF0WjZYsXlfnc-PyCf__z4QJ0_2Wu2i7O48X2u2SahSANUFtRRefS-Lxl4gCPTGNmcj2zIoI-'
   },
   {
     id: '8824',
     name: 'Layla Mansour',
+    type: 'missing',
     status: 'High Priority',
     location: 'Mansoura',
     timeAgo: '3 days ago',
     details: 'Female, 16 years old',
+    age: '16 years old',
+    physicalDescription: 'Brown hair, Black eyes, Fair skin tone',
+    clothingDescription: 'Pink jacket, jeans, brown shoes',
+    lastSeenLocationDetails: 'Downtown Mansoura, near market',
+    city: 'Mansoura',
+    postedBy: 'Mansoura City Police',
+    reportDate: '04/15/2026',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMRvtSFBN7-X6hhu8w-12Ygaqpv-gyqC92kTjK7uAtwJamac0x_5PFmOFpcHK7tfCbNWUT2RHWw6fIIK5-R00XWeGhnQictj8Zyuxbckh17PiTWP0YJnwa0wAm3lOgT9qzHO1MujT3_ULi1zBPnUKaOa4GBCdzBc5fLtsggGGCBC4HH1DZUHWe4K_25s5LQA8Oa3LA7Bkn6MrTuffwIcoa04hoXCsr2oZMF-aB94jzTLfEGE3lConDVOajuSzjT3jfhXM00iR1CGS2'
   }
 ];
@@ -105,7 +122,7 @@ export default function RecentUpdates() {
             profile.type === 'found' ? (
               <FoundPersonCard key={profile.id} profile={profile} idx={idx} isRTL={isRTL} />
             ) : (
-              <PersonCard key={profile.id} profile={profile} idx={idx} isRTL={isRTL} />
+              <MissingPersonCard key={profile.id} profile={profile} idx={idx} isRTL={isRTL} />
             )
           ))}
         </motion.div>

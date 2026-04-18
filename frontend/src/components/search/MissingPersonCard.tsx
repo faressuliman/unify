@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { MapPin, Clock, User } from 'lucide-react';
+import { useState } from 'react';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import type { ProfileData } from '../home/PersonCard';
+import MissingModal from '../ui/modals/MissingModal';
 
 interface MissingPersonCardProps {
   profile: ProfileData;
@@ -14,10 +16,12 @@ interface MissingPersonCardProps {
 
 export default function MissingPersonCard({ profile, idx, isRTL, showImage = false, className = '' }: MissingPersonCardProps) {
   const t = isRTL ? ar.recentUpdates : en.recentUpdates;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <motion.div 
-      key={profile.id}
+    <>
+      <motion.div 
+        key={profile.id}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -66,11 +70,22 @@ export default function MissingPersonCard({ profile, idx, isRTL, showImage = fal
         </div>
 
         <div className="flex flex-col mt-auto">
-          <button className="w-full bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="w-full bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap"
+          >
             {t.buttons.details}
           </button>
         </div>
       </div>
     </motion.div>
+
+      <MissingModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        profile={profile}
+        isRTL={isRTL}
+      />
+    </>
   );
 }
