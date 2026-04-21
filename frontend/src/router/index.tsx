@@ -19,6 +19,7 @@ const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 const AboutUs = lazy(() => import("../pages/AboutUs"));
+const Donate = lazy(() => import("../pages/Donate"));
 
 export const router = createBrowserRouter([
   {
@@ -119,6 +120,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <AboutUs />
+          </Suspense>
+        ),
+      },
+      {
+        path: "donate",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <Donate />
           </Suspense>
         ),
       }

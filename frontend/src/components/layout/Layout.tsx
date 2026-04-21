@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import LoadingScreen from '../ui/LoadingScreen'
 import ScrollToTopButton from '../ui/ScrollToTopButton'
+import DonateFloatingButton from '../ui/DonateFloatingButton'
 import Footer from './Footer'
 
 interface LayoutProps {
@@ -32,6 +33,7 @@ export function Layout({ children }: LayoutProps) {
       <LoadingScreen />
       <Navbar />
       <ScrollToTopButton />
+      <DonateFloatingButton />
       {children}
       {!isAuthPage && <Footer />}
     </div>
