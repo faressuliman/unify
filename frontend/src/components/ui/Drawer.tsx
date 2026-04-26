@@ -1,5 +1,5 @@
 import { Sheet, SheetContent, SheetClose } from './sheet';
-import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Bell, Mail, LogOut } from 'lucide-react';
+import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Bell, Mail, LogOut, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,11 +9,12 @@ interface DrawerProps {
   currentPage: string;
   handleNavClick: (page: string) => void;
   handleLogout: () => void;
+  notificationCount: number;
 }
 
-export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleLogout }: DrawerProps) {
-  const { language, toggleLanguage, t } = useLanguage();
-  const { isAuthenticated } = useAuth();
+export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleLogout, notificationCount }: DrawerProps) {
+  const { language, toggleLanguage, t, isLocked: isLanguageLocked } = useLanguage();
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -89,7 +90,19 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
           </div>
           <button
             onClick={toggleLanguage}
-            className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
+            disabled={isLanguageLocked}
+            className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full border-none border-s-4 border-transparent ${
+              isLanguageLocked
+                ? 'bg-transparent text-gray-400 cursor-not-allowed'
+                : 'bg-transparent hover:bg-gray-50 text-gray-700 hover:ps-8'
+            }`}
+            title={
+              isLanguageLocked
+                ? (language === 'ar'
+                  ? 'تم تعطيل تغيير اللغة أثناء إنشاء منشور'
+                  : 'Language switching is disabled while creating a post')
+                : undefined
+            }
           >
             <Globe className="h-5 w-5 shrink-0" />
             <span className="font-medium">{language === 'en' ? 'العربية' : 'الانجليزية'}</span>
@@ -146,9 +159,16 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
                 </button>
                 <button
                   onClick={() => handleNavClick('notifications')}
-                  className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
+                  className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8 relative"
                 >
-                  <Bell className="h-5 w-5 shrink-0" />
+                  <div className="relative">
+                    <Bell className="h-5 w-5 shrink-0" />
+                    {notificationCount > 0 && (
+                      <span className="absolute -right-1 -top-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </div>
                   <span className="font-medium">{t('nav.notifications')}</span>
                 </button>
                 <button
@@ -158,6 +178,19 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
                   <Mail className="h-5 w-5 shrink-0" />
                   <span className="font-medium">{t('nav.messages')}</span>
                 </button>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => handleNavClick('admin')}
+                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
+                      currentPage === 'admin'
+                        ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
+                    }`}
+                  >
+                    <ShieldCheck className="h-5 w-5 shrink-0" />
+                    <span className="font-medium">{t('nav.admin')}</span>
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-red-50 transition-all duration-300 text-red-600 w-full border-none border-s-4 border-transparent hover:ps-8"

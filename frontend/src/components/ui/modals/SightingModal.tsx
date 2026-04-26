@@ -6,6 +6,7 @@ import FormTextArea from '@/components/ui/FormTextArea';
 import SelectMenu from '@/components/ui/SelectMenu';
 import SubmitButton from '@/components/ui/SubmitButton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { sightingApi } from '@/lib/api';
 import { en } from '../../../data/english';
 import { ar } from '../../../data/arabic';
 
@@ -14,9 +15,10 @@ interface SightingModalProps {
   onOpenChange: (open: boolean) => void;
   personName: string;
   isRTL: boolean;
+  postId: string;
 }
 
-export default function SightingModal({ isOpen, onOpenChange, personName, isRTL }: SightingModalProps) {
+export default function SightingModal({ isOpen, onOpenChange, personName, isRTL, postId }: SightingModalProps) {
   const t = isRTL ? ar.recentUpdates.missingModal : en.recentUpdates.missingModal;
   
   const [formData, setFormData] = useState({
@@ -30,6 +32,7 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
   });
   
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -43,14 +46,14 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const validationRules = {
+  const validationRules = useMemo(() => ({
     confidence: formData.confidence !== '',
     date: formData.date.trim() !== '',
     location: formData.location.trim() !== '',
     wearing: formData.wearing.trim() !== '',
     contactName: formData.contactName.trim() !== '',
     contactPhone: formData.contactPhone.trim() !== ''
-  };
+  }), [formData.confidence, formData.date, formData.location, formData.wearing, formData.contactName, formData.contactPhone]);
 
   const errors = useMemo(() => {
     if (!submitAttempted) return {};
@@ -64,24 +67,43 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
     return e;
   }, [submitAttempted, validationRules, t]);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitAttempted(true);
 
     const isValid = Object.values(validationRules).every(Boolean);
     if (!isValid) return;
 
-    onOpenChange(false);
-    setFormData({
-      confidence: '',
-      date: '',
-      location: '',
-      wearing: '',
-      additional: '',
-      contactName: '',
-      contactPhone: ''
-    });
-    setSubmitAttempted(false);
+    try {
+      setIsLoading(true);
+      await sightingApi.createSighting({
+        missingPersonId: postId,
+        confidence: formData.confidence,
+        seenAt: formData.date || new Date().toISOString(), // In real app, standardise date
+        address: formData.location,
+        description: formData.wearing,
+        additionalDetails: formData.additional,
+        reporterName: formData.contactName,
+        reporterPhone: formData.contactPhone
+      });
+      
+      onOpenChange(false);
+      setFormData({
+        confidence: '',
+        date: '',
+        location: '',
+        wearing: '',
+        additional: '',
+        contactName: '',
+        contactPhone: ''
+      });
+      setSubmitAttempted(false);
+    } catch (error) {
+      console.error(error);
+      // optionally show an error message here
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -120,15 +142,15 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
               <div className="space-y-4">
                 {/* Confidence */}
                 <div>
-                  <SelectMenu
+                    <SelectMenu
                     id="sighting-confidence"
                     label={t.confidenceLabel}
                     value={formData.confidence}
                     options={[
-                      { value: 'notSure', label: t.confidenceOptions.notSure },
+                      { value: 'not_sure', label: t.confidenceOptions.notSure },
                       { value: 'possibly', label: t.confidenceOptions.possibly },
-                      { value: 'prettySure', label: t.confidenceOptions.prettySure },
-                      { value: 'verySure', label: t.confidenceOptions.verySure }
+                      { value: 'pretty_sure', label: t.confidenceOptions.prettySure },
+                      { value: 'very_sure', label: t.confidenceOptions.verySure }
                     ]}
                     onChange={(value) => setFormData(prev => ({ ...prev, confidence: value }))}
                     isRTL={isRTL}
@@ -233,6 +255,7 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL 
                 <SubmitButton
                   type="submit"
                   className="w-full lg:flex-1 px-8 text-[15px] bg-red-600 shadow-[0_4px_14px_rgba(220,38,38,0.3)] hover:bg-red-700 order-1 lg:order-2"
+                  isLoading={isLoading}
                 >
                   {t.submitSighting}
                 </SubmitButton>

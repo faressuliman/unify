@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import App from "../App";
 import ErrorFallback from "../components/ui/ErrorFallback";
 import LoadingScreen from "../components/ui/LoadingScreen";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 
@@ -19,6 +20,9 @@ const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 const AboutUs = lazy(() => import("../pages/AboutUs"));
+const Notifications = lazy(() => import("../pages/Notifications"));
+const Chat = lazy(() => import("../pages/Chat"));
+const Admin = lazy(() => import("../pages/Admin"));
 
 export const router = createBrowserRouter([
   {
@@ -77,9 +81,21 @@ export const router = createBrowserRouter([
       {
         path: "profile",
         element: (
-          <Suspense fallback={<LoadingScreen />}>
-            <Profile />
-          </Suspense>
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingScreen />}>
+              <Profile />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin",
+        element: (
+          <ProtectedRoute requireAdmin>
+            <Suspense fallback={<LoadingScreen />}>
+              <Admin />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
@@ -121,7 +137,27 @@ export const router = createBrowserRouter([
             <AboutUs />
           </Suspense>
         ),
-      }
+      },
+      {
+        path: "notifications",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingScreen />}>
+              <Notifications />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "chat",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingScreen />}>
+              <Chat />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);

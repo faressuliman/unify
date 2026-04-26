@@ -26,7 +26,7 @@ export interface SearchFilters {
   city: string;
 }
 
-export const defaultSearchFilters: SearchFilters = {
+const defaultSearchFilters: SearchFilters = {
   firstName: '',
   lastName: '',
   ageMin: '',
@@ -54,9 +54,11 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
     defaultValues: defaultSearchFilters,
   });
 
-  const watchedFilters = watch();
-  const hasAtLeastOneInput = Object.values(watchedFilters).some((value) => value?.trim() !== '') || Boolean(searchImage);
-  const hasActiveFilters = Object.values(watchedFilters).some((value) => value?.trim() !== '');
+  const watchedFilters = getValues(); // or use formState if necessary; watch() causes full component re-renders
+  // Note: If we really want full re-renders for disabled state, we can use useWatch from react-hook-form 
+  // Let's use react-hook-form correctly:
+  const hasAtLeastOneInput = Object.values(watch()).some((value) => value?.trim() !== '') || Boolean(searchImage);
+  const hasActiveFilters = Object.values(watch()).some((value) => value?.trim() !== '');
 
   const hairColors = useMemo(() => getHairColorOptions(language), [language]);
 

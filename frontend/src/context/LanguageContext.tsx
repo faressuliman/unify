@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { en } from '../data/english';
 
@@ -12,6 +13,8 @@ interface LanguageContextType {
   language: Language;
   toggleLanguage: () => void;
   t: (key: string) => string;
+  isLocked: boolean;
+  lockLanguage: (locked: boolean) => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -22,14 +25,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return saved === 'ar' ? 'ar' : 'en';
   });
   const [arabicTranslations, setArabicTranslations] = useState<Record<string, string> | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
 
   const toggleLanguage = () => {
+    if (isLocked) return;
     setLanguage((prev) => {
       const next = prev === 'en' ? 'ar' : 'en';
       localStorage.setItem('language', next);
       return next;
     });
   };
+
+  const lockLanguage = (locked: boolean) => setIsLocked(locked);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -59,7 +66,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, t, isLocked, lockLanguage }}>
       {children}
     </LanguageContext.Provider>
   );

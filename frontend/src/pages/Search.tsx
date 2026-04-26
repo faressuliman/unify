@@ -5,7 +5,7 @@ import MissingPersonCard from '../components/search/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
 import FoundPersonCard from '../components/search/FoundPersonCard';
 import { motion } from 'framer-motion';
-import SearchFiltersPanel, { defaultSearchFilters, type SearchFilters } from '../components/search/SearchFiltersPanel';
+import SearchFiltersPanel, { type SearchFilters } from '../components/search/SearchFiltersPanel';
 import UnderlineTabSelector from '../components/ui/UnderlineTabSelector';
 import { ApiError, type BackendPost, postApi } from '@/lib/api';
 import type { ProfileData } from '@/components/home/PersonCard';
@@ -14,6 +14,20 @@ type SearchProfile = ProfileData & {
   dateMissing?: string;
   rawClothing?: string;
   rawLocation?: string;
+};
+
+const defaultSearchFilters: SearchFilters = {
+  firstName: '',
+  lastName: '',
+  ageMin: '',
+  ageMax: '',
+  hairColor: '',
+  eyeColor: '',
+  gender: '',
+  location: '',
+  clothing: '',
+  dateMissing: '',
+  city: '',
 };
 
 const humanizeTimeAgo = (dateString?: string): string => {

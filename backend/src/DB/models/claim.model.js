@@ -8,6 +8,7 @@ const claimSchema = new mongoose.Schema(
       required: true,
     },
     claimType: { type: String, required: true },
+    additionalInfo: { type: String },
     claimUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

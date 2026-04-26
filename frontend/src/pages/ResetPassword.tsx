@@ -14,7 +14,19 @@ import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { resetPasswordSchema } from '../validation';
 import { authApi, ApiError } from '@/lib/api';
 
-const getPasswordStrength = (password: string, content: any) => {
+type PasswordStrengthContent = {
+    pwd8Chars: string;
+    pwdUpper: string;
+    pwdNumber: string;
+    pwdSpecial: string;
+    pwdNone: string;
+    pwdWeak: string;
+    pwdFair: string;
+    pwdGood: string;
+    pwdStrong: string;
+};
+
+const getPasswordStrength = (password: string, content: PasswordStrengthContent) => {
     let score = 0;
     const missing: string[] = [];
     
@@ -49,8 +61,20 @@ const ResetPassword = () => {
     const contentLogin = language === 'ar' ? ar.login : en.login;
     const contentSignup = language === 'ar' ? ar.signup : en.signup;
     const isRTL = language === 'ar';
+    const validationDict = contentSignup.validation as Record<string, string>;
+    const passwordStrengthContent: PasswordStrengthContent = {
+        pwd8Chars: contentSignup.pwd8Chars,
+        pwdUpper: contentSignup.pwdUpper,
+        pwdNumber: contentSignup.pwdNumber,
+        pwdSpecial: contentSignup.pwdSpecial,
+        pwdNone: contentSignup.pwdNone,
+        pwdWeak: contentSignup.pwdWeak,
+        pwdFair: contentSignup.pwdFair,
+        pwdGood: contentSignup.pwdGood,
+        pwdStrong: contentSignup.pwdStrong,
+    };
     const localizeError = (message: string) => {
-        return contentSignup.validation[message as keyof typeof contentSignup.validation] ?? message;
+        return validationDict[message] ?? message;
     };
 
     const pageTitle = isRTL ? 'إعادة ضبط كلمة المرور' : 'Reset Password';
@@ -193,21 +217,28 @@ const ResetPassword = () => {
                             />
                             {formData.password && (
                                 <div className="mt-2.5 px-1 font-sans">
+                                    {(() => {
+                                        const strength = getPasswordStrength(formData.password, passwordStrengthContent);
+                                        return (
+                                            <>
                                     <div className="flex justify-between items-center mb-1.5">
-                                        <span className={`text-xs font-bold ${getPasswordStrength(formData.password, contentSignup).textColor}`}>{getPasswordStrength(formData.password, contentSignup).text}</span>
-                                        <span className="text-xs font-semibold text-slate-500">{getPasswordStrength(formData.password, contentSignup).score}/4</span>
+                                        <span className={`text-xs font-bold ${strength.textColor}`}>{strength.text}</span>
+                                        <span className="text-xs font-semibold text-slate-500">{strength.score}/4</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                                         <div 
-                                            className={`h-full ${getPasswordStrength(formData.password, contentSignup).color} transition-all duration-300 ease-out`} 
-                                            style={{ width: `${(getPasswordStrength(formData.password, contentSignup).score / 4) * 100}%` }}
+                                            className={`h-full ${strength.color} transition-all duration-300 ease-out`} 
+                                            style={{ width: `${(strength.score / 4) * 100}%` }}
                                         ></div>
                                     </div>
-                                    {getPasswordStrength(formData.password, contentSignup).missing.length > 0 && (
+                                    {strength.missing.length > 0 && (
                                         <p className="text-xs text-slate-500 mt-2 font-medium">
-                                            {contentSignup.needs} {getPasswordStrength(formData.password, contentSignup).missing.join(", ")}
+                                            {contentSignup.needs} {strength.missing.join(", ")}
                                         </p>
                                     )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             )}
                             <ErrorMessage msg={errors.password} className="text-[11px] sm:text-xs" />

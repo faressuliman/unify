@@ -7,6 +7,7 @@ export const en = {
         'nav.login': 'Login',
         'nav.register': 'Register',
         'nav.profile': 'Profile',
+        'nav.admin': 'Admin Dashboard',
         'nav.logout': 'Logout',
         'nav.notifications': 'Notifications',
         'nav.messages': 'Messages',
@@ -16,6 +17,15 @@ export const en = {
         'nav.changeLanguage': 'Language',
         'nav.getStarted': 'Get Started',
         'nav.account': 'Account',
+        
+        'notifications.title': 'Notifications',
+        'notifications.empty': 'No notifications at this time.',
+        'notifications.markAllRead': 'Mark All as Read',
+        'notifications.new_sighting': 'New sighting reported for ',
+        'notifications.new_claim': 'New claim submitted for ',
+        'notifications.claim_approved': 'Your claim was approved for ',
+        'notifications.claim_rejected': 'Your claim was rejected for ',
+
         'search.searchFormTitle': 'Search & Filter',
         'search.uploadImage': 'Upload Image for AI Recognition',
         'search.uploadSpaceTitle': 'Click to Upload Photo',

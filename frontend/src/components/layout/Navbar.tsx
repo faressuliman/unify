@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu } from 'lucide-react';
+import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,6 +13,8 @@ import {
 } from '../ui/dropdown-menu';
 import { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import unifyLogo from '../../assets/unify.png';
+import { notificationApi, type BackendNotification } from '@/lib/api';
+import { getSocket } from '@/lib/socket';
 
 const LazyDrawer = lazy(() => import('../ui/Drawer').then((module) => ({ default: module.Drawer })));
 
@@ -34,9 +36,9 @@ const prefetchAuthRoutes = () => {
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
-  const { language, toggleLanguage, t } = useLanguage();
-  const [notificationCount] = useState(2);
+  const { user, token, logout, isAuthenticated } = useAuth();
+  const { language, toggleLanguage, t, isLocked: isLanguageLocked } = useLanguage();
+  const [notificationCount, setNotificationCount] = useState(0);
   const [hasActiveChats] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isDrawerLoaded, setIsDrawerLoaded] = useState(false);
@@ -114,7 +116,7 @@ export function Navbar() {
   const isRTL = language === 'ar';
   const [isScrolled, setIsScrolled] = useState(false);
   const [isReady, setIsReady] = useState(() => {
-    return Boolean((window as any).__unifyLoadingComplete);
+    return Boolean((window as unknown as { __unifyLoadingComplete?: boolean }).__unifyLoadingComplete);
   });
   const isAuthLikePage =
     currentPage === 'login' ||
@@ -132,7 +134,7 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    if ((window as any).__unifyLoadingComplete) {
+    if ((window as unknown as { __unifyLoadingComplete?: boolean }).__unifyLoadingComplete) {
       return;
     }
 
@@ -186,6 +188,50 @@ export function Navbar() {
 
     preloadAuthRoutes();
   }, [sheetOpen]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setNotificationCount(0);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchCount = async () => {
+      try {
+        const res = await notificationApi.getMyNotifications(token, 1, 1);
+        if (!cancelled) setNotificationCount(res.unreadCount);
+      } catch (e) {
+        console.error('Failed to fetch notifications count', e);
+      }
+    };
+
+    void fetchCount();
+
+    // Subscribe to realtime updates so the badge reflects new notifications
+    // and read events immediately. Polling stays as a safety net in case the
+    // socket is briefly disconnected.
+    const socket = getSocket();
+    const handleUnreadCount = ({ unreadCount }: { unreadCount: number }) => {
+      setNotificationCount(unreadCount);
+    };
+    const handleNew = (_n: BackendNotification) => {
+      setNotificationCount((c) => c + 1);
+    };
+    if (socket) {
+      socket.on('notification:unread-count', handleUnreadCount);
+      socket.on('notification:new', handleNew);
+    }
+
+    const interval = setInterval(fetchCount, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      if (socket) {
+        socket.off('notification:unread-count', handleUnreadCount);
+        socket.off('notification:new', handleNew);
+      }
+    };
+  }, [isAuthenticated, token]);
 
   const isScrolledActive =
     isScrolled &&
@@ -292,9 +338,20 @@ export function Navbar() {
               {/* Language Toggle */}
               <button
                 onClick={toggleLanguage}
-                className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                disabled={isLanguageLocked}
+                className={`hidden 2xl:flex relative w-10 h-10 rounded-full items-center justify-center transition-all duration-200 border-none ${
+                  isLanguageLocked
+                    ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                    : 'bg-gray-100 hover:bg-gray-200 cursor-pointer'
+                }`}
                 aria-label="Change Language"
-                title={language === 'en' ? 'العربية' : 'الانجليزية'}
+                title={
+                  isLanguageLocked
+                    ? (language === 'ar'
+                      ? 'تم تعطيل تغيير اللغة أثناء إنشاء منشور'
+                      : 'Language switching is disabled while creating a post')
+                    : (language === 'en' ? 'العربية' : 'الانجليزية')
+                }
               >
                 <Globe className="h-5 w-5 text-gray-700" strokeWidth={2} />
               </button>
@@ -345,6 +402,12 @@ export function Navbar() {
                     <User className="me-2 h-4 w-4 text-primary-600" />
                     <span className="font-medium">{t('nav.profile')}</span>
                   </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <DropdownMenuItem onClick={() => handleNavClick('admin')} onSelect={() => handleNavClick('admin')} className="cursor-pointer">
+                      <ShieldCheck className="me-2 h-4 w-4 text-primary-600" />
+                      <span className="font-medium">{t('nav.admin')}</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleLogout} onSelect={handleLogout} className="cursor-pointer text-red-600 focus:text-red-700">
                     <LogOut className="me-2 h-4 w-4" />
                     <span className="font-medium">{t('nav.logout')}</span>
@@ -356,9 +419,20 @@ export function Navbar() {
             <div className="hidden 2xl:flex items-center gap-3">
               <button
                 onClick={toggleLanguage}
-                className="relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                disabled={isLanguageLocked}
+                className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border-none ${
+                  isLanguageLocked
+                    ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                    : 'bg-gray-100 hover:bg-gray-200 cursor-pointer'
+                }`}
                 aria-label="Change Language"
-                title={language === 'en' ? 'العربية' : 'English'}
+                title={
+                  isLanguageLocked
+                    ? (language === 'ar'
+                      ? 'تم تعطيل تغيير اللغة أثناء إنشاء منشور'
+                      : 'Language switching is disabled while creating a post')
+                    : (language === 'en' ? 'العربية' : 'English')
+                }
               >
                 <Globe className="h-5 w-5 text-gray-700" strokeWidth={2} />
               </button>
@@ -411,6 +485,7 @@ export function Navbar() {
                 currentPage={currentPage}
                 handleNavClick={handleNavClick}
                 handleLogout={handleLogout}
+                notificationCount={notificationCount}
               />
             </Suspense>
           ) : null}

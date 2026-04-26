@@ -5,7 +5,8 @@ export const createClaimSchema = joi
   .object({
     postId: genralrules.id.required(),
     claimType: joi.string().required(),
-    file: genralrules.file.optional(),
+    additionalInfo: joi.string().allow("").optional(),
+    document: genralrules.file.optional(),
     authorization: joi.string().required(),
   })
   .unknown(true);

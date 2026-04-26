@@ -30,7 +30,7 @@ export default function ImageUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        setPreview(initialImage ?? null);
+        setTimeout(() => setPreview(initialImage ?? null), 0);
     }, [initialImage]);
 
   const handleFile = (file: File) => {

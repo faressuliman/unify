@@ -46,8 +46,10 @@ export default function LocalizedDateInput({
   const locale = isRTL ? 'ar-EG-u-nu-arab' : 'en-US';
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedDate = fromInputDate(value);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const today = useMemo(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }, []);
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
   const [isOpen, setIsOpen] = useState(false);
@@ -69,13 +71,15 @@ export default function LocalizedDateInput({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  const selectedYear = selectedDate?.getFullYear();
+  const selectedMonth = selectedDate?.getMonth();
   useEffect(() => {
-    if (!selectedDate) return;
-    setDisplayMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
-  }, [selectedDate?.getFullYear(), selectedDate?.getMonth()]);
+    if (!selectedYear || selectedMonth === undefined) return;
+    setDisplayMonth(new Date(selectedYear, selectedMonth, 1));
+  }, [selectedYear, selectedMonth]);
 
   useEffect(() => {
-    if (!selectedDate || selectedDate <= today) return;
+    if (!selectedDate || selectedDate.getTime() <= today.getTime()) return;
     onChange(toInputDate(today));
   }, [onChange, selectedDate, today]);
 

@@ -96,7 +96,7 @@ const Poster = () => {
       setPdfStatus('done');
       setPdfMessage(t('poster.downloadStarted'));
       setTimeout(() => setPdfStatus('idle'), 3000);
-    } catch (e) {
+    } catch {
       setPdfStatus('error');
       setPdfMessage(t('poster.errorOccurred'));
       setTimeout(() => setPdfStatus('idle'), 3000);

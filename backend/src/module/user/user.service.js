@@ -39,5 +39,23 @@ export const updateProfile = async (req, res, next) => {
     select: "-password -otp -otpExpiry",
   });
 
-  return res.status(200).json({ message: "Profile updated", user: updated });
+  if (!updated) {
+    return next(new Error("User not found", { cause: 404 }));
+  }
+
+  return res.status(200).json({
+    message: "Profile updated",
+    user: {
+      id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      phoneNumber: updated.phoneNumber,
+      birthDate: updated.birthDate,
+      role: updated.role,
+      isVerified: updated.isVerified,
+      idImagePath: updated.idImagePath,
+      createdAt: updated.createdAt,
+      lastLoginAt: updated.lastLoginAt,
+    },
+  });
 };

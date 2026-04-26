@@ -169,6 +169,7 @@ export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: M
         onOpenChange={setIsSightingOpen}
         personName={protectedName}
         isRTL={isRTL}
+        postId={profile.id}
       />
     </>
   );

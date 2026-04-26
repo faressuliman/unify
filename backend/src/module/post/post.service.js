@@ -1,6 +1,13 @@
 import Post from "../../DB/models/post.model.js";
 import MapData from "../../DB/models/mapData.model.js";
 import { pagination } from "../../utils/feature/pagination.js";
+import {
+  toSearchKey,
+  escapeRegex,
+  containsArabic,
+  arabicToLatin,
+  latinToArabic,
+} from "../../utils/language/transliterate.js";
 
 // ─── Create Post ──────────────────────────────────────────────────────────────
 export const createPost = async (req, res, next) => {
@@ -25,10 +32,13 @@ export const createPost = async (req, res, next) => {
 
   const postImages = req.files?.map((f) => f.path) || [];
 
+  const fullName = `${firstName} ${lastName}`.trim();
+
   const post = await Post.create({
     postType,
     userId: req.user._id,
-    name: `${firstName} ${lastName}`,
+    name: fullName,
+    nameSearchKey: toSearchKey(fullName),
     age,
     ageUnit,
     gender,
@@ -50,8 +60,32 @@ export const createPost = async (req, res, next) => {
   return res.status(201).json({ message: "Post created successfully", post });
 };
 
+// Backfill `nameSearchKey` for any legacy posts that were created before the
+// field existed. Runs at most once per process (or after restarts) so that
+// cross-script search returns correct results without needing a manual
+// migration step.
+let _searchKeyBackfilled = false;
+const backfillSearchKeys = async () => {
+  if (_searchKeyBackfilled) return;
+  _searchKeyBackfilled = true;
+  try {
+    const stale = await Post.find({
+      $or: [{ nameSearchKey: { $exists: false } }, { nameSearchKey: "" }],
+    }).select("_id name");
+    for (const doc of stale) {
+      doc.nameSearchKey = toSearchKey(doc.name || "");
+      await doc.save();
+    }
+  } catch (err) {
+    // Non-fatal; just log and continue.
+    console.warn("[posts] nameSearchKey backfill failed:", err?.message || err);
+  }
+};
+
 // ─── Get All Posts (with filters + pagination) ────────────────────────────────
 export const getPosts = async (req, res, next) => {
+  await backfillSearchKeys();
+
   const {
     postType, status, gender, city,
     hairColour, eyeColour, firstName, lastName,
@@ -63,12 +97,38 @@ export const getPosts = async (req, res, next) => {
   if (status) filter.status = status;
   else filter.status = "active";
   if (gender) filter.gender = gender;
-  if (city) filter.city = new RegExp(city, "i");
-  if (hairColour) filter.hairColour = new RegExp(hairColour, "i");
-  if (eyeColour) filter.eyeColour = new RegExp(eyeColour, "i");
+  if (city) filter.city = new RegExp(escapeRegex(city), "i");
+  if (hairColour) filter.hairColour = new RegExp(escapeRegex(hairColour), "i");
+  if (eyeColour) filter.eyeColour = new RegExp(escapeRegex(eyeColour), "i");
   if (firstName || lastName) {
-    const name = [firstName, lastName].filter(Boolean).join(" ");
-    filter.name = new RegExp(name, "i");
+    const rawName = [firstName, lastName].filter(Boolean).join(" ").trim();
+    if (rawName) {
+      // Build cross-script matchers so a user typing "أحمد" also matches
+      // "Ahmed" in the stored Latin name and vice versa.
+      const orClauses = [];
+      const escapedRaw = escapeRegex(rawName);
+      orClauses.push({ name: new RegExp(escapedRaw, "i") });
+
+      const isArabic = containsArabic(rawName);
+      const searchKey = toSearchKey(rawName);
+      // Require ≥2 chars in the consonant skeleton to avoid spurious hits
+      // (e.g. "Ali" → "l" would otherwise match every record).
+      if (searchKey && searchKey.replace(/\s+/g, "").length >= 2) {
+        orClauses.push({ nameSearchKey: new RegExp(escapeRegex(searchKey), "i") });
+      }
+      if (isArabic) {
+        const latin = arabicToLatin(rawName);
+        if (latin && latin.length >= 2) {
+          orClauses.push({ name: new RegExp(escapeRegex(latin), "i") });
+        }
+      } else {
+        const arabic = latinToArabic(rawName);
+        if (arabic && arabic.length >= 2) {
+          orClauses.push({ name: new RegExp(escapeRegex(arabic), "i") });
+        }
+      }
+      filter.$or = orClauses;
+    }
   }
   if (ageMin || ageMax) {
     filter.age = {};
@@ -105,10 +165,11 @@ export const getPostById = async (req, res, next) => {
 
 // ─── Get Map Markers ──────────────────────────────────────────────────────────
 export const getMapMarkers = async (req, res, next) => {
-  const { keyword, city, dateMissing, status } = req.query;
+  const { keyword, city, dateMissing, status, postType } = req.query;
 
   const filter = {};
   if (status) filter.status = status;
+  if (postType) filter.postType = postType;
   if (city) filter.city = new RegExp(city, "i");
   if (keyword) filter.name = new RegExp(keyword, "i");
   if (dateMissing) filter.lastSeenDate = { $gte: new Date(dateMissing) };

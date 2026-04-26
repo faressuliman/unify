@@ -19,7 +19,7 @@ import LocalizedDateInput from '../components/ui/LocalizedDateInput';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import SubmitButton from '../components/ui/SubmitButton';
 import MapPopup from '../components/map/MapPopup';
-import { postApi } from '../lib/api';
+import { postApi, type BackendMapMarker } from '../lib/api';
 
 L.Marker.prototype.options.icon = L.icon({ iconUrl: icon, shadowUrl: iconShadow });
 
@@ -125,25 +125,48 @@ type MapFilters = {
   keyword: string;
   city: string;
   dateMissing: string;
-  status: 'missing' | 'found';
+  postType: 'missing' | 'found';
+};
+
+type MapPageDictionary = {
+  allNeighborhoods: string;
+  missing: string;
+  found: string;
+  filterCases: string;
+  refineMarkers: string;
+  keyword: string;
+  searchName: string;
+  areaRegion: string;
+  dateMissing: string;
+  showStatus: string;
+  applyFilters: string;
+  cases: string;
+  title: string;
+  subtitle: string;
+  dateLost?: string;
+  dateFound?: string;
+  notProvided?: string;
+  currentAge?: string;
+  homeAddress?: string;
+  viewDetails?: string;
 };
 
 export default function Map() {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
-  const t = isRTL ? ar.mapPage : (en as any).mapPage;
+  const t = (isRTL ? ar.mapPage : en.mapPage) as MapPageDictionary;
 
   const [draftFilters, setDraftFilters] = useState<MapFilters>({
     keyword: '',
     city: '',
     dateMissing: '',
-    status: 'missing',
+    postType: 'missing',
   });
   const [appliedFilters, setAppliedFilters] = useState<MapFilters>({
     keyword: '',
     city: '',
     dateMissing: '',
-    status: 'missing',
+    postType: 'missing',
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -160,14 +183,14 @@ export default function Map() {
   const mapCenterStr = appliedFilters.city && CITY_COORDS[appliedFilters.city] ? CITY_COORDS[appliedFilters.city] : DEFAULT_CENTER;
   const mapZoom = appliedFilters.city && CITY_COORDS[appliedFilters.city] ? 10 : 6;
 
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<(BackendMapMarker & { position: [number, number] })[]>([]);
 
   useEffect(() => {
     const fetchMarkers = async () => {
       try {
         const response = await postApi.getMapMarkers(appliedFilters);
         const fetchedMarkers = response.markers || [];
-        setPosts(fetchedMarkers.map(m => ({ ...m, position: [m.lat, m.lng] })));
+        setPosts(fetchedMarkers.map((m) => ({ ...m, position: [m.lat, m.lng] })));
       } catch (error) {
         console.error("Error fetching map markers:", error);
       }
@@ -177,8 +200,8 @@ export default function Map() {
 
   const filteredPosts = posts;
 
-  const missingCount = filteredPosts.filter(p => p.type === 'missing').length;
-  const foundCount = filteredPosts.filter(p => p.type === 'found').length;
+  const missingCount = filteredPosts.filter((p) => p.type === 'missing').length;
+  const foundCount = filteredPosts.filter((p) => p.type === 'found').length;
 
   const handleApplyFilters = () => {
     setAppliedFilters(draftFilters);
@@ -196,7 +219,7 @@ export default function Map() {
   };
 
   const renderClearFieldButton = (field: keyof MapFilters) => {
-    if (!draftFilters[field] || field === 'status') return null;
+    if (!draftFilters[field] || field === 'postType') return null;
     
     return (
       <button
@@ -291,8 +314,8 @@ export default function Map() {
             {t.showStatus}
           </label>
           <SegmentedControl
-            value={draftFilters.status}
-            onChange={(value) => setDraftFilters((prev) => ({ ...prev, status: value as MapFilters['status'] }))}
+            value={draftFilters.postType}
+            onChange={(value) => setDraftFilters((prev) => ({ ...prev, postType: value as MapFilters['postType'] }))}
             options={statusOptions}
             className="w-full bg-slate-50 p-1 rounded-xl"
           />
@@ -366,7 +389,7 @@ export default function Map() {
               />
               <ZoomControl position="topleft" />
               
-              {filteredPosts.map(post => (
+              {filteredPosts.map((post) => (
                 <Marker 
                   key={post.id} 
                   position={post.position} 

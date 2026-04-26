@@ -6,19 +6,25 @@ import FormTextArea from '@/components/ui/FormTextArea';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { en } from '../../../data/english';
 import { ar } from '../../../data/arabic';
+import { claimApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 interface ClaimFamilyModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   personName: string;
+  postId?: string;
   isRTL: boolean;
 }
 
-export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, isRTL }: ClaimFamilyModalProps) {
+export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, postId, isRTL }: ClaimFamilyModalProps) {
   const t = isRTL ? ar.recentUpdates.foundModal : en.recentUpdates.foundModal;
+  const { token } = useAuth();
   const [relationship, setRelationship] = useState('');
   const [documentImage, setDocumentImage] = useState<File | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -36,18 +42,36 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, isR
     [submitAttempted, documentImage]
   );
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitAttempted(true);
 
-    if (relationship.trim().length < 15 || !documentImage) {
+    if (relationship.trim().length < 15 || !documentImage || !postId || !token) {
       return;
     }
 
-    onOpenChange(false);
-    setRelationship('');
-    setDocumentImage(null);
-    setSubmitAttempted(false);
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+      formData.append('postId', postId);
+      formData.append('claimType', 'family_reunion');
+      formData.append('additionalInfo', relationship);
+      formData.append('document', documentImage);
+      formData.append('authorization', token);
+      
+      await claimApi.createClaim(formData, token);
+      
+      toast.success(isRTL ? 'تم ارسال الطلب بنجاح' : 'Claim submitted successfully');
+      onOpenChange(false);
+      setRelationship('');
+      setDocumentImage(null);
+      setSubmitAttempted(false);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'Failed to submit claim');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,6 +155,7 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, isR
               <div className="flex flex-col lg:flex-row gap-3 pt-2">
                 <SubmitButton
                   type="submit"
+                  isLoading={isSubmitting}
                   className="w-full lg:flex-1 px-8 text-[15px] bg-blue-600 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:bg-blue-700 order-1 lg:order-2"
                 >
                   {t.submitClaim}
@@ -138,7 +163,8 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, isR
                 <button
                   type="button"
                   onClick={() => handleOpenChange(false)}
-                  className="flex h-14 w-full lg:flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-[15px] font-bold text-slate-700 cursor-pointer transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] order-2 lg:order-1"
+                  disabled={isSubmitting}
+                  className="flex h-14 w-full lg:flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-[15px] font-bold text-slate-700 cursor-pointer transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] order-2 lg:order-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t.cancel}
                 </button>

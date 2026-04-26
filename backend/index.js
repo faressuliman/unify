@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { createServer } from "http";
 import bootstrap from "./src/app.controller.js";
+import { initSocket } from "./src/realtime/io.js";
 
 dotenv.config({ path: path.resolve(".env") });
 
@@ -23,6 +24,7 @@ const start = async () => {
   await bootstrap(app, express);
 
   const httpServer = createServer(app);
+  initSocket(httpServer);
   httpServer.listen(port, () => console.log(`Server listening on port ${port}`));
 };
 

@@ -17,7 +17,19 @@ import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '@/lib/api';
 
-const getPasswordStrength = (password: string, content: any) => {
+type PasswordStrengthContent = {
+    pwd8Chars: string;
+    pwdUpper: string;
+    pwdNumber: string;
+    pwdSpecial: string;
+    pwdNone: string;
+    pwdWeak: string;
+    pwdFair: string;
+    pwdGood: string;
+    pwdStrong: string;
+};
+
+const getPasswordStrength = (password: string, content: PasswordStrengthContent) => {
     let score = 0;
     const missing: string[] = [];
     
@@ -53,6 +65,17 @@ const Register = () => {
     const { language } = useLanguage();
     const content = language === 'ar' ? ar.signup : en.signup;
     const isRTL = language === 'ar';
+    const passwordStrengthContent: PasswordStrengthContent = {
+        pwd8Chars: content.pwd8Chars,
+        pwdUpper: content.pwdUpper,
+        pwdNumber: content.pwdNumber,
+        pwdSpecial: content.pwdSpecial,
+        pwdNone: content.pwdNone,
+        pwdWeak: content.pwdWeak,
+        pwdFair: content.pwdFair,
+        pwdGood: content.pwdGood,
+        pwdStrong: content.pwdStrong,
+    };
     const localizeError = (message: string) => {
         return content.validation[message as keyof typeof content.validation] ?? message;
     };
@@ -255,21 +278,28 @@ const Register = () => {
                             />
                             {formData.password && (
                                 <div className="mt-2.5 px-1 font-sans">
+                                    {(() => {
+                                        const strength = getPasswordStrength(formData.password, passwordStrengthContent);
+                                        return (
+                                            <>
                                     <div className="flex justify-between items-center mb-1.5">
-                                        <span className={`text-xs font-bold ${getPasswordStrength(formData.password, content).textColor}`}>{getPasswordStrength(formData.password, content).text}</span>
-                                        <span className="text-xs font-semibold text-slate-500">{getPasswordStrength(formData.password, content).score}/4</span>
+                                        <span className={`text-xs font-bold ${strength.textColor}`}>{strength.text}</span>
+                                        <span className="text-xs font-semibold text-slate-500">{strength.score}/4</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                                         <div 
-                                            className={`h-full ${getPasswordStrength(formData.password, content).color} transition-all duration-300 ease-out`} 
-                                            style={{ width: `${(getPasswordStrength(formData.password, content).score / 4) * 100}%` }}
+                                            className={`h-full ${strength.color} transition-all duration-300 ease-out`} 
+                                            style={{ width: `${(strength.score / 4) * 100}%` }}
                                         ></div>
                                     </div>
-                                    {getPasswordStrength(formData.password, content).missing.length > 0 && (
+                                    {strength.missing.length > 0 && (
                                         <p className="text-xs text-slate-500 mt-2 font-medium">
-                                            {content.needs} {getPasswordStrength(formData.password, content).missing.join(", ")}
+                                            {content.needs} {strength.missing.join(", ")}
                                         </p>
                                     )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             )}
                             <ErrorMessage msg={errors.password} className="text-[11px] sm:text-xs" />

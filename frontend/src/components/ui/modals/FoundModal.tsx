@@ -170,6 +170,7 @@ export default function FoundModal({ isOpen, onOpenChange, profile, isRTL }: Fou
         isOpen={isClaimOpen}
         onOpenChange={setIsClaimOpen}
         personName={protectedName}
+        postId={profile.id}
         isRTL={isRTL}
       />
     </>

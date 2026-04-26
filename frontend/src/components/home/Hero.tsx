@@ -39,11 +39,11 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
 
   useEffect(() => {
     if ((window as UnifyWindow).__unifyLoadingComplete) {
-      setIsReady(true);
+      setTimeout(() => setIsReady(true), 0);
       return;
     }
 
-    const handleReady = () => setIsReady(true);
+    const handleReady = () => setTimeout(() => setIsReady(true), 0);
     window.addEventListener('loadingComplete', handleReady);
 
     // Fallback in case custom loading event is missed.

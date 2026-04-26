@@ -1,10 +1,11 @@
-﻿import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { MapPin, Clock, User } from 'lucide-react';
 import { useState } from 'react';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import FoundModal from '../ui/modals/FoundModal';
 import MissingModal from '../ui/modals/MissingModal';
+import { directionFor } from '../../lib/textDirection';
 
 export interface ProfileData {
   id: string;
@@ -65,7 +66,11 @@ export default function PersonCard({ profile, idx, isRTL }: PersonCardProps) {
       <div className="p-4 sm:p-5 flex flex-col h-[calc(100%-12rem)] sm:h-[calc(100%-13rem)] min-h-45 justify-between">
         <div>
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-base sm:text-lg font-bold text-tertiary truncate" title={profile.name}>
+            <h3
+              className="text-base sm:text-lg font-bold text-tertiary truncate"
+              title={profile.name}
+              dir={directionFor(profile.name)}
+            >
               {profile.name}
             </h3>
           </div>
@@ -73,7 +78,7 @@ export default function PersonCard({ profile, idx, isRTL }: PersonCardProps) {
           <div className="space-y-1.5 sm:space-y-2 mb-4">
             <div className="flex items-center gap-2 text-slate-500 text-xs sm:text-sm">
               <MapPin className="w-4 h-4 shrink-0" />
-              <span className="truncate">{profile.location}</span>
+              <span className="truncate" dir={directionFor(profile.location)}>{profile.location}</span>
             </div>
             <div className="flex items-center gap-2 text-slate-500 text-xs sm:text-sm">
               <Clock className="w-4 h-4 shrink-0" />
@@ -81,7 +86,7 @@ export default function PersonCard({ profile, idx, isRTL }: PersonCardProps) {
             </div>
             <div className="flex items-center gap-2 text-slate-500 text-xs sm:text-sm">
               <User className="w-4 h-4 shrink-0" />
-              <span className="truncate">{profile.details}</span>
+              <span className="truncate" dir={directionFor(profile.details)}>{profile.details}</span>
             </div>
           </div>
         </div>

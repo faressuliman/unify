@@ -13,5 +13,6 @@ router.get("/stats", asynchandler(adminService.getDashboardStats));
 router.get("/users", asynchandler(adminService.getAllUsers));
 router.patch("/users/:id/ban", asynchandler(adminService.toggleBanUser));
 router.get("/claims/pending", asynchandler(adminService.getPendingClaims));
+router.get("/claims", asynchandler(adminService.getAllClaims));
 
 export default router;

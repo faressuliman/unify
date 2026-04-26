@@ -7,5 +7,6 @@ const router = Router();
 
 router.get("/", authenticate, asynchandler(notificationService.getMyNotifications));
 router.patch("/read-all", authenticate, asynchandler(notificationService.markAllRead));
+router.patch("/:id/read", authenticate, asynchandler(notificationService.markOneRead));
 
 export default router;

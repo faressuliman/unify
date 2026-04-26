@@ -2,11 +2,11 @@ import Claim from "../../DB/models/claim.model.js";
 import AIVerification from "../../DB/models/aiVerification.model.js";
 import AdminVerification from "../../DB/models/adminVerification.model.js";
 import Post from "../../DB/models/post.model.js";
-import Notification from "../../DB/models/notification.model.js";
+import { createNotification } from "../notification/notification.helper.js";
 
 // ─── Create Claim ─────────────────────────────────────────────────────────────
 export const createClaim = async (req, res, next) => {
-  const { postId, claimType } = req.body;
+  const { postId, claimType, additionalInfo } = req.body;
 
   const post = await Post.findById(postId);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
@@ -19,13 +19,14 @@ export const createClaim = async (req, res, next) => {
   const claim = await Claim.create({
     postId,
     claimType,
+    additionalInfo,
     claimUserId: req.user._id,
     documentPath,
     status: "pending",
   });
 
   // Notify post owner
-  await Notification.create({
+  await createNotification({
     userId: post.userId,
     postId: post._id,
     type: "new_claim",
@@ -37,7 +38,10 @@ export const createClaim = async (req, res, next) => {
 // ─── Get My Claims ────────────────────────────────────────────────────────────
 export const getMyClaims = async (req, res, next) => {
   const claims = await Claim.find({ claimUserId: req.user._id })
-    .populate("postId", "name postType status")
+    .populate({
+      path: "postId",
+      select: "name postType status userId",
+    })
     .sort({ createdAt: -1 });
 
   return res.status(200).json({ claims });
@@ -107,13 +111,13 @@ export const adminReviewClaim = async (req, res, next) => {
   // If approved, resolve the post
   if (result === "approved") {
     await Post.findByIdAndUpdate(claim.postId, { status: "resolved" });
-    await Notification.create({
+    await createNotification({
       userId: claim.claimUserId,
       postId: claim.postId,
       type: "claim_approved",
     });
   } else {
-    await Notification.create({
+    await createNotification({
       userId: claim.claimUserId,
       postId: claim.postId,
       type: "claim_rejected",

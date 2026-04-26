@@ -7,6 +7,7 @@ export const ar = {
         'nav.login': 'تسجيل الدخول',
         'nav.register': 'إنشاء حساب',
         'nav.profile': 'الملف الشخصي',
+        'nav.admin': 'لوحة الإدارة',
         'nav.logout': 'تسجيل الخروج',
         'nav.notifications': 'الإشعارات',
         'nav.messages': 'الرسائل',
@@ -16,6 +17,15 @@ export const ar = {
         'nav.changeLanguage': 'اللغة',
         'nav.getStarted': 'ابدأ الآن',
         'nav.account': 'الحساب',
+
+        'notifications.title': 'الإشعارات',
+        'notifications.empty': 'لا توجد إشعارات في الوقت الحالي.',
+        'notifications.markAllRead': 'تحديد الكل كمقروء',
+        'notifications.new_sighting': 'رؤية جديدة تم الإبلاغ عنها لـ ',
+        'notifications.new_claim': 'تم تقديم طلب جديد لـ ',
+        'notifications.claim_approved': 'تمت الموافقة على طلبك لـ ',
+        'notifications.claim_rejected': 'تم رفض طلبك لـ ',
+
         'search.searchFormTitle': 'بحث وتصفية',
         'search.uploadImage': 'رفع صورة للتعرف بالذكاء الاصطناعي',
         'search.uploadSpaceTitle': 'انقر لرفع الصورة',

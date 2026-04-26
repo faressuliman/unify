@@ -3,6 +3,8 @@ import { useMap } from 'react-leaflet';
 import { X } from 'lucide-react';
 import MissingModal from '../ui/modals/MissingModal';
 import FoundModal from '../ui/modals/FoundModal';
+import { type BackendMapMarker } from '../../lib/api';
+import type { ProfileData } from '../home/PersonCard';
 
 const extractAge = (age: number | string, details?: string): string => {
   if (age) return String(age);
@@ -12,14 +14,33 @@ const extractAge = (age: number | string, details?: string): string => {
 };
 
 type MapPopupProps = {
-  post: any;
+  post: BackendMapMarker;
   isRTL: boolean;
-  t: any;
+  t: {
+    dateLost?: string;
+    dateFound?: string;
+    notProvided?: string;
+    currentAge?: string;
+    homeAddress?: string;
+    viewDetails?: string;
+  };
 };
 
 export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
   const map = useMap();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const modalProfile: ProfileData = {
+    id: post.id,
+    type: post.type,
+    name: post.name,
+    status: post.status ?? 'active',
+    location: post.location ?? post.address ?? post.city ?? '',
+    timeAgo: post.timeAgo ?? (post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''),
+    details: post.details ?? '',
+    age: post.age ? String(post.age) : undefined,
+    city: post.city,
+    reportDate: post.createdAt ? new Date(post.createdAt).toLocaleDateString() : undefined,
+  };
 
   return (
     <>
@@ -49,7 +70,7 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-slate-400 font-medium text-xs break-keep whitespace-nowrap">{t.currentAge} :</span>
-            <span className="font-semibold text-slate-800 flex-1 text-end">{extractAge(post.age, post.details) || '?'}</span>
+            <span className="font-semibold text-slate-800 flex-1 text-end">{extractAge(post.age ?? '', post.details) || '?'}</span>
           </div>
           <div className="flex items-start gap-4">
             <span className="text-slate-400 font-medium text-xs break-keep whitespace-nowrap">{t.homeAddress || 'Address'} :</span>
@@ -70,14 +91,14 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
         <MissingModal
           isOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          profile={post}
+          profile={modalProfile}
           isRTL={isRTL}
         />
       ) : (
         <FoundModal
           isOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          profile={post}
+          profile={modalProfile}
           isRTL={isRTL}
         />
       )}

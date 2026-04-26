@@ -3,9 +3,14 @@ import { useLanguage } from "../../context/LanguageContext";
 import { AlertCircle, Home } from "lucide-react";
 import { useRouteError, useNavigate } from "react-router-dom";
 
+type RouteErrorLike = {
+  status?: number;
+  message?: string;
+};
+
 export default function ErrorFallback() {
   const { language } = useLanguage();
-  const error: any = useRouteError();
+  const error = useRouteError() as RouteErrorLike | null;
   const navigate = useNavigate();
 
   const handleGoHome = () => {

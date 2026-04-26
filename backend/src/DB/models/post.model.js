@@ -5,6 +5,7 @@ const postSchema = new mongoose.Schema(
     postType: { type: String, enum: ["missing", "found"], required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
+    nameSearchKey: { type: String, index: true },
     age: { type: Number },
     ageUnit: { type: String, enum: ["years", "months", "days"], default: "years" },
     gender: { type: String, enum: ["male", "female", "unknown"] },

@@ -1,6 +1,6 @@
 import SightingReport from "../../DB/models/sightingReport.model.js";
 import Post from "../../DB/models/post.model.js";
-import Notification from "../../DB/models/notification.model.js";
+import { createNotification } from "../notification/notification.helper.js";
 
 // ─── Create Sighting Report ───────────────────────────────────────────────────
 export const createSighting = async (req, res, next) => {
@@ -29,7 +29,7 @@ export const createSighting = async (req, res, next) => {
   });
 
   // Notify the post owner
-  await Notification.create({
+  await createNotification({
     userId: post.userId,
     postId: post._id,
     type: "new_sighting",
@@ -41,6 +41,16 @@ export const createSighting = async (req, res, next) => {
 // ─── Get Sightings For a Post ─────────────────────────────────────────────────
 export const getSightingsByPost = async (req, res, next) => {
   const { postId } = req.params;
+
+  const post = await Post.findById(postId);
+  if (!post) return next(new Error("Post not found", { cause: 404 }));
+
+  // Only the post owner or an admin can view sighting reports for a post.
+  const isOwner = post.userId?.toString() === req.user._id.toString();
+  const isAdmin = req.user.role === "admin";
+  if (!isOwner && !isAdmin) {
+    return next(new Error("Unauthorized", { cause: 403 }));
+  }
 
   const reports = await SightingReport.find({ missingPersonId: postId }).sort({
     createdAt: -1,

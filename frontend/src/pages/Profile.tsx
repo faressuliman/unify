@@ -2,18 +2,22 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { userApi, type UserProfileInfo, type BackendPost } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
+import { userApi, claimApi, chatApi, type UserProfileInfo, type BackendPost, type BackendClaim } from '../lib/api';
 import type { ProfileData } from '../components/home/PersonCard';
-import { FileText, CheckCircle, ShieldCheck, Mail, Phone, Calendar, ArrowDownRight, ArrowDownLeft, ChevronRight, ChevronLeft, Pencil } from 'lucide-react';
+import { FileText, CheckCircle, ShieldCheck, Mail, Phone, Calendar, ArrowDownRight, ArrowDownLeft, ChevronRight, ChevronLeft, Pencil, MessageCircle, XCircle, Clock, Eye } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import MissingPersonCard from '../components/search/MissingPersonCard';
 import FoundPersonCard from '../components/search/FoundPersonCard';
 import UnderlineTabSelector from '../components/ui/UnderlineTabSelector';
+import EditProfileModal from '../components/ui/modals/EditProfileModal';
+import SightingsListModal from '../components/ui/modals/SightingsListModal';
 
 export default function Profile() {
   const { t, language } = useLanguage();
   const { token } = useAuth();
   const isRTL = language === 'ar';
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'missing' | 'found'>('missing');
   const cardsRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -21,25 +25,36 @@ export default function Profile() {
   
   const [profileData, setProfileData] = useState<UserProfileInfo | null>(null);
   const [posts, setPosts] = useState<BackendPost[]>([]);
+  const [claims, setClaims] = useState<BackendClaim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [sightingsModal, setSightingsModal] = useState<{ open: boolean; postId: string; postName: string }>({
+    open: false,
+    postId: '',
+    postName: '',
+  });
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileData = async () => {
       if (!token) {
         setLoading(false);
         return;
       }
       try {
-        const response = await userApi.getProfile(token);
-        setProfileData(response.user);
-        setPosts(response.posts || []);
+        const [profileRes, claimsRes] = await Promise.all([
+          userApi.getProfile(token),
+          claimApi.getMyClaims(token).catch(() => ({ claims: [] }))
+        ]);
+        setProfileData(profileRes.user);
+        setPosts(profileRes.posts || []);
+        setClaims(claimsRes.claims || []);
       } catch (error) {
         console.error("Failed to fetch profile info:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProfile();
+    fetchProfileData();
   }, [token]);
 
   const filteredPosts = useMemo(() => {
@@ -82,6 +97,26 @@ export default function Profile() {
       </div>
     );
   }
+
+  const handleStartChat = async (claim: BackendClaim) => {
+    try {
+      let responderId = '';
+      if (typeof claim.postId === 'object' && claim.postId?.userId) {
+         responderId = claim.postId.userId;
+      } else if (typeof claim.claimUserId === 'object' && claim.claimUserId?._id) {
+         responderId = claim.claimUserId._id;
+      }
+      if (!responderId) {
+         console.warn("Could not find user to chat with.");
+         return;
+      }
+
+      await chatApi.startChat(responderId, token!);
+      navigate('/chat');
+    } catch(err) {
+      console.error("Failed to start chat", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-8 pb-12" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -133,7 +168,10 @@ export default function Profile() {
           </div>
 
           <div className="flex flex-row md:flex-row gap-3 w-full md:w-auto z-10 justify-center md:self-start">
-            <button className="flex-1 md:flex-none px-6 py-2.5 bg-slate-100/80 text-[#212a4a] rounded-[10px] font-semibold text-sm hover:bg-slate-200 transition-colors cursor-pointer">
+              <button 
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex-1 md:flex-none px-6 py-2.5 bg-slate-100/80 text-[#212a4a] rounded-[10px] font-semibold text-sm hover:bg-slate-200 transition-colors cursor-pointer"
+              >
                 {isRTL ? 'تعديل الملف' : 'Edit Profile'}
             </button>
             <button className="flex-1 md:flex-none px-6 py-2.5 bg-[#fef5da] text-[#1c190d] font-semibold text-sm rounded-[10px] border border-[#faebd7] hover:bg-[#ffe5a0] transition-all cursor-pointer shadow-xs">
@@ -207,33 +245,51 @@ export default function Profile() {
                initial={{ opacity: 0, y: 10 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.15 }}
-               className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs"
+               className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs flex flex-col max-h-100"
             >
-              <div className="p-4 border-b border-primary-100 flex items-center justify-between">
+              <div className="p-4 border-b border-primary-100 flex items-center justify-between shrink-0">
                 <h3 className="text-tertiary font-bold text-start">{isRTL ? 'المطالبات الأخيرة' : 'Recent Claims'}</h3>
-                {/* View All removed per request */}
               </div>
-              <div className="divide-y divide-primary-100">
-                <div className="p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer">
-                  <div className="size-10 rounded-lg bg-white text-secondary flex items-center justify-center shrink-0 border border-primary-200">
-                    <FileText className="w-5 h-5" />
+              <div className="divide-y divide-primary-100 overflow-y-auto min-h-0 custom-scrollbar">
+                {claims.length > 0 ? (
+                  claims.map((claim) => {
+                    const postName = typeof claim.postId === 'object' ? (claim.postId as BackendPost).name || 'Unknown' : 'Unknown';
+                    const statusText = isRTL 
+                      ? (claim.status === 'approved' ? 'تمت الموافقة' : claim.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة')
+                      : (claim.status === 'approved' ? 'Approved' : claim.status === 'rejected' ? 'Rejected' : 'Pending');
+                    
+                    const StatusIcon = claim.status === 'approved' ? ShieldCheck : claim.status === 'rejected' ? XCircle : Clock;
+                    
+                    return (
+                      <div key={claim._id} className="p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div className={`size-10 rounded-lg bg-white flex items-center justify-center shrink-0 border border-primary-200 ${claim.status === 'approved' ? 'text-green-500' : claim.status === 'rejected' ? 'text-red-500' : 'text-amber-500'}`}>
+                          <StatusIcon className="w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col items-start text-start min-w-0 flex-1">
+                          <p className="text-sm font-bold text-tertiary truncate w-full">{postName}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{statusText}</p>
+                          <span className="text-[10px] mt-1 text-slate-400">
+                            {new Date(claim.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                        {claim.status === 'approved' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleStartChat(claim); }}
+                            className="ml-auto w-8 h-8 rounded-full bg-secondary/10 hover:bg-secondary/20 flex items-center justify-center text-secondary transition-colors"
+                            aria-label={isRTL ? 'بدء المحادثة' : 'Start Chat'}
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-8 text-center text-slate-500">
+                    <FileText className="w-8 h-8 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm">{isRTL ? 'لا توجد مطالبات حتى الآن' : 'No claims found'}</p>
                   </div>
-                  <div className="flex flex-col items-start text-start">
-                    <p className="text-sm font-bold text-tertiary">New Lead Provided</p>
-                    <p className="text-xs text-slate-500">Case #29401 - Alexandria</p>
-                    <span className="text-[10px] mt-1 text-slate-400">2 hours ago</span>
-                  </div>
-                </div>
-                <div className="p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer">
-                  <div className="size-10 rounded-lg bg-white text-secondary flex items-center justify-center shrink-0 border border-primary-200">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div className="flex flex-col items-start text-start">
-                    <p className="text-sm font-bold text-tertiary">Claim Verified</p>
-                    <p className="text-xs text-slate-500">Identity match confirmed by Ministry</p>
-                    <span className="text-[10px] mt-1 text-slate-400">Yesterday</span>
-                  </div>
-                </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -277,25 +333,40 @@ export default function Profile() {
                 >
                   {filteredPosts.length > 0 ? (
                     filteredPosts.map((profile, idx) => (
-                      activeTab === 'missing' ? (
-                        <MissingPersonCard
-                          key={profile.id}
-                          profile={profile}
-                          idx={idx}
-                          isRTL={isRTL}
-                          showImage={true}
-                          className="min-w-70! sm:min-w-[320px]! lg:min-w-0! lg:w-[calc(48%-1rem)] xl:w-[calc(36.5%-1rem)] flex-none!"
-                        />
-                      ) : (
-                        <FoundPersonCard
-                          key={profile.id}
-                          profile={profile}
-                          idx={idx}
-                          isRTL={isRTL}
-                          showImage={true}
-                          className="min-w-70! sm:min-w-[320px]! lg:min-w-0! lg:w-[calc(48%-1rem)] xl:w-[calc(36.5%-1rem)] flex-none!"
-                        />
-                      )
+                      <div key={profile.id} className="flex flex-col gap-2 min-w-70 sm:min-w-[320px] lg:min-w-0 lg:w-[calc(48%-1rem)] xl:w-[calc(36.5%-1rem)] flex-none">
+                        {activeTab === 'missing' ? (
+                          <MissingPersonCard
+                            profile={profile}
+                            idx={idx}
+                            isRTL={isRTL}
+                            showImage={true}
+                            className="w-full!"
+                          />
+                        ) : (
+                          <FoundPersonCard
+                            profile={profile}
+                            idx={idx}
+                            isRTL={isRTL}
+                            showImage={true}
+                            className="w-full!"
+                          />
+                        )}
+                        {activeTab === 'missing' && (
+                          <button
+                            onClick={() =>
+                              setSightingsModal({
+                                open: true,
+                                postId: profile.id,
+                                postName: profile.name,
+                              })
+                            }
+                            className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-2 rounded-xl bg-white border border-primary-200 text-tertiary text-xs font-bold hover:bg-primary-50 transition-colors cursor-pointer"
+                          >
+                            <Eye className="h-3.5 w-3.5 text-secondary" />
+                            {isRTL ? 'عرض المشاهدات' : 'View sightings'}
+                          </button>
+                        )}
+                      </div>
                     ))
                   ) : (
                     <div className="py-12 w-full text-center text-slate-500 bg-white rounded-xl border border-dashed border-slate-300">
@@ -330,6 +401,27 @@ export default function Profile() {
 
         </div>
       </main>
+
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        profile={profileData}
+        onSuccess={(updatedProfile) => setProfileData(updatedProfile)}
+        isRTL={isRTL}
+      />
+
+      {token && sightingsModal.postId && (
+        <SightingsListModal
+          isOpen={sightingsModal.open}
+          onOpenChange={(open) =>
+            setSightingsModal((prev) => ({ ...prev, open }))
+          }
+          postId={sightingsModal.postId}
+          postName={sightingsModal.postName}
+          isRTL={isRTL}
+          token={token}
+        />
+      )}
     </div>
   );
 }

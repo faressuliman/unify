@@ -1,6 +1,8 @@
 import Chat from "../../DB/models/chat.model.js";
 import Message from "../../DB/models/message.model.js";
 import User from "../../DB/models/user.model.js";
+import Claim from "../../DB/models/claim.model.js";
+import { emitToChat, emitToUser } from "../../realtime/io.js";
 
 // ─── Start or Get Chat ────────────────────────────────────────────────────────
 export const startChat = async (req, res, next) => {
@@ -12,6 +14,37 @@ export const startChat = async (req, res, next) => {
 
   const responder = await User.findById(responderId);
   if (!responder) return next(new Error("User not found", { cause: 404 }));
+
+  // Admins can chat with anyone; otherwise, require an approved claim that
+  // links the two users (claim author and post owner) before starting a chat.
+  if (req.user.role !== "admin" && responder.role !== "admin") {
+    const me = req.user._id.toString();
+    const them = responderId.toString();
+
+    const claims = await Claim.find({
+      status: "approved",
+      claimUserId: { $in: [req.user._id, responderId] },
+    }).populate({ path: "postId", select: "userId" });
+
+    const allowed = claims.some((c) => {
+      if (!c.postId) return false;
+      const owner = c.postId.userId?.toString();
+      const claimant = c.claimUserId?.toString();
+      return (
+        (owner === me && claimant === them) ||
+        (owner === them && claimant === me)
+      );
+    });
+
+    if (!allowed) {
+      return next(
+        new Error(
+          "You can only chat with someone after a claim between you has been approved",
+          { cause: 403 }
+        )
+      );
+    }
+  }
 
   // Check if chat already exists
   let chat = await Chat.findOne({
@@ -75,7 +108,24 @@ export const sendMessage = async (req, res, next) => {
     attachmentPath,
   });
 
-  return res.status(201).json({ message });
+  // Populate sender for clients that render the name immediately.
+  const populated = await Message.findById(message._id).populate(
+    "senderUserId",
+    "name"
+  );
+
+  // Broadcast to anyone subscribed to this chat thread, plus a direct
+  // fanout to the recipient's personal room so they get a "ping" even
+  // when the chat is not currently open.
+  emitToChat(chatId, "chat:message", populated);
+
+  const otherUserId =
+    chat.initiatorUserId.toString() === req.user._id.toString()
+      ? chat.responderUserId.toString()
+      : chat.initiatorUserId.toString();
+  emitToUser(otherUserId, "chat:message", populated);
+
+  return res.status(201).json({ message: populated });
 };
 
 // ─── Get Chat Messages ────────────────────────────────────────────────────────

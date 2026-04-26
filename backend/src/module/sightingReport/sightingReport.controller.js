@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asynchandler } from "../../utils/globalErrorHandling/index.js";
 import { validation } from "../../middleware/validation.js";
+import { authenticate } from "../../middleware/auth.js";
 import { createSightingSchema } from "./sightingReport.validation.js";
 import * as sightingService from "./sightingReport.service.js";
 
@@ -14,6 +15,6 @@ router.post(
 );
 
 // Auth required to view sightings (post owner or admin)
-router.get("/:postId", asynchandler(sightingService.getSightingsByPost));
+router.get("/:postId", authenticate, asynchandler(sightingService.getSightingsByPost));
 
 export default router;

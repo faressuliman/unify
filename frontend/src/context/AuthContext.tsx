@@ -1,11 +1,14 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
 import { authApi, type AuthUser } from '@/lib/api';
+import { connectSocket, disconnectSocket } from '@/lib/socket';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -32,6 +35,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return cachedUser ? (JSON.parse(cachedUser) as AuthUser) : null;
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('auth.token'));
+
+  // Maintain a single socket.io connection while authenticated. The socket
+  // is established as soon as we have a token and torn down on logout so
+  // realtime listeners across the app can `getSocket()` synchronously.
+  useEffect(() => {
+    if (token) {
+      connectSocket(token);
+    } else {
+      disconnectSocket();
+    }
+  }, [token]);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });

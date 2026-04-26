@@ -78,6 +78,7 @@ type RegisterInput = {
 
 export interface BackendPost {
   _id: string;
+  userId?: string;
   postType: "missing" | "found";
   name: string;
   status: "active" | "resolved" | "closed";
@@ -96,6 +97,24 @@ export interface BackendPost {
   reporterPhone?: string;
   postImages?: string[];
   createdAt?: string;
+}
+
+export interface BackendMapMarker {
+  id: string;
+  type: "missing" | "found";
+  name: string;
+  lat: number;
+  lng: number;
+  age?: number | string;
+  details?: string;
+  city?: string;
+  location?: string;
+  address?: string;
+  imagePath?: string;
+  createdAt?: string;
+  lastSeenDate?: string;
+  timeAgo?: string;
+  status?: string;
 }
 
 interface GetPostsResponse {
@@ -190,7 +209,7 @@ export const postApi = {
         }
       });
     }
-    return apiRequest<{ markers: any[] }>(`posts/map-markers?${searchParams.toString()}`);
+    return apiRequest<{ markers: BackendMapMarker[] }>(`posts/map-markers?${searchParams.toString()}`);
   },
 
   createPost: (payload: CreatePostPayload, token: string) => {
@@ -253,4 +272,303 @@ export const userApi = {
       method: "GET",
       token,
     }),
+  updateProfile: (data: FormData, token: string) => {
+    // Append authorization to FormData for joi validation in backend
+    data.append("authorization", token);
+    return apiRequest<{ message: string; user: UserProfileInfo }>("users/profile", {
+      method: "PUT",
+      body: data,
+      token,
+    });
+  },
+};
+
+export interface SightingPayload {
+  missingPersonId: string;
+  confidence: "not_sure" | "possibly" | "pretty_sure" | "very_sure" | string;
+  seenAt: string;
+  address: string;
+  description: string;
+  additionalDetails?: string;
+  reporterName: string;
+  reporterPhone: string;
+}
+
+export interface BackendSightingLocation {
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface BackendSighting {
+  _id: string;
+  missingPersonId: string;
+  confidence: "not_sure" | "possibly" | "pretty_sure" | "very_sure";
+  seenAt: string;
+  location: BackendSightingLocation;
+  description: string;
+  additionalDetails?: string;
+  reporterName: string;
+  reporterPhone: string;
+  createdAt?: string;
+}
+
+export const sightingApi = {
+  createSighting: (payload: SightingPayload) =>
+    apiRequest<{ message: string; report: BackendSighting }>("sightings", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  
+  getSightings: (postId: string, token: string) =>
+    apiRequest<{ message: string; reports: BackendSighting[] }>(`sightings/${postId}`, {
+      method: "GET",
+      token,
+    })
+};
+
+export interface CreateClaimPayload {
+  postId: string;
+  additionalInfo?: string;
+}
+
+export interface BackendClaim {
+  _id: string;
+  postId: BackendPost | string; // Can be populated
+  claimantId?: string;
+  claimUserId?: { _id: string; name?: string; email?: string; phoneNumber?: string } | string;
+  claimType?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  documentPath?: string;
+  additionalInfo?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export const claimApi = {
+  createClaim: async (data: FormData, token: string) => {
+    return apiRequest<{ message: string; claim: BackendClaim }>('claims', {
+      method: "POST",
+      body: data,
+      token,
+    });
+  },
+  getMyClaims: async (token: string) => {
+    return apiRequest<{ message: string; claims: BackendClaim[] }>('claims/my', {
+      method: "GET",
+      token,
+    });
+  },
+  getClaimsByPost: async (postId: string, token: string) => {
+    return apiRequest<{ message: string; claims: BackendClaim[] }>(`claims/post/${postId}`, {
+      method: "GET",
+      token,
+    });
+  }
+};
+
+export interface BackendNotificationPost {
+  _id: string;
+  name: string;
+  postType: "missing" | "found";
+}
+
+export interface BackendNotification {
+  _id: string;
+  userId: string;
+  postId?: BackendNotificationPost | string;
+  type: "new_sighting" | "new_claim" | "claim_approved" | "claim_rejected";
+  isRead: boolean;
+  deliveredVia: "email" | "push" | "in-app";
+  createdAt: string;
+}
+
+export const notificationApi = {
+  getMyNotifications: async (token: string, page?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (page) params.set("page", String(page));
+    if (limit) params.set("limit", String(limit));
+    
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<{ notifications: BackendNotification[]; unreadCount: number }>(`notifications${queryString}`, {
+      method: "GET",
+      token,
+    });
+  },
+  markAllRead: async (token: string) => {
+    return apiRequest<{ message: string }>('notifications/read-all', {
+      method: "PATCH",
+      token,
+    });
+  },
+  markOneRead: async (id: string, token: string) => {
+    return apiRequest<{ message: string; notification: BackendNotification }>(`notifications/${id}/read`, {
+      method: "PATCH",
+      token,
+    });
+  }
+};
+
+export interface BackendChatUser {
+  _id: string;
+  name: string;
+}
+
+export interface BackendChat {
+  _id: string;
+  initiatorUserId: BackendChatUser | string;
+  responderUserId: BackendChatUser | string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface BackendMessage {
+  _id: string;
+  chatId: string;
+  senderUserId: BackendChatUser | string;
+  content?: string;
+  attachmentPath?: string;
+  createdAt: string;
+}
+
+export const chatApi = {
+  startChat: async (responderId: string, token: string) => {
+    return apiRequest<{ chat: BackendChat }>('chats', {
+      method: "POST",
+      body: JSON.stringify({ responderId }),
+      token,
+    });
+  },
+  getMyChats: async (token: string) => {
+    return apiRequest<{ chats: BackendChat[] }>('chats', {
+      method: "GET",
+      token,
+    });
+  },
+  sendMessage: async (chatId: string, content: string | undefined, attachment: File | null, token: string) => {
+    const formData = new FormData();
+    if (content) formData.append("content", content);
+    if (attachment) formData.append("attachment", attachment);
+    
+    // If neither content nor attachment is provided, body could be null, 
+    // but we can send formData as empty body in case it's strictly needed.
+    const hasData = Boolean(content || attachment);
+    return apiRequest<{ message: BackendMessage }>(`chats/${chatId}/messages`, {
+      method: "POST",
+      body: hasData ? formData : null,
+      token,
+    });
+  },
+  getChatMessages: async (chatId: string, page: number, limit: number, token: string) => {
+    const params = new URLSearchParams();
+    if (page) params.set("page", String(page));
+    if (limit) params.set("limit", String(limit));
+    
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<{ messages: BackendMessage[] }>(`chats/${chatId}/messages${queryString}`, {
+      method: "GET",
+      token,
+    });
+  }
+};
+
+export interface DashboardStats {
+  totalUsers: number;
+  totalPosts: number;
+  activeMissing: number;
+  foundPosts: number;
+  resolvedPosts: number;
+  pendingClaims: number;
+}
+
+export interface AdminUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  phoneNumber?: string;
+  isbanned: boolean;
+  isVerified?: boolean;
+  createdAt: string;
+}
+
+export interface PaginatedResponse {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface AdminUsersResponse extends PaginatedResponse {
+  users: AdminUser[];
+}
+
+export interface AdminPendingClaimsResponse extends PaginatedResponse {
+  claims: BackendClaim[];
+}
+
+export const adminApi = {
+  getDashboardStats: async (token: string) => {
+    return apiRequest<{ stats: DashboardStats }>("admin/stats", {
+      method: "GET",
+      token,
+    });
+  },
+  getAllUsers: async (token: string, params?: { page?: number; limit?: number; name?: string; email?: string }) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.name) search.set("name", params.name);
+    if (params?.email) search.set("email", params.email);
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminUsersResponse>(`admin/users${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
+  toggleBanUser: async (userId: string, token: string) => {
+    return apiRequest<{ message: string; isbanned: boolean }>(`admin/users/${userId}/ban`, {
+      method: "PATCH",
+      token,
+    });
+  },
+  getPendingClaims: async (token: string, params?: { page?: number; limit?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminPendingClaimsResponse>(`admin/claims/pending${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
+  getAllClaims: async (
+    token: string,
+    params?: { page?: number; limit?: number; status?: 'pending' | 'approved' | 'rejected' | 'all' }
+  ) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.status && params.status !== 'all') search.set("status", params.status);
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminPendingClaimsResponse>(`admin/claims${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
+  adminReviewClaim: async (claimId: string, result: 'approved' | 'rejected', notes: string | undefined, token: string) => {
+    return apiRequest<{ message: string; claim: BackendClaim }>(`claims/${claimId}/admin-review`, {
+      method: "POST",
+      body: JSON.stringify({ result, notes, authorization: token }),
+      token,
+    });
+  },
+  aiReviewClaim: async (claimId: string, aiDecision: 'approved' | 'rejected' | 'uncertain', aiConfidenceScore: number, notes: string | undefined, verificationType: string | undefined, token: string) => {
+    return apiRequest<{ message: string; claim: BackendClaim }>(`claims/${claimId}/ai-review`, {
+      method: "POST",
+      body: JSON.stringify({ aiDecision, aiConfidenceScore, notes, verificationType, authorization: token }),
+      token,
+    });
+  }
 };

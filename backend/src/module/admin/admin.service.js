@@ -7,7 +7,7 @@ import { pagination } from "../../utils/feature/pagination.js";
 export const getAllUsers = async (req, res, next) => {
   const { page, limit, name, email } = req.query;
 
-  const filter = {};
+  const filter = { isdeleted: false };
   if (name) filter.name = new RegExp(name, "i");
   if (email) filter.email = new RegExp(email, "i");
 
@@ -19,7 +19,13 @@ export const getAllUsers = async (req, res, next) => {
     select: "-password -otp -otpExpiry",
   });
 
-  return res.status(200).json(result);
+  return res.status(200).json({
+    users: result.data,
+    page: result.page,
+    limit: result.limit,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+  });
 };
 
 // ─── Ban / Unban User ─────────────────────────────────────────────────────────
@@ -33,6 +39,7 @@ export const toggleBanUser = async (req, res, next) => {
 
   return res.status(200).json({
     message: user.isbanned ? "User banned" : "User unbanned",
+    isbanned: user.isbanned,
   });
 };
 
@@ -51,7 +58,42 @@ export const getPendingClaims = async (req, res, next) => {
     ],
   });
 
-  return res.status(200).json(result);
+  return res.status(200).json({
+    claims: result.data,
+    page: result.page,
+    limit: result.limit,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+  });
+};
+
+// ─── Get All Claims (any status) ──────────────────────────────────────────────
+export const getAllClaims = async (req, res, next) => {
+  const { page, limit, status } = req.query;
+
+  const filter = {};
+  if (status && ["pending", "approved", "rejected"].includes(status)) {
+    filter.status = status;
+  }
+
+  const result = await pagination({
+    page, limit,
+    model: Claim,
+    filter,
+    sort: { createdAt: -1 },
+    populate: [
+      { path: "postId", select: "name postType status" },
+      { path: "claimUserId", select: "name email phoneNumber" },
+    ],
+  });
+
+  return res.status(200).json({
+    claims: result.data,
+    page: result.page,
+    limit: result.limit,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+  });
 };
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
@@ -69,7 +111,13 @@ export const getDashboardStats = async (req, res, next) => {
   ]);
 
   return res.status(200).json({
-    totalUsers, totalPosts, activeMissing,
-    foundPosts, resolvedPosts, pendingClaims,
+    stats: {
+      totalUsers,
+      totalPosts,
+      activeMissing,
+      foundPosts,
+      resolvedPosts,
+      pendingClaims,
+    },
   });
 };
