@@ -5,6 +5,7 @@ import { generatetoken } from "../../utils/token/generateToken.js";
 import { sendEmail } from "../../service/sendEmail.js";
 import { html } from "../../utils/sendEmail.events/template.js";
 import { encrypt } from './../../utils/encrypt/encrypt.js';
+import cloudinary from "../../utils/cloudinary/index.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const register = async (req, res, next) => {
@@ -18,16 +19,17 @@ export const register = async (req, res, next) => {
   let idImagePath;
   if (req.file) {
     idImagePath = req.file.path;
+    // AI Verification removed for testing
   }
 
   const hashedPassword = await Hash({ key: password });
-  const encryptedphoneNumber = await encrypt({ key: phoneNumber, SECRET_KEY: process.env.SECRET_KEY });
+  // Removed phone number encryption per user request
 
   const user = await User.create({
     name,
     email,
     password: hashedPassword,
-    phoneNumber:encryptedphoneNumber,
+    phoneNumber,
     birthDate,
     idImagePath,
   });
@@ -47,6 +49,17 @@ export const login = async (req, res, next) => {
 
   const isMatch = await compare({ key: password, hashed: user.password });
   if (!isMatch) return next(new Error("Invalid credentials", { cause: 401 }));
+
+  // Identity verification gate — admins may always sign in, regular users
+  // must wait until the admin team approves their submitted ID document.
+  if (!user.isVerified && user.role !== "admin") {
+    return next(
+      new Error(
+        "Your account is pending verification. We'll email you as soon as our team reviews your ID.",
+        { cause: 403 },
+      ),
+    );
+  }
 
   const accessToken = await generatetoken({
     payload: { id: user._id, role: user.role },

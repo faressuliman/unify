@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { ApiError } from '@/lib/api';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
+import { toast } from 'sonner';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -33,6 +34,7 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -67,10 +69,26 @@ const Login = () => {
         setIsSubmitting(true);
 
         try {
-            await login(formData.email, formData.password);
+            await login(formData.email, formData.password, rememberMe);
+            toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Welcome back!');
             navigate('/');
         } catch (error) {
-            setSubmitError(error instanceof ApiError ? error.message : 'Unable to log in right now.');
+            const message = error instanceof ApiError ? error.message : 'Unable to log in right now.';
+            if (message === 'Invalid credentials') {
+                toast.error(localizeError(message));
+            } else if (message.toLowerCase().includes('pending verification')) {
+                // Friendly RTL/LTR copy when the backend blocks unverified users.
+                toast.warning(
+                    isRTL
+                        ? 'حسابك قيد المراجعة. سنُرسل لك بريداً إلكترونياً فور اعتماد فريقنا لوثيقة الهوية.'
+                        : "Your account is pending verification. We'll email you as soon as our team reviews your ID.",
+                    { duration: 7000 },
+                );
+            } else if (message.toLowerCase().includes('network') || message.toLowerCase().includes('timeout')) {
+                toast.error(isRTL ? 'تعذّر الاتصال بالخادم حالياً. حاول مرة أخرى.' : 'Unable to reach the server right now. Please try again.');
+            } else {
+                setSubmitError(message);
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -137,7 +155,13 @@ const Login = () => {
                         
                         <div className="flex items-center justify-between -mt-2">
                             <div className="flex items-center gap-2">
-                                <input type="checkbox" id="remember" className="rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer" />
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer"
+                                />
                                 <label htmlFor="remember" className="text-sm text-gray-600 font-bold cursor-pointer">{content.rememberMe}</label>
                             </div>
                             <Link to="/forgot-password" className="text-sm font-bold text-tertiary hover:underline hover:decoration-secondary transition-all">{content.forgotPassword}</Link>

@@ -23,6 +23,7 @@ export interface ProfileData {
   foundLocationDetails?: string;
   city?: string;
   postedBy?: string;
+  postUserId?: string;
   reportDate?: string;
 }
 

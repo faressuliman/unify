@@ -13,7 +13,7 @@ type FormInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
   ({ label, id, className = '', labelClassName, suffix, icon, isRTL, ...props }, ref) => {
     const baseInputClass =
-      `peer flex h-10 w-full rounded-md border border-gray-300 bg-gray-50/50 ${icon ? (isRTL ? 'pr-10 pl-3' : 'pl-10 pr-3') : 'px-3'} py-2 text-sm text-slate-700 ring-offset-background placeholder:text-muted-foreground transition duration-300 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary disabled:cursor-not-allowed disabled:opacity-50`;
+      `peer flex min-h-10 w-full rounded-md border border-gray-300 bg-gray-50/50 ${icon ? (isRTL ? 'pr-10 pl-3' : 'pl-10 pr-3') : 'px-3'} py-2.5 text-sm leading-relaxed text-slate-700 ring-offset-background placeholder:text-muted-foreground transition duration-300 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary disabled:cursor-not-allowed disabled:opacity-50`;
 
     return (
       <div className="space-y-2 text-start">

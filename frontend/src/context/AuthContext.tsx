@@ -9,12 +9,13 @@ import {
 } from 'react';
 import { authApi, type AuthUser } from '@/lib/api';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
+import { deleteCookie, getCookie, setCookie } from '@/lib/cookieService';
 
 interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
   register: (payload: {
     name: string;
     email: string;
@@ -29,12 +30,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_TOKEN_COOKIE = 'unify.auth.token';
+const AUTH_USER_COOKIE = 'unify.auth.user';
+const REMEMBER_DAYS = 30;
+const DEFAULT_DAYS = 1;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const cachedUser = localStorage.getItem('auth.user');
+    const cachedUser = getCookie(AUTH_USER_COOKIE);
     return cachedUser ? (JSON.parse(cachedUser) as AuthUser) : null;
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('auth.token'));
+  const [token, setToken] = useState<string | null>(() => getCookie(AUTH_TOKEN_COOKIE));
 
   // Maintain a single socket.io connection while authenticated. The socket
   // is established as soon as we have a token and torn down on logout so
@@ -47,16 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe: boolean) => {
     const response = await authApi.login({ email, password });
     const nextUser = response.user ?? null;
     const nextToken = response.token ?? null;
 
     if (nextUser && nextToken) {
+      const days = rememberMe ? REMEMBER_DAYS : DEFAULT_DAYS;
       setUser(nextUser);
       setToken(nextToken);
-      localStorage.setItem('auth.user', JSON.stringify(nextUser));
-      localStorage.setItem('auth.token', nextToken);
+      setCookie(AUTH_USER_COOKIE, JSON.stringify(nextUser), { days });
+      setCookie(AUTH_TOKEN_COOKIE, nextToken, { days });
     }
   };
 
@@ -75,8 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('auth.user');
-    localStorage.removeItem('auth.token');
+    deleteCookie(AUTH_USER_COOKIE);
+    deleteCookie(AUTH_TOKEN_COOKIE);
   };
 
   const contextValue = useMemo(

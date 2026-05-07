@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { type ProfileData } from './PersonCard';
 import FoundPersonCard from '../search/FoundPersonCard';
@@ -9,40 +9,28 @@ import { motion } from 'framer-motion';
 import { ArrowDownRight, ArrowDownLeft, Loader2 } from 'lucide-react';
 import UnderlineTabSelector from '../ui/UnderlineTabSelector';
 import { postApi, type BackendPost } from '@/lib/api';
+import { mapPostFields } from '@/lib/postFormatters';
 
-const humanizeTimeAgo = (dateString?: string): string => {
-  if (!dateString) return 'Recently posted';
-  const now = Date.now();
-  const then = new Date(dateString).getTime();
-  const diffMs = Math.max(now - then, 0);
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Less than 1 hour ago';
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} days ago`;
-  const diffMonths = Math.floor(diffDays / 30);
-  return `${diffMonths} months ago`;
-};
-
-const mapBackendPostToCard = (post: BackendPost): ProfileData => {
-  const ageWithUnit = post.age ? `${post.age} ${post.ageUnit ?? 'years'}` : 'Unknown age';
-  const gender = post.gender ? post.gender[0].toUpperCase() + post.gender.slice(1) : 'Unknown';
+const mapBackendPostToCard = (post: BackendPost, isRTL: boolean): ProfileData => {
+  const fields = mapPostFields(post, isRTL);
   return {
     id: post._id,
     type: post.postType,
-    name: post.name,
+    name: fields.name,
     status: post.status,
-    location: post.postType === 'missing' ? post.lastSeenLocation ?? post.city ?? 'Unknown location' : post.foundLocation ?? post.city ?? 'Unknown location',
-    timeAgo: humanizeTimeAgo(post.createdAt),
-    details: `${gender}, ${ageWithUnit}`,
+    location: fields.location,
+    timeAgo: fields.timeAgo,
+    details: fields.details,
     image: post.postImages?.[0],
-    city: post.city,
-    age: post.age ? `${post.age} ${post.ageUnit ?? 'years'}` : undefined,
-    physicalDescription: [post.hairColour, post.eyeColour].filter(Boolean).join(', '),
-    clothingDescription: post.clothesDescription,
-    lastSeenLocationDetails: post.lastSeenLocation,
-    foundLocationDetails: post.foundLocation,
-    reportDate: post.createdAt ? new Date(post.createdAt).toLocaleDateString() : undefined,
+    city: fields.city,
+    age: fields.age,
+    physicalDescription: fields.physicalDescription,
+    clothingDescription: fields.clothingDescription,
+    lastSeenLocationDetails: fields.lastSeenLocationDetails,
+    foundLocationDetails: fields.foundLocationDetails,
+    reportDate: fields.reportDate,
+    postedBy: fields.postedBy,
+    postUserId: fields.postUserId,
   };
 };
 
@@ -52,7 +40,7 @@ export default function RecentUpdates() {
   const t = isRTL ? ar.recentUpdates : en.recentUpdates;
 
   const [activeTab, setActiveTab] = useState<'missing' | 'found'>('missing');
-  const [posts, setPosts] = useState<ProfileData[]>([]);
+  const [rawPosts, setRawPosts] = useState<BackendPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -65,7 +53,7 @@ export default function RecentUpdates() {
           page: 1,
           limit: 4,
         });
-        setPosts(response.data.map(mapBackendPostToCard));
+        setRawPosts(response.data);
       } catch (err) {
         console.error('Failed to load recent posts:', err);
       } finally {
@@ -74,6 +62,11 @@ export default function RecentUpdates() {
     };
     void fetchPosts();
   }, [activeTab]);
+
+  const posts = useMemo(
+    () => rawPosts.map((p) => mapBackendPostToCard(p, isRTL)),
+    [rawPosts, isRTL],
+  );
 
   return (
     <section className="w-full bg-slate-50" dir={isRTL ? 'rtl' : 'ltr'}>

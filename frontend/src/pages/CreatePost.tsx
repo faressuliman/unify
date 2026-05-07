@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { UserCircle, Camera, FileText, MapPin, Send } from 'lucide-react';
+import { UserCircle, Camera, FileText, MapPin, Send, Info } from 'lucide-react';
 import FormInput from '@/components/ui/FormInput';
 import FormTextArea from '@/components/ui/FormTextArea';
 import SubmitButton from '@/components/ui/SubmitButton';
@@ -13,12 +13,14 @@ import PageHeader from '@/components/ui/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
+import InfoBanner from '@/components/ui/InfoBanner';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
 import { getEyeColorOptions, getHairColorOptions } from '../data/appearanceOptions';
 import { ApiError, postApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const CreatePost = () => {
     const { token } = useAuth();
@@ -200,7 +202,7 @@ const CreatePost = () => {
         setIsSubmitting(true);
 
         try {
-            await postApi.createPost(
+            const response = await postApi.createPost(
                 {
                     postType: formData.postType as 'missing' | 'found',
                     firstName: formData.firstName.trim(),
@@ -228,7 +230,27 @@ const CreatePost = () => {
                 token
             );
 
-            navigate('/search');
+            // Send the user to the search page, pre-selecting the right tab
+            // (missing/found) and asking the page to scroll past the filters
+            // straight to the results section so they can immediately see
+            // the new post listed.
+            const searchTab = formData.postType === 'missing' ? 'missing' : 'found';
+            const targetUrl = `/search?tab=${searchTab}&scrollTo=results&newPost=${response.post._id}`;
+
+            toast.success(
+                isRTL ? 'تم إنشاء البلاغ بنجاح' : 'Post created successfully',
+                {
+                    description: isRTL ? 'يمكنك عرضه الآن في صفحة البحث.' : 'You can view it now on the search page.',
+                    action: {
+                        label: isRTL ? 'عرض المنشور' : 'View Post',
+                        onClick: () => navigate(targetUrl),
+                    },
+                    duration: 6000,
+                    className: 'sm:flex-row flex-col items-start',
+                },
+            );
+
+            navigate(targetUrl);
         } catch (error) {
             setSubmitError(error instanceof ApiError ? error.message : (isRTL ? 'فشل إرسال البلاغ.' : 'Failed to submit post.'));
         } finally {
@@ -265,11 +287,15 @@ const CreatePost = () => {
                 </motion.div>
 
                 <div className="max-w-400 mx-auto px-6 lg:px-12 w-full">
-                    <div className="mt-4 mb-2 rounded-xl border border-amber-200/70 bg-amber-50/60 px-4 py-3 text-[13px] font-medium text-amber-800 leading-relaxed">
-                        {language === 'ar'
-                            ? 'تم تثبيت اللغة على العربية أثناء إنشاء المنشور لتجنب خلط المحتوى. أكمل النموذج بنفس اللغة، ثم يمكنك تبديل اللغة لاحقًا.'
-                            : 'The interface language is locked while you create a post so the content stays consistent. Finish in the same language—you can switch again afterwards.'}
-                    </div>
+                    <InfoBanner
+                        icon={<Info className="h-5 w-5" aria-hidden="true" />}
+                        message={
+                            language === 'ar'
+                                ? 'تم تثبيت اللغة على العربية أثناء إنشاء المنشور لتجنب خلط المحتوى. أكمل النموذج بنفس اللغة، ثم يمكنك تبديل اللغة لاحقًا.'
+                                : 'The interface language is locked while you create a post so the content stays consistent. Finish in the same language—you can switch again afterwards.'
+                        }
+                        className="mt-4 mb-2"
+                    />
                     <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-2 lg:items-start mt-6">
                         
                         {/* LEFT COLUMN: Input Forms */}

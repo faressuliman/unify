@@ -8,7 +8,21 @@ export const loginSchema = z.object({
 export const signUpSchema = z.object({
     fullName: z.string().trim().min(1, { message: "Full Name is required" }).min(2, { message: "Full Name must be at least 2 characters" }),
     email: z.string().trim().min(1, { message: "Email is required" }).email({ message: "Invalid email address" }),
-    age: z.coerce.number().min(18, { message: "You must be at least 18 years old" }).max(90, { message: "Age must be 90 or less" }),
+    birthDate: z
+        .string()
+        .trim()
+        .min(1, { message: "Birth date is required" })
+        .refine((value) => !Number.isNaN(Date.parse(value)), { message: "Invalid birth date" })
+        .refine((value) => {
+            const birth = new Date(value);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDelta = today.getMonth() - birth.getMonth();
+            if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birth.getDate())) {
+                age -= 1;
+            }
+            return age >= 18 && age <= 90;
+        }, { message: "You must be at least 18 years old" }),
     phoneNumber: z.string().trim().min(1, { message: "Phone Number is required" }).length(11, { message: "Phone number must be exactly 11 digits" }),
     password: z.string().trim()
         .min(8, { message: "Password must be at least 8 characters" })

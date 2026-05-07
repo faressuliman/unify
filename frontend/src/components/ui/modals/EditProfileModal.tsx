@@ -72,9 +72,9 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-[70] bg-slate-950/40 modal-overlay" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-slate-950/40 modal-overlay" />
         <DialogPrimitive.Content
-          className="fixed left-1/2 top-1/2 z-[71] w-[calc(100%-1.25rem)] max-h-[90vh] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col focus:outline-none modal-pop"
+          className="fixed left-1/2 top-1/2 z-71 w-[calc(100%-1.25rem)] max-h-[90vh] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col focus:outline-none modal-pop"
           dir={isRTL ? 'rtl' : 'ltr'}
         >
           <div className="relative border-b border-slate-100 bg-slate-50/50 px-6 py-5">

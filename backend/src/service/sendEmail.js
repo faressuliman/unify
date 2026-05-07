@@ -2,22 +2,21 @@ import nodemailer from "nodemailer";
 
 export const sendEmail = async (to, subject, html,attachments) => {
  const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
   port: 587,
   secure: false,
   auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
   const info = await transporter.sendMail({
-    from: `"adham 👻" <${process.env.EMAIL}>`,
-
-    to: to ? to : "adhamh666@gmail.com",
-    subject: subject ? subject : "Hello ✔",
-    html: html ? html : "<b>Hello world?</b>",
-    attachments: attachments ? attachments : []
+    from: `"Unify" <${process.env.EMAIL_USER}>`,
+    to: to,
+    subject: subject,
+    html: html,
+    attachments: attachments || []
   });
 
 };

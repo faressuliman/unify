@@ -1,10 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import './index.css'
 import { router } from './router'
-import { AuthProvider } from './context/AuthContext.tsx'
-import { LanguageProvider } from './context/LanguageContext.tsx'
+import { AuthProvider } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import unifyLogo from './assets/unify.png'
 
 const preloadLogo = () => {
@@ -27,6 +28,18 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <LanguageProvider>
         <RouterProvider router={router} />
+        <Toaster
+          position="bottom-center"
+          richColors
+          closeButton
+          toastOptions={{
+            classNames: {
+              toast: 'rounded-xl border border-slate-200/70 shadow-lg',
+              title: 'text-sm font-semibold',
+              description: 'text-xs text-slate-600',
+            },
+          }}
+        />
       </LanguageProvider>
     </AuthProvider>
   </StrictMode>,

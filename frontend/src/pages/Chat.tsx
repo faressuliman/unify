@@ -169,7 +169,7 @@ export default function Chat() {
       />
 
       <main className="w-full max-w-400 mx-auto px-6 lg:px-12">
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs grid grid-cols-1 md:grid-cols-[280px_1fr] h-[70vh] min-h-[500px]">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs grid grid-cols-1 md:grid-cols-[280px_1fr] h-[70vh] min-h-125">
           {/* Sidebar */}
           <aside className={`border-${isRTL ? 'l' : 'r'} border-slate-100 flex flex-col ${activeChatId ? 'hidden md:flex' : 'flex'}`}>
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
@@ -278,7 +278,7 @@ export default function Chat() {
                             }`}
                           >
                             {m.content && (
-                              <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>
+                              <p className="text-sm whitespace-pre-wrap wrap-break-word">{m.content}</p>
                             )}
                             {m.attachmentPath && (
                               <a
@@ -315,7 +315,7 @@ export default function Chat() {
                   {attachment && (
                     <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg text-xs">
                       <Paperclip className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="truncate max-w-[160px]">{attachment.name}</span>
+                      <span className="truncate max-w-40">{attachment.name}</span>
                       <button
                         type="button"
                         onClick={() => {

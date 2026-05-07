@@ -13,7 +13,7 @@ import {
 } from '../ui/dropdown-menu';
 import { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import unifyLogo from '../../assets/unify.png';
-import { notificationApi, type BackendNotification } from '@/lib/api';
+import { notificationApi } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
 
 const LazyDrawer = lazy(() => import('../ui/Drawer').then((module) => ({ default: module.Drawer })));
@@ -214,7 +214,7 @@ export function Navbar() {
     const handleUnreadCount = ({ unreadCount }: { unreadCount: number }) => {
       setNotificationCount(unreadCount);
     };
-    const handleNew = (_n: BackendNotification) => {
+    const handleNew = () => {
       setNotificationCount((c) => c + 1);
     };
     if (socket) {

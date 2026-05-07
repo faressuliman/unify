@@ -1,5 +1,7 @@
 import { type ReactNode, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { useAuth } from '../../../context/AuthContext';
+import { toArabicDisplay, toRTLDisplay } from '../../../lib/transliterate';
 import {
   Calendar,
   Lock,
@@ -51,14 +53,17 @@ const getFallbackAge = (details: string, fallback: string) => {
 export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: MissingModalProps) {
   const t = isRTL ? ar.recentUpdates.missingModal : en.recentUpdates.missingModal;
   const [isSightingOpen, setIsSightingOpen] = useState(false);
+  const { user } = useAuth();
 
-  const protectedName = profile.name || t.unknown;
+  const isOwnPost = !!(user?.id && profile.postUserId && user.id === profile.postUserId);
+
+  const protectedName = toArabicDisplay(profile.name || t.unknown, isRTL);
   const age = profile.age || getFallbackAge(profile.details, t.unknown);
   const physicalDescription = profile.physicalDescription || profile.details;
   const clothingDescription = profile.clothingDescription || t.notAvailable;
-  const lastSeenLocation = profile.lastSeenLocationDetails || profile.location;
-  const city = profile.city || t.notAvailable;
-  const postedBy = profile.postedBy || t.unknown;
+  const lastSeenLocation = toRTLDisplay(profile.lastSeenLocationDetails || profile.location, isRTL);
+  const city = toRTLDisplay(profile.city || t.notAvailable, isRTL);
+  const postedBy = toArabicDisplay(profile.postedBy || t.unknown, isRTL);
   const reportDate = profile.reportDate || t.notAvailable;
 
   return (
@@ -118,7 +123,7 @@ export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: M
               <div className="flex flex-col gap-6">
                 {/* Personal & Appearance Segment */}
                 <div className="space-y-3">
-                  <h4 className="text-[13px] font-bold uppercase tracking-widest text-slate-400 ms-1">Personal Details</h4>
+                  <h4 className="text-[13px] font-bold uppercase tracking-widest text-slate-400 ms-1">{t.personalDetails}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <InfoCard icon={<UserRound className="h-4.5 w-4.5" />} label={t.age} value={age} />
                     <InfoCard icon={<User className="h-4.5 w-4.5" />} label={t.postedBy} value={postedBy} />
@@ -129,7 +134,7 @@ export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: M
 
                 {/* Location & Log Segment */}
                 <div className="space-y-3">
-                  <h4 className="text-[13px] font-bold uppercase tracking-widest text-slate-400 ms-1">Location Details</h4>
+                  <h4 className="text-[13px] font-bold uppercase tracking-widest text-slate-400 ms-1">{t.locationDetails}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <InfoCard icon={<MapPin className="h-4.5 w-4.5" />} label={t.city} value={city} />
                     <InfoCard icon={<Calendar className="h-4.5 w-4.5" />} label={t.reportDate} value={reportDate} />
@@ -139,6 +144,7 @@ export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: M
               </div>
 
               {/* Call to Action Container */}
+              {!isOwnPost && (
               <div className="mt-8 space-y-4">
               <div className="rounded-[20px] bg-red-50/60 p-5 sm:p-6 border border-red-100/60">
                 <div className="flex items-start gap-4">
@@ -158,6 +164,7 @@ export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: M
                   {t.seenThem}
                 </SubmitButton>
               </div>
+              )}
             </div>
             </div>
           </DialogPrimitive.Content>

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { userApi, claimApi, chatApi, type UserProfileInfo, type BackendPost, type BackendClaim } from '../lib/api';
 import type { ProfileData } from '../components/home/PersonCard';
+import { mapPostFields } from '../lib/postFormatters';
 import { FileText, CheckCircle, ShieldCheck, Mail, Phone, Calendar, ArrowDownRight, ArrowDownLeft, ChevronRight, ChevronLeft, Pencil, MessageCircle, XCircle, Clock, Eye } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import MissingPersonCard from '../components/search/MissingPersonCard';
@@ -34,6 +35,30 @@ export default function Profile() {
     postName: '',
   });
 
+  const formatBirthDate = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleDateString(isRTL ? 'ar-EG' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const calculateAge = (value?: string) => {
+    if (!value) return null;
+    const birth = new Date(value);
+    if (Number.isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDelta = today.getMonth() - birth.getMonth();
+    if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birth.getDate())) {
+      age -= 1;
+    }
+    return age;
+  };
+
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!token) {
@@ -59,23 +84,28 @@ export default function Profile() {
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => post.postType === activeTab).map((post) => {
-      const isMissing = post.postType === 'missing';
+      const fields = mapPostFields(post, isRTL);
       return {
         id: post._id,
-        name: post.name || (isRTL ? 'غير معروف' : 'Unknown'),
+        name: fields.name || (isRTL ? 'غير معروف' : 'Unknown'),
         type: post.postType,
         status: post.status,
-        location: isMissing ? (post.lastSeenLocation || post.city || '') : (post.foundLocation || post.city || ''),
-        timeAgo: post.lastSeenDate || post.createdAt || new Date().toISOString(),
-        details: post.clothesDescription || '',
+        location: fields.location,
+        timeAgo: fields.timeAgo,
+        details: fields.details,
         image: post.postImages?.[0],
-        age: post.age ? `${post.age} ${post.ageUnit || 'y'}` : undefined,
-        physicalDescription: `Hair: ${post.hairColour || 'Unknown'}, Eyes: ${post.eyeColour || 'Unknown'}`,
-        clothingDescription: post.clothesDescription,
-        reporterPhone: post.reporterPhone
+        city: fields.city,
+        age: fields.age,
+        physicalDescription: fields.physicalDescription || undefined,
+        clothingDescription: fields.clothingDescription,
+        lastSeenLocationDetails: fields.lastSeenLocationDetails,
+        foundLocationDetails: fields.foundLocationDetails,
+        reportDate: fields.reportDate,
+        postedBy: fields.postedBy ?? profileData?.name,
+        postUserId: fields.postUserId ?? profileData?.id,
       } as ProfileData;
     });
-  }, [activeTab, posts, isRTL]);
+  }, [activeTab, posts, isRTL, profileData]);
 
   const updateScrollControls = () => {
     if (!cardsRef.current) return;
@@ -102,7 +132,8 @@ export default function Profile() {
     try {
       let responderId = '';
       if (typeof claim.postId === 'object' && claim.postId?.userId) {
-         responderId = claim.postId.userId;
+         const uid = claim.postId.userId;
+         responderId = typeof uid === 'object' ? uid._id : uid;
       } else if (typeof claim.claimUserId === 'object' && claim.claimUserId?._id) {
          responderId = claim.claimUserId._id;
       }
@@ -142,10 +173,9 @@ export default function Profile() {
             <div className="relative shrink-0">
                 <div className="w-24 h-24 bg-[#faebd7] rounded-full flex items-center justify-center p-2">
                   <div 
-                    className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl" 
-                    style={profileData?.idImagePath ? { backgroundImage: `url(${profileData.idImagePath})` } : {}}
+                    className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl"
                   >
-                    {!profileData?.idImagePath && profileData?.name?.charAt(0).toUpperCase()}
+                    {profileData?.name?.charAt(0).toUpperCase()}
                   </div>
                 </div>
                 <div className="absolute bottom-0 right-0 bg-white rounded-full p-0.5 shadow-sm translate-x-1/4 translate-y-1/4">
@@ -218,6 +248,30 @@ export default function Profile() {
                     <div className="text-start min-w-0">
                       <p className="text-xs text-slate-500 font-medium mb-0.5">{isRTL ? 'رقم الهاتف' : 'Phone Number'}</p>
                       <p className="text-sm font-bold text-tertiary">{profileData?.phoneNumber || (isRTL ? 'لم يتم التحديد' : 'Not specified')}</p>
+                    </div>
+                  </div>
+                  <button className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer" aria-label={isRTL ? 'تعديل' : 'Edit'}>
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex items-start justify-between gap-3 p-3 bg-slate-50/80 rounded-lg border border-slate-100">
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div className="mt-0.5 bg-white p-2 rounded-md shadow-xs border border-primary-200">
+                      <Calendar className="w-4 h-4 text-secondary" />
+                    </div>
+                    <div className="text-start min-w-0">
+                      <p className="text-xs text-slate-500 font-medium mb-0.5">{isRTL ? 'تاريخ الميلاد' : 'Birth Date'}</p>
+                      <p className="text-sm font-bold text-tertiary">
+                        {(() => {
+                          const birthDate = formatBirthDate(profileData?.birthDate);
+                          const age = calculateAge(profileData?.birthDate);
+                          if (!birthDate) {
+                            return isRTL ? 'لم يتم التحديد' : 'Not specified';
+                          }
+                          const ageText = age !== null ? `${age} ${isRTL ? 'سنة' : 'yrs'}` : null;
+                          return ageText ? `${birthDate} • ${ageText}` : birthDate;
+                        })()}
+                      </p>
                     </div>
                   </div>
                   <button className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer" aria-label={isRTL ? 'تعديل' : 'Edit'}>

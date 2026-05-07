@@ -15,4 +15,12 @@ router.patch("/users/:id/ban", asynchandler(adminService.toggleBanUser));
 router.get("/claims/pending", asynchandler(adminService.getPendingClaims));
 router.get("/claims", asynchandler(adminService.getAllClaims));
 
+// Identity verification queue
+router.get("/verifications/pending", asynchandler(adminService.getPendingVerifications));
+router.post("/users/:id/verify", asynchandler(adminService.verifyUser));
+router.post("/users/:id/reject-verification", asynchandler(adminService.rejectVerification));
+
+// Post moderation
+router.get("/posts", asynchandler(adminService.getAllPostsAdmin));
+
 export default router;

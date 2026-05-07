@@ -179,17 +179,23 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
                   <span className="font-medium">{t('nav.messages')}</span>
                 </button>
                 {user?.role === 'admin' && (
-                  <button
-                    onClick={() => handleNavClick('admin')}
-                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
-                      currentPage === 'admin'
-                        ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
-                        : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
-                    }`}
-                  >
-                    <ShieldCheck className="h-5 w-5 shrink-0" />
-                    <span className="font-medium">{t('nav.admin')}</span>
-                  </button>
+                  <>
+                    <div className="h-px bg-gray-200 my-2 mx-6" />
+                    <div className="px-6 py-2 text-xs uppercase tracking-wider text-gray-500 text-start">
+                      {t('nav.adminSection')}
+                    </div>
+                    <button
+                      onClick={() => handleNavClick('admin')}
+                      className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 w-full cursor-pointer border-none hover:ps-8 ${
+                        currentPage === 'admin'
+                          ? 'bg-primary/20 text-black font-semibold border-s-4 border-primary'
+                          : 'bg-transparent hover:bg-gray-50 text-gray-700 border-s-4 border-transparent'
+                      }`}
+                    >
+                      <ShieldCheck className="h-5 w-5 shrink-0" />
+                      <span className="font-medium">{t('nav.admin')}</span>
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={handleLogout}

@@ -25,6 +25,7 @@ type RequestOptions = {
 async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body = null, headers = {}, token = null } = options;
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  const hasBody = body !== null && body !== undefined;
 
   try {
     const response = await axiosInstance.request<T>({
@@ -32,7 +33,7 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}): Promis
       method,
       data: body,
       headers: {
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        ...(hasBody && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: token } : {}),
         ...headers,
       },
@@ -78,7 +79,7 @@ type RegisterInput = {
 
 export interface BackendPost {
   _id: string;
-  userId?: string;
+  userId?: string | { _id: string; name: string; email?: string };
   postType: "missing" | "found";
   name: string;
   status: "active" | "resolved" | "closed";
@@ -480,6 +481,7 @@ export interface DashboardStats {
   foundPosts: number;
   resolvedPosts: number;
   pendingClaims: number;
+  pendingVerifications?: number;
 }
 
 export interface AdminUser {
@@ -488,9 +490,21 @@ export interface AdminUser {
   email: string;
   role: "user" | "admin";
   phoneNumber?: string;
+  birthDate?: string;
+  gender?: string;
+  address?: string;
   isbanned: boolean;
   isVerified?: boolean;
+  idImagePath?: string;
   createdAt: string;
+}
+
+export interface AdminPostsResponse {
+  posts: BackendPost[];
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 export interface PaginatedResponse {
@@ -561,6 +575,67 @@ export const adminApi = {
     return apiRequest<{ message: string; claim: BackendClaim }>(`claims/${claimId}/admin-review`, {
       method: "POST",
       body: JSON.stringify({ result, notes, authorization: token }),
+      token,
+    });
+  },
+  // Identity verification queue ────────────────────────────────────────────
+  getPendingVerifications: async (
+    token: string,
+    params?: { page?: number; limit?: number; name?: string; email?: string },
+  ) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.name) search.set("name", params.name);
+    if (params?.email) search.set("email", params.email);
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminUsersResponse>(`admin/verifications/pending${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
+  verifyUser: async (userId: string, token: string) => {
+    return apiRequest<{ message: string; user: AdminUser }>(
+      `admin/users/${userId}/verify`,
+      { method: "POST", token },
+    );
+  },
+  rejectVerification: async (userId: string, reason: string | undefined, token: string) => {
+    return apiRequest<{ message: string }>(
+      `admin/users/${userId}/reject-verification`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+        token,
+      },
+    );
+  },
+  // Posts moderation ─────────────────────────────────────────────────────────
+  getAllPostsAdmin: async (
+    token: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      postType?: "missing" | "found";
+      status?: "active" | "resolved" | "closed";
+      name?: string;
+    },
+  ) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.postType) search.set("postType", params.postType);
+    if (params?.status) search.set("status", params.status);
+    if (params?.name) search.set("name", params.name);
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminPostsResponse>(`admin/posts${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
+  deletePostAdmin: async (postId: string, token: string) => {
+    return apiRequest<{ message: string }>(`posts/${postId}`, {
+      method: "DELETE",
       token,
     });
   },

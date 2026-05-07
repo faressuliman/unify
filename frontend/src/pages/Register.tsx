@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Calendar, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
 import { signUpSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -11,11 +11,13 @@ import { ar } from '../data/arabic';
 import SubmitButton from '@/components/ui/SubmitButton';
 import FormInput from '@/components/ui/FormInput';
 import ImageUpload from '@/components/ui/ImageUpload';
+import LocalizedDateInput from '@/components/ui/LocalizedDateInput';
 import compassImg from '../assets/compass.jpg';
 import FeatureCard from '@/components/ui/FeatureCard';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '@/lib/api';
+import { toast } from 'sonner';
 
 type PasswordStrengthContent = {
     pwd8Chars: string;
@@ -83,7 +85,7 @@ const Register = () => {
     const [formData, setFormData] = useState<{
         fullName: string;
         email: string;
-        age: string;
+        birthDate: string;
         phoneNumber: string;
         password: string;
         confirmPassword: string;
@@ -91,7 +93,7 @@ const Register = () => {
     }>({
         fullName: '',
         email: '',
-        age: '',
+        birthDate: '',
         phoneNumber: '',
         password: '',
         confirmPassword: '',
@@ -106,12 +108,8 @@ const Register = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         let parsedValue = value;
-        if (name === 'age' || name === 'phoneNumber') {
+        if (name === 'phoneNumber') {
             parsedValue = value.replace(/\D/g, ''); 
-        }
-
-        if (name === 'age') {
-            if (parseInt(parsedValue) > 90) return;
         }
 
         if (name === 'phoneNumber' && parsedValue.length > 11) {
@@ -126,6 +124,14 @@ const Register = () => {
         
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleBirthDateChange = (value: string) => {
+        setFormData(prev => ({ ...prev, birthDate: value }));
+        setSubmitError('');
+        if (errors.birthDate) {
+            setErrors(prev => ({ ...prev, birthDate: '' }));
         }
     };
 
@@ -149,10 +155,6 @@ const Register = () => {
         setSubmitError('');
         setIsSubmitting(true);
 
-        const ageNumber = Number(formData.age);
-        const currentYear = new Date().getFullYear();
-        const birthDate = new Date(currentYear - ageNumber, 0, 1).toISOString();
-
         try {
             await register({
                 name: formData.fullName,
@@ -160,10 +162,22 @@ const Register = () => {
                 password: formData.password,
                 confirmPassword: formData.confirmPassword,
                 phoneNumber: formData.phoneNumber,
-                birthDate,
+                birthDate: formData.birthDate,
                 idPicture: formData.idPicture,
             });
-            navigate('/login');
+            // Account is created in a "pending verification" state on the
+            // backend — surface that explicitly so the user knows why they
+            // can't log in immediately and that we'll email them.
+            toast.success(
+                isRTL ? 'تم إنشاء حسابك بنجاح' : 'Account created successfully',
+                {
+                    description: isRTL
+                        ? 'حسابك قيد المراجعة. سنُرسل لك بريداً إلكترونياً فور اعتماد فريقنا لوثيقة الهوية.'
+                        : "Your account is pending verification. We'll email you as soon as our team reviews your ID.",
+                    duration: 8000,
+                },
+            );
+            navigate('/');
         } catch (error) {
             setSubmitError(error instanceof ApiError ? error.message : 'Unable to create account right now.');
         } finally {
@@ -223,20 +237,15 @@ const Register = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <FormInput 
-                                    icon={<Calendar className="w-4 h-4" />}
-                                    type="text" 
-                                    inputMode="numeric"
-                                    name="age"
-                                    label={content.age}
-                                    placeholder={content.age} 
-                                    value={formData.age}
-                                    onChange={handleChange}
-                                    maxLength={2}
+                                <LocalizedDateInput
+                                    id="birthDate"
+                                    label={content.birthDate}
+                                    value={formData.birthDate}
+                                    onChange={handleBirthDateChange}
                                     isRTL={isRTL}
-                                    className={errors.age ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
+                                    placeholder={content.birthDatePlaceholder || content.birthDate}
                                 />
-                                <ErrorMessage msg={errors.age} className="text-[11px] sm:text-xs" />
+                                <ErrorMessage msg={errors.birthDate} className="text-[11px] sm:text-xs" />
                             </div>
                             <div>
                                 <FormInput 

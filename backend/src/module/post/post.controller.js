@@ -10,6 +10,13 @@ const router = Router();
 
 // Public
 router.get("/", validation(getPostsSchema), asynchandler(postService.getPosts));
+
+router.post(
+  "/search-image",
+  multerHost(filetypes.image, "unify/search_temp").single("searchImage"),
+  asynchandler(postService.searchByImage)
+);
+
 router.get("/map-markers", asynchandler(postService.getMapMarkers));
 router.get("/:id", asynchandler(postService.getPostById));
 
