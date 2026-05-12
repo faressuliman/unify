@@ -143,6 +143,8 @@ type CreatePostPayload = {
   affiliation?: string;
   organizationName?: string;
   reporterPhone?: string;
+  latitude?: number;
+  longitude?: number;
   photos?: File[];
 };
 

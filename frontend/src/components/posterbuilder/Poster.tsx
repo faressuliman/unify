@@ -155,7 +155,10 @@ const Poster = () => {
   };
 
   return (
-    <section className="bg-slate-50 py-8" dir={isRTL ? "rtl" : "ltr"}>
+    <section
+      className="bg-slate-50 dark:bg-slate-950 py-8 transition-colors duration-300"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <motion.div
         initial="hidden"
         animate="visible"
@@ -177,8 +180,8 @@ const Poster = () => {
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start mt-6">
             <motion.div className="space-y-6" variants={itemVariants}>
               {/* Personal Details Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-secondary">
                     <UserCircle className="w-6 h-6" />
                   </span>
@@ -292,8 +295,8 @@ const Poster = () => {
               </div>
 
               {/* Photo Upload Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-secondary">
                     <Camera className="w-6 h-6" />
                   </span>
@@ -313,8 +316,8 @@ const Poster = () => {
               </div>
 
               {/* Additional Info Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-secondary">
                     <FileText className="w-6 h-6" />
                   </span>
@@ -417,22 +420,22 @@ const Poster = () => {
 
             {/* Preview Column */}
             <motion.div
-              className="hidden lg:flex bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[850px]"
+              className="hidden lg:flex w-full bg-slate-100 dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[520px]"
               variants={itemVariants}
             >
               <div
                 ref={previewRef}
-                className="w-full mx-auto max-w-[850px] bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
+                className="w-full mx-auto max-w-[860px] bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
               >
                 {/* Header */}
-                <div className="bg-red-700 py-12 text-center">
+                <div className="bg-red-700 py-6 text-center">
                   <h2
                     className={`text-4xl font-black text-white font-sans ${isRTL ? "tracking-normal" : "tracking-widest uppercase"}`}
                   >
                     {t("poster.previewMissing")}
                   </h2>
                   <p
-                    className={`text-red-100 text-[0.65rem] font-bold mt-6 font-sans ${isRTL ? "tracking-normal" : "tracking-[0.2em] uppercase"}`}
+                    className={`text-red-100 text-[0.65rem] font-bold mt-2 font-sans ${isRTL ? "tracking-normal" : "tracking-[0.2em] uppercase"}`}
                   >
                     {t("poster.previewHelp")}
                   </p>
@@ -479,11 +482,11 @@ const Poster = () => {
                 </div>
 
                 {/* Details Section */}
-                <div className="p-16 bg-white flex flex-col gap-16">
-                  <div className="grid grid-cols-2 gap-16 font-sans">
+                <div className="p-8 bg-white flex flex-col gap-8">
+                  <div className="grid grid-cols-2 gap-8 font-sans">
                     <div className="flex flex-col">
                       <span
-                        className={`text-[0.65rem] font-bold text-slate-400 mb-4 ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                        className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
                       >
                         {t("poster.age")}
                       </span>
@@ -498,7 +501,7 @@ const Poster = () => {
                     </div>
                     <div className="flex flex-col">
                       <span
-                        className={`text-[0.65rem] font-bold text-slate-400 mb-4 ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                        className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
                       >
                         {t("poster.height")}
                       </span>
@@ -513,9 +516,9 @@ const Poster = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col border-t border-slate-100 pt-10">
+                  <div className="flex flex-col border-t border-slate-100 pt-6">
                     <span
-                      className={`text-[0.65rem] font-bold text-slate-400 mb-4 font-sans ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                      className={`text-[0.65rem] font-bold text-slate-400 mb-2 font-sans ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
                     >
                       {t("poster.lastSeen")}
                     </span>
@@ -527,9 +530,9 @@ const Poster = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col border-t border-slate-100 pt-10">
+                  <div className="flex flex-col border-t border-slate-100 pt-6">
                     <span
-                      className={`text-[0.65rem] font-bold text-slate-400 mb-4 font-sans ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                      className={`text-[0.65rem] font-bold text-slate-400 mb-2 font-sans ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
                     >
                       {t("poster.descClothing")}
                     </span>
@@ -541,7 +544,7 @@ const Poster = () => {
                     </p>
                   </div>
 
-                  <div className="mt-8 bg-red-50 border border-red-100 rounded-[1.25rem] p-6 text-center shadow-sm">
+                  <div className="mt-2 bg-red-50 border border-red-100 rounded-[1.25rem] p-6 text-center shadow-sm">
                     <div className="bg-red-700 text-white px-2 sm:px-6 py-4 rounded-xl font-black text-base sm:text-xl shadow-lg flex flex-col items-center justify-center gap-2 sm:gap-3 leading-tight">
                       <div className="flex items-center gap-2">
                         <FontAwesomeIcon

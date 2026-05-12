@@ -241,10 +241,39 @@ export default function Map() {
   useEffect(() => {
     const fetchMarkers = async () => {
       try {
-        const response = await postApi.getMapMarkers(appliedFilters);
-        const fetchedMarkers = response.markers || [];
+        const response = await postApi.getPosts({
+          postType: appliedFilters.postType,
+          city: appliedFilters.city || undefined,
+          dateMissing: appliedFilters.dateMissing || undefined,
+          firstName: appliedFilters.keyword || undefined,
+          status: "active",
+          limit: 1000,
+        });
+        const fetchedMarkers = response.data || [];
         setPosts(
-          fetchedMarkers.map((m) => ({ ...m, position: [m.lat, m.lng] })),
+          fetchedMarkers
+            .map((m: any) => {
+              const cityCoords = m.city ? CITY_COORDS[m.city] : undefined;
+              const lat =
+                m.lat || m.latitude || (cityCoords ? cityCoords[0] : null);
+              const lng =
+                m.lng || m.longitude || (cityCoords ? cityCoords[1] : null);
+              return {
+                ...m,
+                type: m.type || m.postType,
+                id: m._id || m.id,
+                name:
+                  m.name ||
+                  (m.firstName
+                    ? `${m.firstName} ${m.lastName || ""}`.trim()
+                    : "Unknown"),
+                image: m.image || (m.postImages && m.postImages[0]) || null,
+                position: lat && lng ? [lat, lng] : null,
+              };
+            })
+            .filter((m) => m.position !== null) as (BackendMapMarker & {
+            position: [number, number];
+          })[],
         );
       } catch (error) {
         console.error("Error fetching map markers:", error);
@@ -293,15 +322,15 @@ export default function Map() {
   ) => (
     <form
       onSubmit={handleSubmitFilters}
-      className={`flex flex-col h-full bg-white font-sans w-full ${enableScroll ? "overflow-y-auto" : "overflow-hidden"}`}
+      className={`flex flex-col h-full bg-white dark:bg-slate-900 font-sans w-full ${enableScroll ? "overflow-y-auto" : "overflow-hidden"}`}
     >
-      <div className="p-6 pb-5 border-b border-slate-100 flex items-start justify-between gap-4 sticky top-0 bg-white z-10">
+      <div className="p-6 pb-5 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4 sticky top-0 bg-white dark:bg-slate-900 z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
             <ListFilter className="w-5 h-5" />
           </div>
           <div className="text-start">
-            <h3 className="font-bold text-xl text-slate-800 leading-tight">
+            <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 leading-tight">
               {t.filterCases}
             </h3>
             <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase mt-0.5">
@@ -315,11 +344,11 @@ export default function Map() {
           </SheetClose>
         )}
       </div>
-      <div className="p-6 flex flex-col gap-6 flex-1 bg-slate-50/30">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+      <div className="p-6 flex flex-col gap-6 flex-1 bg-slate-50/30 dark:bg-slate-950/50">
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
           <div className="flex items-center justify-between mb-3">
             <label
-              className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
+              className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
             >
               <Search className="w-3.5 h-3.5 text-blue-500" />
               {t.keyword}
@@ -340,10 +369,10 @@ export default function Map() {
           />
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
           <div className="flex items-center justify-between mb-3">
             <label
-              className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
+              className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
             >
               <MapPin className="w-3.5 h-3.5 text-rose-500" />
               {t.areaRegion}
@@ -362,10 +391,10 @@ export default function Map() {
           />
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
           <div className="flex items-center justify-between mb-3">
             <label
-              className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
+              className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
             >
               <Calendar className="w-3.5 h-3.5 text-emerald-500" />
               {t.dateMissing}
@@ -384,9 +413,9 @@ export default function Map() {
           />
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group">
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
           <label
-            className={`text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-4 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
+            className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 mb-4 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
           >
             <Info className="w-3.5 h-3.5 text-amber-500" />
             {t.showStatus}
@@ -405,7 +434,7 @@ export default function Map() {
         </div>
       </div>
 
-      <div className="pt-4 mb-8 pb-6 px-6 border-t border-slate-100 bg-white shrink-0 sticky bottom-0 z-10 w-full shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)]">
+      <div className="pt-4 mb-8 pb-6 px-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 sticky bottom-0 z-10 w-full shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)]">
         <SubmitButton
           type="submit"
           className="w-full h-14 text-base font-bold rounded-xl shadow-lg bg-amber-600 hover:bg-amber-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0"
@@ -418,7 +447,7 @@ export default function Map() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 flex flex-col pt-8 pb-16 font-sans"
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-8 pb-16 font-sans transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <PageHeader
@@ -431,7 +460,7 @@ export default function Map() {
 
       <div className="max-w-400 mx-auto w-full px-4 lg:px-8 mt-4 flex-1 flex flex-col lg:flex-row gap-6 relative">
         {/* Mobile Filter Toggle */}
-        <div className="lg:hidden flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div className="lg:hidden flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
           <MapDrawer
             isOpen={isFilterOpen}
             setIsOpen={setIsFilterOpen}
@@ -440,19 +469,19 @@ export default function Map() {
             content={renderFiltersContent(true, false)}
           />
 
-          <span className="font-bold text-tertiary flex items-center gap-2">
+          <span className="font-bold text-tertiary dark:text-slate-100 flex items-center gap-2">
             <Info className="w-5 h-5 text-secondary" />
             {filteredPosts.length} {t.cases}
           </span>
         </div>
 
         {/* Desktop Sidebar Filters */}
-        <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
+        <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
           {renderFiltersContent(false, true)}
         </aside>
 
         {/* Main Map View */}
-        <main className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative h-[70vh] min-h-100 lg:min-h-125 lg:h-[calc(100vh-140px)] flex flex-col z-0">
+        <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:min-h-125 lg:h-[calc(100vh-140px)] flex flex-col z-0">
           <div className="absolute inset-0 z-0">
             <MapContainer
               center={DEFAULT_CENTER}
@@ -491,10 +520,10 @@ export default function Map() {
           </div>
 
           {/* Floating Stats Overlay Top Right */}
-          <div className="absolute top-4 right-4 z-50 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-slate-200 flex items-center gap-4 cursor-default">
+          <div className="absolute top-4 right-4 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center gap-4 cursor-default">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span>
-              <span className="font-bold text-xs sm:text-sm text-slate-700">
+              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
                 <span className="text-red-600 font-black">{missingCount}</span>{" "}
                 {t.missing}
               </span>
@@ -502,7 +531,7 @@ export default function Map() {
             <div className="w-px h-4 bg-slate-300"></div>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 shadow-sm shadow-green-500/50"></span>
-              <span className="font-bold text-xs sm:text-sm text-slate-700">
+              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
                 <span className="text-green-600 font-black">{foundCount}</span>{" "}
                 {t.found}
               </span>
