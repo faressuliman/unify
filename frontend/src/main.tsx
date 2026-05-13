@@ -7,7 +7,6 @@ import { router } from "./router";
 import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import unifyLogo from "./assets/unify.png";
-import { ThemeProvider } from "./context/ThemeContext";
 
 const preloadLogo = () => {
   const existingPreload = document.querySelector(
@@ -28,24 +27,22 @@ preloadLogo();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <LanguageProvider>
-          <RouterProvider router={router} />
-          <Toaster
-            position="bottom-center"
-            richColors
-            closeButton
-            toastOptions={{
-              classNames: {
-                toast: "rounded-xl border border-slate-200/70 shadow-lg",
-                title: "text-sm font-semibold",
-                description: "text-xs text-slate-600",
-              },
-            }}
-          />
-        </LanguageProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <RouterProvider router={router} />
+        <Toaster
+          position="bottom-center"
+          richColors
+          closeButton
+          toastOptions={{
+            classNames: {
+              toast: "rounded-xl border border-slate-200/70 shadow-lg",
+              title: "text-sm font-semibold",
+              description: "text-xs text-slate-600",
+            },
+          }}
+        />
+      </LanguageProvider>
+    </AuthProvider>
   </StrictMode>,
 );

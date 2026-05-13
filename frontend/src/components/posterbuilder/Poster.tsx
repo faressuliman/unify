@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from "react";
+﻿﻿import { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import { toJpeg } from "html-to-image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -156,7 +156,7 @@ const Poster = () => {
 
   return (
     <section
-      className="bg-slate-50 dark:bg-slate-950 py-8 transition-colors duration-300"
+      className="bg-slate-50 py-8 transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <motion.div
@@ -180,8 +180,8 @@ const Poster = () => {
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start mt-6">
             <motion.div className="space-y-6" variants={itemVariants}>
               {/* Personal Details Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-secondary">
                     <UserCircle className="w-6 h-6" />
                   </span>
@@ -295,8 +295,8 @@ const Poster = () => {
               </div>
 
               {/* Photo Upload Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-secondary">
                     <Camera className="w-6 h-6" />
                   </span>
@@ -316,8 +316,8 @@ const Poster = () => {
               </div>
 
               {/* Additional Info Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-secondary">
                     <FileText className="w-6 h-6" />
                   </span>
@@ -420,7 +420,7 @@ const Poster = () => {
 
             {/* Preview Column */}
             <motion.div
-              className="hidden lg:flex w-full bg-slate-100 dark:bg-slate-800/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[520px]"
+              className="hidden lg:flex w-full bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[520px]"
               variants={itemVariants}
             >
               <div

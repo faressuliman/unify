@@ -42,7 +42,7 @@ type ClaimsTab = "pending" | "processed";
 const PAGE_LIMIT = 10;
 
 export default function Admin() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { language } = useLanguage();
   const isRTL = language === "ar";
   const tCopy = useMemo(() => getCopy(isRTL), [isRTL]);
@@ -511,11 +511,11 @@ export default function Admin() {
               </p>
             </header>
 
-            {activeSection === "overview" && (
+            {activeSection === "overview" && user?.role === "admin" && (
               <div className="flex justify-end pb-2">
                 <button
                   onClick={async () => {
-                    if (!token || isSeeding) return;
+                    if (!token || isSeeding || user?.role !== "admin") return;
                     setIsSeeding(true);
                     toast.info("Starting to generate dummy data...");
                     await seedDummyData(token, (msg) => toast.info(msg));

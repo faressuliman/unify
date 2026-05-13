@@ -349,7 +349,7 @@ const CreatePost = () => {
 
   return (
     <section
-      className="bg-slate-50 dark:bg-slate-950 py-8 min-h-screen font-sans transition-colors duration-300"
+      className="bg-slate-50 py-8 min-h-screen font-sans transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <motion.div
@@ -384,8 +384,8 @@ const CreatePost = () => {
             {/* LEFT COLUMN: Input Forms */}
             <motion.div className="space-y-6 min-w-0" variants={itemVariants}>
               {/* Basic Information Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans text-start">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                     <UserCircle className="w-5 h-5" />
                   </span>
@@ -394,7 +394,7 @@ const CreatePost = () => {
 
                 <div className="space-y-4">
                   <div className="flex flex-col mb-4">
-                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-300 mb-3 text-start">
+                    <label className="block text-sm font-bold text-slate-800 mb-3 text-start">
                       {t.postType}
                     </label>
                     <SegmentedControl
@@ -554,8 +554,8 @@ const CreatePost = () => {
               </div>
 
               {/* Appearance & Details Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans text-start">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                     <FileText className="w-5 h-5" />
                   </span>
@@ -614,8 +614,8 @@ const CreatePost = () => {
               </div>
 
               {/* Last Seen Information Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans text-start">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                     <MapPin className="w-5 h-5" />
                   </span>
@@ -688,7 +688,7 @@ const CreatePost = () => {
                         />
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-w-0">
+                      <div className="rounded-xl border border-slate-200 p-4 min-w-0">
                         <SelectMenu
                           id="affiliation"
                           label={
@@ -765,8 +765,8 @@ const CreatePost = () => {
               </div>
 
               {/* Photo Upload Card */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md">
-                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 font-sans text-start">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans text-start">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                     <Camera className="w-5 h-5" />
                   </span>
@@ -793,7 +793,7 @@ const CreatePost = () => {
                 />
               </div>
 
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col sm:flex-row gap-3 w-full">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row gap-3 w-full">
                 {submitError ? (
                   <div className="w-full sm:basis-full">
                     <ErrorMessage msg={submitError} className="text-sm" />
@@ -802,7 +802,7 @@ const CreatePost = () => {
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
-                  className="order-2 sm:order-1 flex-1 w-full py-3.5 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer text-sm font-bold rounded-xl transition-all"
+                  className="order-2 sm:order-1 flex-1 w-full py-3.5 text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer text-sm font-bold rounded-xl transition-all"
                 >
                   {t.cancel}
                 </button>
@@ -829,7 +829,7 @@ const CreatePost = () => {
               variants={itemVariants}
               className="hidden lg:block lg:sticky lg:top-24 space-y-6"
             >
-              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col items-center justify-center overflow-hidden relative min-h-80 lg:min-h-[400px]">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center overflow-hidden relative min-h-80 lg:min-h-[400px]">
                 {/* Animated UI Composition mimicking the user's illustration */}
                 <div
                   className={`relative w-full max-w-[380px] aspect-square transition-transform duration-500 ${formData.postType === "found" ? "scale-[1.02]" : ""}`}
@@ -839,8 +839,8 @@ const CreatePost = () => {
                   <div className="absolute bottom-10 -left-10 w-48 h-48 bg-primary/10 rounded-full blur-3xl opacity-60"></div>
 
                   {/* Mock Browser/App Window Background */}
-                  <div className="absolute inset-4 mt-8 ms-8 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-inner flex flex-col overflow-hidden">
-                    <div className="h-8 bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 flex items-center px-4 gap-1.5">
+                  <div className="absolute inset-4 mt-8 ms-8 bg-slate-50 border border-slate-100 rounded-2xl shadow-inner flex flex-col overflow-hidden">
+                    <div className="h-8 bg-slate-100/80 border-b border-slate-200 flex items-center px-4 gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
@@ -915,7 +915,7 @@ const CreatePost = () => {
                 </div>
 
                 <div className="relative z-20 text-center mt-6">
-                  <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">
                     {formData.postType === "missing"
                       ? t.missingPerson
                       : t.foundPerson}

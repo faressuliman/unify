@@ -11,8 +11,6 @@ import {
   Mail,
   Menu,
   ShieldCheck,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useAuth } from "../../context/AuthContext";
@@ -27,7 +25,6 @@ import {
 } from "../ui/dropdown-menu";
 import { useState, useEffect, lazy, Suspense, useRef } from "react";
 import unifyLogo from "../../assets/unify.png";
-import { useTheme } from "../../context/ThemeContext";
 import { notificationApi } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 
@@ -60,7 +57,6 @@ export function Navbar() {
     t,
     isLocked: isLanguageLocked,
   } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
   const [notificationCount, setNotificationCount] = useState(0);
   const [hasActiveChats] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -286,8 +282,8 @@ export function Navbar() {
       className={`${isAuthLikePage || currentPage === "map" ? "relative" : "sticky"} top-0 z-50 w-full transition-all duration-300 
         ${
           isScrolledActive
-            ? "bg-white/95 dark:bg-slate-950/95 border-b shadow-md backdrop-blur-md border-gray-200/50 dark:border-slate-800/50 2xl:bg-transparent 2xl:dark:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none"
-            : "bg-white/95 dark:bg-slate-950/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 dark:border-slate-800/50 pointer-events-auto"
+            ? "bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none"
+            : "bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto"
         }`}
       dir={isRTL ? "rtl" : "ltr"}
     >
@@ -296,8 +292,8 @@ export function Navbar() {
           className={`w-full flex h-20 items-center justify-between transition-all duration-300
           ${
             isScrolledActive
-              ? "2xl:bg-white/95 2xl:dark:bg-slate-950/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:dark:border-slate-800/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6"
-              : "2xl:bg-transparent 2xl:dark:bg-transparent 2xl:border-transparent 2xl:shadow-none"
+              ? "2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6"
+              : "2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none"
           }`}
         >
           {/* Left: Logo */}
@@ -313,21 +309,21 @@ export function Navbar() {
               className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
             >
               <img src={unifyLogo} alt="Unify" className="h-14 w-auto" />
-              <span className="text-2xl font-extrabold tracking-normal text-tertiary dark:text-white">
+              <span className="text-2xl font-extrabold tracking-normal text-tertiary">
                 {isRTL ? "يونيفاي" : "Unify"}
               </span>
             </button>
           </div>
 
           {/* Center: Navigation */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 dark:border-slate-700/50 bg-white dark:bg-slate-900 hidden 2xl:flex">
+          <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden 2xl:flex">
             <nav className="hidden 2xl:flex items-center gap-2  px-3 py-2  ">
               <button
                 onClick={() => handleNavClick("search")}
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "search"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <Search
@@ -342,7 +338,7 @@ export function Navbar() {
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "create-post"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <PlusCircle
@@ -359,7 +355,7 @@ export function Navbar() {
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "poster-builder"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <FileImage
@@ -376,7 +372,7 @@ export function Navbar() {
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "map"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <MapPin
@@ -399,8 +395,8 @@ export function Navbar() {
                   disabled={isLanguageLocked}
                   className={`hidden 2xl:flex relative w-10 h-10 rounded-full items-center justify-center transition-all duration-200 border-none ${
                     isLanguageLocked
-                      ? "bg-gray-100 dark:bg-slate-800 cursor-not-allowed opacity-60"
-                      : "bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 cursor-pointer"
+                      ? "bg-gray-100 cursor-not-allowed opacity-60"
+                      : "bg-gray-100 hover:bg-gray-200 cursor-pointer"
                   }`}
                   aria-label="Change Language"
                   title={
@@ -413,53 +409,28 @@ export function Navbar() {
                         : "الانجليزية"
                   }
                 >
-                  <Globe
-                    className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                    strokeWidth={2}
-                  />
-                </button>
-
-                {/* Theme Toggle */}
-                <button
-                  onClick={toggleTheme}
-                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 items-center justify-center transition-all duration-200 cursor-pointer border-none"
-                  aria-label="Toggle Theme"
-                >
-                  {theme === "dark" ? (
-                    <Sun className="h-5 w-5 text-yellow-500" strokeWidth={2} />
-                  ) : (
-                    <Moon
-                      className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                      strokeWidth={2}
-                    />
-                  )}
+                  <Globe className="h-5 w-5 text-gray-700" strokeWidth={2} />
                 </button>
 
                 {/* Messages */}
                 <button
                   onClick={() => handleNavClick("chat")}
-                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                   aria-label="Messages"
                 >
-                  <Mail
-                    className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                    strokeWidth={2}
-                  />
+                  <Mail className="h-5 w-5 text-gray-700" strokeWidth={2} />
                   {hasActiveChats && (
-                    <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white dark:border-slate-900"></span>
+                    <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white"></span>
                   )}
                 </button>
 
                 {/* Notifications */}
                 <button
                   onClick={handleNotificationClick}
-                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                   aria-label="Notifications"
                 >
-                  <Bell
-                    className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                    strokeWidth={2}
-                  />
+                  <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
                   {notificationCount > 0 && (
                     <span className="absolute -right-0.5 -top-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
                       {notificationCount}
@@ -471,32 +442,22 @@ export function Navbar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="hidden 2xl:flex w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                      className="hidden 2xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                       aria-label="User menu"
                     >
-                      <User
-                        className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                        strokeWidth={2}
-                      />
+                      <User className="h-5 w-5 text-gray-700" strokeWidth={2} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-56 mt-2 dark:bg-slate-900 dark:border-slate-800"
-                  >
-                    <div className="px-3 py-2 bg-linear-to-br from-primary-50 to-primary-100/50 dark:from-slate-800 dark:to-slate-800/50">
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {user?.name}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-slate-400">
-                        {user?.email}
-                      </p>
+                  <DropdownMenuContent align="end" className="w-56 mt-2">
+                    <div className="px-3 py-2 bg-linear-to-br from-primary-50 to-primary-100/50">
+                      <p className="font-medium text-gray-900">{user?.name}</p>
+                      <p className="text-xs text-gray-600">{user?.email}</p>
                     </div>
-                    <DropdownMenuSeparator className="dark:bg-slate-800" />
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => handleNavClick("profile")}
                       onSelect={() => handleNavClick("profile")}
-                      className="cursor-pointer dark:hover:bg-slate-800 dark:focus:bg-slate-800 dark:text-slate-200"
+                      className="cursor-pointer"
                     >
                       <User className="me-2 h-4 w-4 text-primary-600" />
                       <span className="font-medium">{t("nav.profile")}</span>
@@ -505,7 +466,7 @@ export function Navbar() {
                       <DropdownMenuItem
                         onClick={() => handleNavClick("admin")}
                         onSelect={() => handleNavClick("admin")}
-                        className="cursor-pointer dark:hover:bg-slate-800 dark:focus:bg-slate-800 dark:text-slate-200"
+                        className="cursor-pointer"
                       >
                         <ShieldCheck className="me-2 h-4 w-4 text-primary-600" />
                         <span className="font-medium">{t("nav.admin")}</span>
@@ -514,7 +475,7 @@ export function Navbar() {
                     <DropdownMenuItem
                       onClick={handleLogout}
                       onSelect={handleLogout}
-                      className="cursor-pointer text-red-600 focus:text-red-700 dark:text-red-400 dark:focus:bg-slate-800"
+                      className="cursor-pointer text-red-600 focus:text-red-700"
                     >
                       <LogOut className="me-2 h-4 w-4" />
                       <span className="font-medium">{t("nav.logout")}</span>
@@ -524,29 +485,13 @@ export function Navbar() {
               </>
             ) : (
               <div className="hidden 2xl:flex items-center gap-3">
-                {/* Theme Toggle */}
-                <button
-                  onClick={toggleTheme}
-                  className="relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border-none bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 cursor-pointer"
-                  aria-label="Toggle Theme"
-                >
-                  {theme === "dark" ? (
-                    <Sun className="h-5 w-5 text-yellow-500" strokeWidth={2} />
-                  ) : (
-                    <Moon
-                      className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                      strokeWidth={2}
-                    />
-                  )}
-                </button>
-
                 <button
                   onClick={toggleLanguage}
                   disabled={isLanguageLocked}
                   className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border-none ${
                     isLanguageLocked
-                      ? "bg-gray-100 dark:bg-slate-800 cursor-not-allowed opacity-60"
-                      : "bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 cursor-pointer"
+                      ? "bg-gray-100 cursor-not-allowed opacity-60"
+                      : "bg-gray-100 hover:bg-gray-200 cursor-pointer"
                   }`}
                   aria-label="Change Language"
                   title={
@@ -559,15 +504,12 @@ export function Navbar() {
                         : "English"
                   }
                 >
-                  <Globe
-                    className="h-5 w-5 text-gray-700 dark:text-gray-300"
-                    strokeWidth={2}
-                  />
+                  <Globe className="h-5 w-5 text-gray-700" strokeWidth={2} />
                 </button>
                 <Button
                   variant="ghost"
                   onClick={() => handleNavClick("login")}
-                  className="rounded-full px-6 font-medium hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer dark:text-slate-300"
+                  className="rounded-full px-6 font-medium hover:bg-gray-100 cursor-pointer"
                 >
                   {t("nav.login")}
                 </Button>
@@ -584,7 +526,7 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               aria-label="Open menu"
-              className="cursor-pointer 2xl:hidden dark:text-slate-200 dark:hover:bg-slate-800"
+              className="cursor-pointer 2xl:hidden"
               onClick={handleOpenDrawer}
               onMouseEnter={() => {
                 preloadMobileDrawer();
