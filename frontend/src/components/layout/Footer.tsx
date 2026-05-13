@@ -71,7 +71,7 @@ export default function Footer() {
         <FileSearch size={180} />
       </motion.div>
 
-      <div className="relative z-10 mx-auto w-full max-w-350 px-4 lg:px-8 pt-2 pb-8 border-b border-tertiary/10">
+      <div className="relative z-10 mx-auto w-full max-w-350 px-4 lg:px-8 pt-2 pb-10 border-b border-tertiary/10">
         <div className="grid gap-8 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

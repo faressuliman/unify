@@ -1575,6 +1575,7 @@ function ReviewClaimModal({
           </div>
           <button
             onClick={onClose}
+            title={isRTL ? "إغلاق" : "Close"}
             className="h-8 w-8 rounded-full bg-slate-200/60 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center"
           >
             <X className="h-4 w-4" />
@@ -1737,6 +1738,7 @@ function ReviewVerificationModal({
           </div>
           <button
             onClick={onClose}
+            title={isRTL ? "إغلاق" : "Close"}
             className="h-8 w-8 rounded-full bg-slate-200/60 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center"
           >
             <X className="h-4 w-4" />

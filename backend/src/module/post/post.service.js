@@ -25,18 +25,32 @@ export const searchByImage = async (req, res, next) => {
     await cloudinary.uploader.destroy(req.file.filename);
   }
   return res.status(501).json({
-    message: "Image Search is temporarily disabled while testing other functionality."
+    message:
+      "Image Search is temporarily disabled while testing other functionality.",
   });
 };
 
 // ─── Create Post ──────────────────────────────────────────────────────────────
 export const createPost = async (req, res, next) => {
   const {
-    postType, firstName, lastName, age, ageUnit, gender,
-    hairColour, eyeColour, clothesDescription, city,
-    lastSeenLocation, lastSeenDate, foundLocation,
-    affiliation, organizationName, reporterPhone,
-    latitude, longitude,
+    postType,
+    firstName,
+    lastName,
+    age,
+    ageUnit,
+    gender,
+    hairColour,
+    eyeColour,
+    clothesDescription,
+    city,
+    lastSeenLocation,
+    lastSeenDate,
+    foundLocation,
+    affiliation,
+    organizationName,
+    reporterPhone,
+    latitude,
+    longitude,
   } = req.body;
 
   let locationId;
@@ -51,7 +65,7 @@ export const createPost = async (req, res, next) => {
   }
 
   const postImages = req.files?.map((f) => f.path) || [];
-  
+
   let faceEncoding = [];
   // AI Service removed for testing
 
@@ -111,9 +125,19 @@ export const getPosts = async (req, res, next) => {
   await backfillSearchKeys();
 
   const {
-    postType, status, gender, city,
-    hairColour, eyeColour, firstName, lastName,
-    ageMin, ageMax, dateMissing, page, limit,
+    postType,
+    status,
+    gender,
+    city,
+    hairColour,
+    eyeColour,
+    firstName,
+    lastName,
+    ageMin,
+    ageMax,
+    dateMissing,
+    page,
+    limit,
   } = req.query;
 
   const filter = {};
@@ -138,7 +162,9 @@ export const getPosts = async (req, res, next) => {
       // Require ≥2 chars in the consonant skeleton to avoid spurious hits
       // (e.g. "Ali" → "l" would otherwise match every record).
       if (searchKey && searchKey.replace(/\s+/g, "").length >= 2) {
-        orClauses.push({ nameSearchKey: new RegExp(escapeRegex(searchKey), "i") });
+        orClauses.push({
+          nameSearchKey: new RegExp(escapeRegex(searchKey), "i"),
+        });
       }
       if (isArabic) {
         const latin = arabicToLatin(rawName);
@@ -188,6 +214,39 @@ export const getPostById = async (req, res, next) => {
 };
 
 // ─── Get Map Markers ──────────────────────────────────────────────────────────
+const CITY_COORDS = {
+  Cairo: [30.0444, 31.2357],
+  القاهرة: [30.0444, 31.2357],
+  Alexandria: [31.2001, 29.9187],
+  الإسكندرية: [31.2001, 29.9187],
+  Giza: [30.0131, 31.2089],
+  الجيزة: [30.0131, 31.2089],
+  Aswan: [24.0889, 32.8998],
+  أسوان: [24.0889, 32.8998],
+  Luxor: [25.6872, 32.6396],
+  الأقصر: [25.6872, 32.6396],
+  Asyut: [27.1783, 31.1859],
+  أسيوط: [27.1783, 31.1859],
+  Sohag: [26.557, 31.6948],
+  سوهاج: [26.557, 31.6948],
+  Ismailia: [30.5965, 32.2715],
+  الإسماعيلية: [30.5965, 32.2715],
+  "Port Said": [31.2565, 32.2841],
+  بورسعيد: [31.2565, 32.2841],
+  Suez: [29.9668, 32.5498],
+  السويس: [29.9668, 32.5498],
+  Mansoura: [31.0409, 31.3785],
+  المنصورة: [31.0409, 31.3785],
+  Tanta: [30.7865, 31.0003],
+  طنطا: [30.7865, 31.0003],
+  Zagazig: [30.5877, 31.5167],
+  الزقازيق: [30.5877, 31.5167],
+  Fayyum: [29.3084, 30.8428],
+  الفيوم: [29.3084, 30.8428],
+  Minya: [28.1099, 30.7503],
+  المنيا: [28.1099, 30.7503],
+};
+
 export const getMapMarkers = async (req, res, next) => {
   const { keyword, city, dateMissing, status, postType } = req.query;
 
@@ -199,26 +258,40 @@ export const getMapMarkers = async (req, res, next) => {
   if (dateMissing) filter.lastSeenDate = { $gte: new Date(dateMissing) };
 
   const posts = await Post.find(filter)
-    .select("name postType status city postImages locationId createdAt age lastSeenDate foundLocation")
+    .select(
+      "name postType status city postImages locationId createdAt age lastSeenDate foundLocation",
+    )
     .populate("locationId", "latitude longitude address");
 
   const markers = posts
-    .filter((p) => p.locationId?.latitude && p.locationId?.longitude)
-    .map((p) => ({
-      id: p._id,
-      name: p.name,
-      type: p.postType,
-      status: p.status,
-      city: p.city,
-      age: p.age,
-      lastSeenDate: p.lastSeenDate,
-      foundLocation: p.foundLocation,
-      createdAt: p.createdAt,
-      image: p.postImages?.[0],
-      lat: p.locationId.latitude,
-      lng: p.locationId.longitude,
-      address: p.locationId.address,
-    }));
+    .map((p) => {
+      const isLocated = p.locationId?.latitude && p.locationId?.longitude;
+      const fallbackCoords = p.city ? CITY_COORDS[p.city] : undefined;
+      const [lat, lng] = isLocated
+        ? [p.locationId.latitude, p.locationId.longitude]
+        : fallbackCoords || [null, null];
+
+      return {
+        id: p._id,
+        name: p.name,
+        type: p.postType,
+        status: p.status,
+        city: p.city,
+        age: p.age,
+        lastSeenDate: p.lastSeenDate,
+        foundLocation: p.foundLocation,
+        createdAt: p.createdAt,
+        image: p.postImages?.[0],
+        lat,
+        lng,
+        address:
+          p.locationId?.address ||
+          p.foundLocation ||
+          p.lastSeenLocation ||
+          p.city,
+      };
+    })
+    .filter((marker) => marker.lat !== null && marker.lng !== null);
 
   return res.status(200).json({ markers });
 };
@@ -228,7 +301,10 @@ export const updatePost = async (req, res, next) => {
   const post = await Post.findById(req.params.id);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
 
-  if (post.userId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (
+    post.userId.toString() !== req.user._id.toString() &&
+    req.user.role !== "admin"
+  ) {
     return next(new Error("Unauthorized", { cause: 403 }));
   }
 
@@ -245,7 +321,10 @@ export const deletePost = async (req, res, next) => {
   const post = await Post.findById(req.params.id);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
 
-  if (post.userId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (
+    post.userId.toString() !== req.user._id.toString() &&
+    req.user.role !== "admin"
+  ) {
     return next(new Error("Unauthorized", { cause: 403 }));
   }
 

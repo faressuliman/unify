@@ -6,6 +6,7 @@ import "./index.css";
 import { router } from "./router";
 import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import unifyLogo from "./assets/unify.png";
 
 const preloadLogo = () => {
@@ -29,19 +30,21 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
       <LanguageProvider>
-        <RouterProvider router={router} />
-        <Toaster
-          position="bottom-center"
-          richColors
-          closeButton
-          toastOptions={{
-            classNames: {
-              toast: "rounded-xl border border-slate-200/70 shadow-lg",
-              title: "text-sm font-semibold",
-              description: "text-xs text-slate-600",
-            },
-          }}
-        />
+        <ThemeProvider>
+          <RouterProvider router={router} />
+          <Toaster
+            position="bottom-center"
+            richColors
+            closeButton
+            toastOptions={{
+              classNames: {
+                toast: "rounded-xl border border-slate-200/70 shadow-lg",
+                title: "text-sm font-semibold",
+                description: "text-xs text-slate-600",
+              },
+            }}
+          />
+        </ThemeProvider>
       </LanguageProvider>
     </AuthProvider>
   </StrictMode>,

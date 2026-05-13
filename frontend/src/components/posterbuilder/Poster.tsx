@@ -420,7 +420,7 @@ const Poster = () => {
 
             {/* Preview Column */}
             <motion.div
-              className="hidden lg:flex w-full bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[520px]"
+              className="hidden lg:flex w-full bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[800px]"
               variants={itemVariants}
             >
               <div

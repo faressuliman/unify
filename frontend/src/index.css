@@ -234,6 +234,22 @@ body[dir="rtl"] {
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html.dark body,
+  body.dark {
+    background-color: #0f172a;
+    color: #e2e8f0;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.light body,
+  body.light {
+    background-color: #ffffff;
+    color: #0a0a0a;
+  }
+
   /* Keep native date text and picker icon on the right in RTL forms. */
   .rtl-date-input {
     direction: rtl;

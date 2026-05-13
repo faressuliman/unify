@@ -6,6 +6,7 @@ import path from "path";
 import { createServer } from "http";
 import bootstrap from "./src/app.controller.js";
 import { initSocket } from "./src/realtime/io.js";
+import logger from "./src/utils/logger.js";
 
 dotenv.config({ path: path.resolve(".env") });
 
@@ -15,7 +16,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 
 const port = process.env.PORT || 3001;
@@ -25,7 +26,9 @@ const start = async () => {
 
   const httpServer = createServer(app);
   initSocket(httpServer);
-  httpServer.listen(port, () => console.log(`Server listening on port ${port}`));
+  httpServer.listen(port, () =>
+    logger.info(`Server listening on port ${port}`),
+  );
 };
 
 start();

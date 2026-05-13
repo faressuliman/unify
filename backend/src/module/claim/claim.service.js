@@ -2,6 +2,7 @@ import Claim from "../../DB/models/claim.model.js";
 import AIVerification from "../../DB/models/aiVerification.model.js";
 import AdminVerification from "../../DB/models/adminVerification.model.js";
 import Post from "../../DB/models/post.model.js";
+import Chat from "../../DB/models/chat.model.js";
 import { createNotification } from "../notification/notification.helper.js";
 
 // ─── Create Claim ─────────────────────────────────────────────────────────────
@@ -12,7 +13,10 @@ export const createClaim = async (req, res, next) => {
   if (!post) return next(new Error("Post not found", { cause: 404 }));
 
   const existing = await Claim.findOne({ postId, claimUserId: req.user._id });
-  if (existing) return next(new Error("You already submitted a claim for this post", { cause: 409 }));
+  if (existing)
+    return next(
+      new Error("You already submitted a claim for this post", { cause: 409 }),
+    );
 
   const documentPath = req.file?.path;
 
@@ -52,7 +56,10 @@ export const getClaimsByPost = async (req, res, next) => {
   const post = await Post.findById(req.params.postId);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
 
-  if (post.userId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (
+    post.userId.toString() !== req.user._id.toString() &&
+    req.user.role !== "admin"
+  ) {
     return next(new Error("Unauthorized", { cause: 403 }));
   }
 
@@ -71,7 +78,8 @@ export const aiReviewClaim = async (req, res, next) => {
   if (!claim) return next(new Error("Claim not found", { cause: 404 }));
 
   const existing = await AIVerification.findOne({ claimId: claim._id });
-  if (existing) return next(new Error("AI review already done", { cause: 409 }));
+  if (existing)
+    return next(new Error("AI review already done", { cause: 409 }));
 
   const aiVerif = await AIVerification.create({
     claimId: claim._id,
@@ -93,7 +101,8 @@ export const adminReviewClaim = async (req, res, next) => {
   if (!claim) return next(new Error("Claim not found", { cause: 404 }));
 
   const existing = await AdminVerification.findOne({ claimId: claim._id });
-  if (existing) return next(new Error("Admin review already done", { cause: 409 }));
+  if (existing)
+    return next(new Error("Admin review already done", { cause: 409 }));
 
   const adminVerif = await AdminVerification.create({
     claimId: claim._id,
@@ -108,9 +117,34 @@ export const adminReviewClaim = async (req, res, next) => {
   claim.reviewedAt = new Date();
   await claim.save();
 
-  // If approved, resolve the post
+  // If approved, resolve the post and create chat between claimant and post owner
   if (result === "approved") {
     await Post.findByIdAndUpdate(claim.postId, { status: "resolved" });
+
+    // Create chat between claimant and post owner
+    const post = await Post.findById(claim.postId).populate("userId", "_id");
+    if (post && post.userId) {
+      const claimantId = claim.claimUserId;
+      const postOwnerId = post.userId._id;
+
+      // Check if chat already exists
+      let existingChat = await Chat.findOne({
+        $or: [
+          { initiatorUserId: claimantId, responderUserId: postOwnerId },
+          { initiatorUserId: postOwnerId, responderUserId: claimantId },
+        ],
+      });
+
+      if (!existingChat) {
+        // Create new chat
+        existingChat = await Chat.create({
+          initiatorUserId: claimantId,
+          responderUserId: postOwnerId,
+          isActive: true,
+        });
+      }
+    }
+
     await createNotification({
       userId: claim.claimUserId,
       postId: claim.postId,

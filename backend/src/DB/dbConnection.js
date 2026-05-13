@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import logger from "../utils/logger.js";
 
 const connectionDB = async () => {
   await mongoose
@@ -7,8 +8,8 @@ const connectionDB = async () => {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     })
-    .then(() => console.log("MongoDB connected..."))
-    .catch((err) => console.error(`MongoDB connection error: ${err.message}`));
+    .then(() => logger.info("MongoDB connected successfully"))
+    .catch((err) => logger.error(`MongoDB connection error: ${err.message}`));
 };
 
 export default connectionDB;

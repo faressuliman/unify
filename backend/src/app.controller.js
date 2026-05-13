@@ -1,5 +1,11 @@
 import connectionDB from "./DB/dbConnection.js";
 import { globalerrorhandling } from "./utils/globalErrorHandling/index.js";
+import {
+  apiLimiter,
+  authLimiter,
+  chatLimiter,
+  uploadLimiter,
+} from "./middleware/rateLimit.js";
 
 import authRouter from "./module/auth/auth.controller.js";
 import userRouter from "./module/user/user.controller.js";
@@ -16,7 +22,15 @@ const bootstrap = async (app, express) => {
 
   await connectionDB();
 
-  app.get("/", (req, res) => res.status(200).json({ message: "UNIFY API is running" }));
+  app.get("/", (req, res) =>
+    res.status(200).json({ message: "UNIFY API is running" }),
+  );
+
+  // Apply rate limiting
+  app.use("/api/auth", authLimiter);
+  app.use("/api/chats", chatLimiter);
+  app.use("/api/posts", uploadLimiter); // For file uploads in posts
+  app.use("/api", apiLimiter); // General API rate limiting
 
   app.use("/api/auth", authRouter);
   app.use("/api/users", userRouter);

@@ -241,46 +241,32 @@ export default function Map() {
   useEffect(() => {
     const fetchMarkers = async () => {
       try {
-        const response = await postApi.getPosts({
+        const response = await postApi.getMapMarkers({
           postType: appliedFilters.postType,
           city: appliedFilters.city || undefined,
           dateMissing: appliedFilters.dateMissing || undefined,
-          firstName: appliedFilters.keyword || undefined,
+          keyword: appliedFilters.keyword || undefined,
           status: "active",
           limit: 1000,
         });
-        const fetchedMarkers = response.data || [];
+
+        const fetchedMarkers = response.markers || [];
+
         setPosts(
           fetchedMarkers
-            .map((m: any) => {
-              const cityCoords = m.city ? CITY_COORDS[m.city] : undefined;
-              const lat =
-                m.lat || m.latitude || (cityCoords ? cityCoords[0] : null);
-              const lng =
-                m.lng || m.longitude || (cityCoords ? cityCoords[1] : null);
-              return {
-                ...m,
-                type: m.type || m.postType,
-                id: m._id || m.id,
-                name:
-                  m.name ||
-                  (m.firstName
-                    ? `${m.firstName} ${m.lastName || ""}`.trim()
-                    : "Unknown"),
-                image: m.image || (m.postImages && m.postImages[0]) || null,
-                position: lat && lng ? [lat, lng] : null,
-              };
-            })
-            .filter((m) => m.position !== null) as (BackendMapMarker & {
-            position: [number, number];
-          })[],
+            .map((m) => ({
+              ...m,
+              position: [m.lat, m.lng] as [number, number],
+              name: m.name || (m.name ? m.name : isRTL ? "حالة" : "Case"),
+            }))
+            .filter((m) => m.lat !== undefined && m.lng !== undefined),
         );
       } catch (error) {
         console.error("Error fetching map markers:", error);
       }
     };
     fetchMarkers();
-  }, [appliedFilters]);
+  }, [appliedFilters, isRTL]);
 
   const filteredPosts = posts;
 
