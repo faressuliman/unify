@@ -3,11 +3,19 @@ import mongoose from "mongoose";
 const postSchema = new mongoose.Schema(
   {
     postType: { type: String, enum: ["missing", "found"], required: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     name: { type: String, required: true },
     nameSearchKey: { type: String, index: true },
     age: { type: Number },
-    ageUnit: { type: String, enum: ["years", "months", "days"], default: "years" },
+    ageUnit: {
+      type: String,
+      enum: ["years", "months", "days"],
+      default: "years",
+    },
     gender: { type: String, enum: ["male", "female", "unknown"] },
     hairColour: { type: String },
     eyeColour: { type: String },
@@ -21,13 +29,21 @@ const postSchema = new mongoose.Schema(
       enum: ["none", "shelter", "hospital", "nonprofit", "government"],
     },
     organizationName: { type: String },
+    faceEncoding: {
+      type: [Number], // مصفوفة من الأرقام
+      default: undefined,
+    },
     reporterPhone: { type: String },
     postImages: [{ type: String }],
     faceEncoding: { type: [Number], default: [] },
-    status: { type: String, enum: ["active", "resolved", "closed"], default: "active" },
+    status: {
+      type: String,
+      enum: ["active", "resolved", "closed"],
+      default: "active",
+    },
     locationId: { type: mongoose.Schema.Types.ObjectId, ref: "MapData" },
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" } }
+  { timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" } },
 );
 
 const Post = mongoose.model("Post", postSchema);

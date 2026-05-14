@@ -8,9 +8,7 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L, { divIcon } from "leaflet";
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import L from "leaflet";
 import { renderToString } from "react-dom/server";
 import {
   ListFilter,
@@ -36,11 +34,7 @@ import SubmitButton from "../components/ui/SubmitButton";
 import MapPopup from "../components/map/MapPopup";
 import { postApi, type BackendMapMarker } from "../lib/api";
 
-L.Marker.prototype.options.icon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-});
-
+// إحداثيات المدن كبديل (Fallback)
 const CITY_COORDS: Record<string, [number, number]> = {
   Cairo: [30.0444, 31.2357],
   القاهرة: [30.0444, 31.2357],
@@ -74,25 +68,67 @@ const CITY_COORDS: Record<string, [number, number]> = {
   المنيا: [28.1099, 30.7503],
 };
 
-const DEFAULT_CENTER: [number, number] = [27.8206, 30.8025]; // Central Egypt
+const DEFAULT_CENTER: [number, number] = [27.8206, 30.8025];
 
+// --- إنشاء الماركر المطور (النبض للأحمر فقط + بدون ظل أسود) ---
 const createMarkerIcon = (type: "missing" | "found") => {
   const isMissing = type === "missing";
+  const color = isMissing ? "#ef4444" : "#22c55e";
 
-  const htmlString = renderToString(
-    <div
-      className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-md ${isMissing ? "bg-red-500 border-white text-white" : "bg-green-500 border-white text-white"}`}
-    >
-      <UserCircle className="w-4 h-4 text-white" />
-    </div>,
-  );
+  const htmlContent = `
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+      ${
+        isMissing
+          ? `
+        <div style="
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background-color: ${color};
+          opacity: 0.4;
+          animation: map-pulse 2s ease-out infinite;
+        "></div>
+      `
+          : ""
+      }
+      <div style="
+        position: relative;
+        z-index: 10;
+        width: 28px;
+        height: 28px;
+        background-color: ${color};
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <div style="
+          position: absolute;
+          bottom: -3px;
+          width: 6px;
+          height: 6px;
+          background-color: ${color};
+          transform: rotate(45deg);
+          border-right: 1.5px solid white;
+          border-bottom: 1.5px solid white;
+        "></div>
+      </div>
+    </div>
+  `;
 
-  return divIcon({
-    className: "custom-map-icon",
-    html: htmlString,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
+  return L.divIcon({
+    html: htmlContent,
+    className: "custom-marker-clean",
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -15],
   });
 };
 
@@ -112,53 +148,11 @@ function MapUpdater({
 
 function MapResizeFix() {
   const map = useMap();
-
   useEffect(() => {
     const invalidate = () => map.invalidateSize({ pan: false });
-
-    const scheduleInvalidate = () => {
-      requestAnimationFrame(invalidate);
-      setTimeout(invalidate, 120);
-      setTimeout(invalidate, 420);
-    };
-
-    const timer = setTimeout(scheduleInvalidate, 60);
-    const raf = requestAnimationFrame(scheduleInvalidate);
-
-    const onResize = () => scheduleInvalidate();
-    const onOrientationChange = () => setTimeout(scheduleInvalidate, 140);
-    const onVisibility = () => {
-      if (!document.hidden) scheduleInvalidate();
-    };
-
-    const mapElement = map.getContainer();
-    const resizeObserver =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => scheduleInvalidate())
-        : null;
-
-    if (resizeObserver) {
-      resizeObserver.observe(mapElement);
-    }
-
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onOrientationChange);
-    document.addEventListener("visibilitychange", onVisibility);
-
-    map.whenReady(() => scheduleInvalidate());
-
-    return () => {
-      clearTimeout(timer);
-      cancelAnimationFrame(raf);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onOrientationChange);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
+    const timer = setTimeout(invalidate, 100);
+    return () => clearTimeout(timer);
   }, [map]);
-
   return null;
 }
 
@@ -169,33 +163,10 @@ type MapFilters = {
   postType: "all" | "missing" | "found";
 };
 
-type MapPageDictionary = {
-  allNeighborhoods: string;
-  missing: string;
-  found: string;
-  filterCases: string;
-  refineMarkers: string;
-  keyword: string;
-  searchName: string;
-  areaRegion: string;
-  dateMissing: string;
-  showStatus: string;
-  applyFilters: string;
-  cases: string;
-  title: string;
-  subtitle: string;
-  dateLost?: string;
-  dateFound?: string;
-  notProvided?: string;
-  currentAge?: string;
-  homeAddress?: string;
-  viewDetails?: string;
-};
-
 export default function Map() {
   const { language } = useLanguage();
   const isRTL = language === "ar";
-  const t = (isRTL ? ar.mapPage : en.mapPage) as MapPageDictionary;
+  const t = (isRTL ? ar.mapPage : en.mapPage) as any;
 
   const [draftFilters, setDraftFilters] = useState<MapFilters>({
     keyword: "",
@@ -210,6 +181,7 @@ export default function Map() {
     postType: "all",
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [posts, setPosts] = useState<any[]>([]);
 
   const cityOptions = useMemo(
     () => [
@@ -235,10 +207,6 @@ export default function Map() {
   const mapZoom =
     appliedFilters.city && CITY_COORDS[appliedFilters.city] ? 10 : 6;
 
-  const [posts, setPosts] = useState<
-    (BackendMapMarker & { position: [number, number] })[]
-  >([]);
-
   useEffect(() => {
     const fetchMarkers = async () => {
       try {
@@ -254,92 +222,42 @@ export default function Map() {
           limit: 10000,
         });
 
-        const fetchedMarkers = response.markers || [];
-
         const seen = new Set<string>();
-        setPosts(
-          fetchedMarkers
-            .map((m) => {
-              let lat = Number(m.lat);
-              let lng = Number(m.lng);
+        const processed = (response.markers || [])
+          .map((m: any) => {
+            let lat = Number(m.lat);
+            let lng = Number(m.lng);
+            if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
+              const coords = CITY_COORDS[m.city];
+              if (coords) [lat, lng] = coords;
+            }
 
-              if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
-                const coords = CITY_COORDS[m.city];
-                if (coords) {
-                  lat = coords[0];
-                  lng = coords[1];
-                }
-              }
+            let key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
+            while (seen.has(key)) {
+              lat += (Math.random() - 0.5) * 0.003;
+              lng += (Math.random() - 0.5) * 0.003;
+              key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
+            }
+            seen.add(key);
+            return { ...m, lat, lng, position: [lat, lng] };
+          })
+          .filter((m: any) => m.lat && m.lng);
 
-              if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
-                const originalLat = lat;
-                const originalLng = lng;
-                let radius = 0.03;
-                let angle = Math.random() * Math.PI * 2;
-                let key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
-                let attempts = 0;
-                while (seen.has(key) && attempts < 300) {
-                  lat = originalLat + Math.cos(angle) * radius;
-                  lng = originalLng + Math.sin(angle) * radius;
-                  key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
-                  angle += Math.PI / 4;
-                  radius += 0.01;
-                  attempts++;
-                }
-                seen.add(key);
-              }
-              return {
-                ...m,
-                lat,
-                lng,
-              };
-            })
-            .map((m) => ({
-              ...m,
-              position: [m.lat, m.lng] as [number, number],
-              name: m.name || (m.name ? m.name : isRTL ? "حالة" : "Case"),
-            }))
-            .filter((m) => m.lat !== undefined && m.lng !== undefined),
-        );
+        setPosts(processed);
       } catch (error) {
-        console.error("Error fetching map markers:", error);
+        console.error(error);
       }
     };
     fetchMarkers();
   }, [appliedFilters, isRTL]);
 
-  const filteredPosts = posts;
-
-  const missingCount = filteredPosts.filter((p) => p.type === "missing").length;
-  const foundCount = filteredPosts.filter((p) => p.type === "found").length;
-
-  const handleApplyFilters = () => {
-    setAppliedFilters(draftFilters);
-    setIsFilterOpen(false);
-  };
-
-  const handleClearField = (field: keyof MapFilters) => {
-    setDraftFilters((prev) => ({ ...prev, [field]: "" }));
-    setAppliedFilters((prev) => ({ ...prev, [field]: "" }));
-  };
+  const missingCount = posts.filter((p) => p.type === "missing").length;
+  const foundCount = posts.filter((p) => p.type === "found").length;
 
   const handleSubmitFilters = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleApplyFilters();
-  };
-
-  const renderClearFieldButton = (field: keyof MapFilters) => {
-    if (!draftFilters[field] || field === "postType") return null;
-
-    return (
-      <button
-        type="button"
-        onClick={() => handleClearField(field)}
-        className="text-xs font-semibold text-secondary hover:text-secondary/80 cursor-pointer normal-case tracking-normal"
-      >
-        {isRTL ? "مسح" : "Clear"}
-      </button>
-    );
+    setAppliedFilters(draftFilters);
+    setIsFilterOpen(false);
   };
 
   const renderFiltersContent = (
@@ -350,120 +268,89 @@ export default function Map() {
       onSubmit={handleSubmitFilters}
       className={`flex flex-col h-full bg-white dark:bg-slate-900 font-sans w-full ${enableScroll ? "overflow-y-auto" : "overflow-hidden"}`}
     >
-      <div className="p-6 pb-5 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4 sticky top-0 bg-white dark:bg-slate-900 z-10">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
             <ListFilter className="w-5 h-5" />
           </div>
-          <div className="text-start">
-            <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 leading-tight">
+          <div>
+            <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100">
               {t.filterCases}
             </h3>
-            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase mt-0.5">
+            <p className="text-xs font-semibold text-slate-500 uppercase">
               {t.refineMarkers}
             </p>
           </div>
         </div>
         {showCloseButton && (
-          <SheetClose className="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-full w-9 h-9 flex items-center justify-center shrink-0 transition-colors shadow-sm">
+          <SheetClose className="bg-slate-50 rounded-full w-9 h-9 flex items-center justify-center">
             <X className="w-4 h-4" />
           </SheetClose>
         )}
       </div>
       <div className="p-6 flex flex-col gap-6 flex-1 bg-slate-50/30 dark:bg-slate-950/50">
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
-          <div className="flex items-center justify-between mb-3">
-            <label
-              className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
-            >
-              <Search className="w-3.5 h-3.5 text-blue-500" />
-              {t.keyword}
-            </label>
-            {renderClearFieldButton("keyword")}
-          </div>
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+          <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
+            <Search className="w-3.5 h-3.5 text-blue-500" />
+            {t.keyword}
+          </label>
           <FormInput
             id="keyword"
             label={null}
             value={draftFilters.keyword}
             onChange={(e) =>
-              setDraftFilters((prev) => ({ ...prev, keyword: e.target.value }))
+              setDraftFilters((p) => ({ ...p, keyword: e.target.value }))
             }
             placeholder={t.searchName}
-            icon={<Search className="w-4 h-4 text-slate-400" />}
             isRTL={isRTL}
-            className="bg-slate-50 border-0 focus:ring-2 focus:ring-blue-100 transition-shadow"
           />
         </div>
-
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
-          <div className="flex items-center justify-between mb-3">
-            <label
-              className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
-            >
-              <MapPin className="w-3.5 h-3.5 text-rose-500" />
-              {t.areaRegion}
-            </label>
-            {renderClearFieldButton("city")}
-          </div>
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+          <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
+            <MapPin className="w-3.5 h-3.5 text-rose-500" />
+            {t.areaRegion}
+          </label>
           <SelectMenu
             id="city"
             label={null}
             value={draftFilters.city}
-            onChange={(value) =>
-              setDraftFilters((prev) => ({ ...prev, city: value }))
-            }
+            onChange={(v) => setDraftFilters((p) => ({ ...p, city: v }))}
             options={cityOptions}
             isRTL={isRTL}
           />
         </div>
-
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
-          <div className="flex items-center justify-between mb-3">
-            <label
-              className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
-            >
-              <Calendar className="w-3.5 h-3.5 text-emerald-500" />
-              {t.dateMissing}
-            </label>
-            {renderClearFieldButton("dateMissing")}
-          </div>
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+          <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
+            <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+            {t.dateMissing}
+          </label>
           <LocalizedDateInput
             id="dateMissing"
             label={null}
             value={draftFilters.dateMissing}
-            onChange={(value) =>
-              setDraftFilters((prev) => ({ ...prev, dateMissing: value }))
-            }
+            onChange={(v) => setDraftFilters((p) => ({ ...p, dateMissing: v }))}
             isRTL={isRTL}
-            placeholder={isRTL ? "يوم / شهر / عام" : "MM / DD / YYYY"}
           />
         </div>
-
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group">
-          <label
-            className={`text-[0.7rem] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-2 mb-4 ${isRTL ? "tracking-normal" : "tracking-widest"}`}
-          >
+        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+          <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-4">
             <Info className="w-3.5 h-3.5 text-amber-500" />
             {t.showStatus}
           </label>
           <SegmentedControl
             value={draftFilters.postType}
-            onChange={(value) =>
-              setDraftFilters((prev) => ({
-                ...prev,
-                postType: value as MapFilters["postType"],
-              }))
+            onChange={(v) =>
+              setDraftFilters((p) => ({ ...p, postType: v as any }))
             }
             options={statusOptions}
             className="w-full bg-slate-50 p-1 rounded-xl"
           />
         </div>
       </div>
-
-      <div className="pt-4 mb-8 pb-6 px-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 sticky bottom-0 z-10 w-full shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)]">
+      <div className="p-6 border-t bg-white dark:bg-slate-900 sticky bottom-0 z-10 w-full">
         <SubmitButton
           type="submit"
-          className="w-full h-14 text-base font-bold rounded-xl shadow-lg bg-amber-600 hover:bg-amber-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full h-14 font-bold bg-amber-600 hover:bg-amber-700 rounded-xl"
         >
           {t.applyFilters}
         </SubmitButton>
@@ -473,39 +360,22 @@ export default function Map() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-8 pb-16 font-sans transition-colors duration-300"
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-8 pb-16 font-sans"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <style>{`
-        /* Modern rounded shape for the popup */
-        .custom-popup .leaflet-popup-content-wrapper {
-          border-radius: 20px;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-          border: 1px solid #f1f5f9;
+        @keyframes map-pulse {
+          0% { transform: scale(1); opacity: 0.6; }
+          100% { transform: scale(3); opacity: 0; }
         }
-        .dark .custom-popup .leaflet-popup-content-wrapper {
-          background-color: #0f172a;
-          border-color: #1e293b;
+        /* مسح الظلال والأنماط الافتراضية */
+        .leaflet-marker-shadow, .leaflet-shadow-pane, .leaflet-marker-icon { 
+          display: none !important; background: transparent !important; border: none !important; box-shadow: none !important; 
         }
-        .custom-popup .leaflet-popup-content {
-          margin: 8px 12px !important; 
-        }
-        /* The bottom arrow pointer */
-        .custom-popup .leaflet-popup-tip {
-          box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-          border-bottom: 1px solid #f1f5f9;
-          border-right: 1px solid #f1f5f9;
-        }
-        .dark .custom-popup .leaflet-popup-tip {
-          background-color: #0f172a;
-          border-color: #1e293b;
-        }
-        /* Optional: Uncomment below to completely hide the pointer arrow for a floating bubble look */
-        /*
-        .custom-popup .leaflet-popup-tip-container { display: none; }
-        .custom-popup { margin-bottom: 15px; }
-        */
+        .custom-marker-clean { display: flex !important; align-items: center !important; justify-content: center !important; background: none !important; border: none !important; }
+        .custom-popup .leaflet-popup-content-wrapper { border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
       `}</style>
+
       <PageHeader
         navigatedTo={isRTL ? "الخريطة" : "Map"}
         title={t.title}
@@ -515,49 +385,24 @@ export default function Map() {
       />
 
       <div className="max-w-400 mx-auto w-full px-4 lg:px-8 mt-4 flex-1 flex flex-col lg:flex-row gap-6 relative">
-        {/* Mobile Filter Toggle */}
-        <div className="lg:hidden flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-          <MapDrawer
-            isOpen={isFilterOpen}
-            setIsOpen={setIsFilterOpen}
-            isRTL={isRTL}
-            triggerLabel={t.filterCases}
-            content={renderFiltersContent(true, false)}
-          />
-
-          <span className="font-bold text-tertiary dark:text-slate-100 flex items-center gap-2">
-            <Info className="w-5 h-5 text-secondary" />
-            {filteredPosts.length} {t.cases}
-          </span>
-        </div>
-
-        {/* Desktop Sidebar Filters */}
         <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
           {renderFiltersContent(false, true)}
         </aside>
 
-        {/* Main Map View */}
-        <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:min-h-125 lg:h-[calc(100vh-140px)] flex flex-col z-0">
+        <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:h-[calc(100vh-140px)] flex flex-col z-0">
           <div className="absolute inset-0 z-0">
             <MapContainer
               center={DEFAULT_CENTER}
               zoom={6}
               zoomControl={false}
-              dragging={true}
-              touchZoom={true}
-              doubleClickZoom={true}
               style={{ width: "100%", height: "100%" }}
-              className="w-full h-full z-10 custom-map-tiles"
             >
               <MapUpdater center={mapCenterStr} zoom={mapZoom} />
               <MapResizeFix />
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
               <ZoomControl position="topleft" />
 
-              {filteredPosts.map((post) => (
+              {posts.map((post) => (
                 <Marker
                   key={post.id}
                   position={post.position}
@@ -566,7 +411,7 @@ export default function Map() {
                   <Popup
                     className="custom-popup"
                     closeButton={false}
-                    minWidth={240}
+                    minWidth={280}
                   >
                     <MapPopup post={post} isRTL={isRTL} t={t} />
                   </Popup>
@@ -575,21 +420,18 @@ export default function Map() {
             </MapContainer>
           </div>
 
-          {/* Floating Stats Overlay Top Right */}
-          <div className="absolute top-4 right-4 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center gap-4 cursor-default">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span>
-              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-                <span className="text-red-600 font-black">{missingCount}</span>{" "}
-                {t.missing}
+          {/* Floating Stats - Glassmorphism Design */}
+          <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+            <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+              <span className="text-[12px] font-bold text-slate-700">
+                {missingCount} {t.missing}
               </span>
             </div>
-            <div className="w-px h-4 bg-slate-300"></div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 shadow-sm shadow-green-500/50"></span>
-              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-                <span className="text-green-600 font-black">{foundCount}</span>{" "}
-                {t.found}
+            <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+              <span className="text-[12px] font-bold text-slate-700">
+                {foundCount} {t.found}
               </span>
             </div>
           </div>

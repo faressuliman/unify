@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from deepface import DeepFace
 import easyocr
 from deep_translator import GoogleTranslator
+from flask import Flask, request, jsonify
+from deepface import DeepFace
 
 app = FastAPI()
 
@@ -114,3 +116,39 @@ async def extract_id_data(
     finally:
         if os.path.exists(id_path):
             os.remove(id_path)
+            # ----------------------------------------------------
+# 3. مسار استخراج بصمة الوجه (Face Encoding for Search)
+# ----------------------------------------------------
+@app.post('/get-face-encoding')
+async def get_face_encoding(image: UploadFile = File(...)):
+    temp_path = f"search_{image.filename}"
+    
+    try:
+        # حفظ الصورة مؤقتاً للتحليل
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        # استخراج الـ Embedding (البصمة الرياضية للوجه)
+        # استخدمنا Facenet512 لأنه الأقوى في حالات تغير السن (Aging)
+        embeddings = DeepFace.represent(
+            img_path=temp_path,
+            model_name='Facenet512',
+            detector_backend='retinaface', # أدق محرك للصور الصغيرة والبعيدة
+            enforce_detection=True
+        )
+
+        # بصمة أول وجه يظهر في الصورة
+        encoding = embeddings[0]["embedding"]
+
+        return {
+            "success": True,
+            "encoding": encoding
+        }
+
+    except Exception as e:
+        print(f"Encoding Error: {e}")
+        return {"success": False, "error": str(e)}
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
