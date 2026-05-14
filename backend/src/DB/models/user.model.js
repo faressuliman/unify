@@ -9,6 +9,24 @@ const userSchema = new mongoose.Schema(
     phoneNumber: { type: String },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     idImagePath: { type: String },
+    selfieImagePath: { type: String },
+
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "verified", "rejected"],
+      default: "pending",
+    },
+
+    riskScore: {
+      type: Number,
+      default: 0,
+    },
+
+    isFaceVerified: {
+      type: Boolean,
+      default: false,
+    },
+
     isVerified: { type: Boolean, default: false },
     isdeleted: { type: Boolean, default: false },
     isbanned: { type: Boolean, default: false },
@@ -17,7 +35,7 @@ const userSchema = new mongoose.Schema(
     otp: { type: String },
     otpExpiry: { type: Date },
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: false } }
+  { timestamps: { createdAt: "createdAt", updatedAt: false } },
 );
 
 const User = mongoose.model("User", userSchema);

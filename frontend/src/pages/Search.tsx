@@ -73,11 +73,12 @@ const applyLocalFilters = (
   posts: SearchProfile[],
   filters: SearchFilters,
 ): SearchProfile[] => {
-  const normalize = (value: string) => value.trim().toLowerCase();
+  const normalize = (value?: string | null) =>
+    (value || "").trim().toLowerCase();
 
   return posts.filter((post) => {
     const location = normalize(post.location);
-    const citySource = normalize(post.city ?? "");
+    const citySource = normalize(post.city);
 
     if (filters.city) {
       const cityNeedle = normalize(filters.city);
@@ -88,14 +89,14 @@ const applyLocalFilters = (
 
     if (
       filters.location &&
-      !(post.rawLocation ?? "").includes(normalize(filters.location))
+      !normalize(post.rawLocation).includes(normalize(filters.location))
     ) {
       return false;
     }
 
     if (
       filters.clothing &&
-      !(post.rawClothing ?? "").includes(normalize(filters.clothing))
+      !normalize(post.rawClothing).includes(normalize(filters.clothing))
     ) {
       return false;
     }
@@ -258,7 +259,7 @@ export default function Search() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-8 pb-16 transition-colors duration-300"
+      className="min-h-screen bg-slate-50 flex flex-col pt-8 pb-16 transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="flex-1">
@@ -320,7 +321,7 @@ export default function Search() {
 
             {isImageSearchActive && (
               <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
+                <h3 className="text-xl font-semibold text-slate-800">
                   {isRTL
                     ? "مطابقات البحث بالذكاء الاصطناعي"
                     : "AI Facial Search Matches"}
@@ -329,7 +330,11 @@ export default function Search() {
                   onClick={() => {
                     setIsImageSearchActive(false);
                     // Update location state to remove image so refresh doesn't trigger it
-                    window.history.replaceState({}, "");
+                    window.history.replaceState(
+                      {},
+                      "",
+                      window.location.pathname + window.location.search,
+                    );
                   }}
                   className="text-sm font-medium text-slate-500 hover:text-red-500"
                 >
@@ -340,11 +345,11 @@ export default function Search() {
 
             {/* Cards Slider Display */}
             {isLoading ? (
-              <div className="py-12 text-center text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+              <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
                 <p>{isRTL ? "جاري تحميل النتائج..." : "Loading results..."}</p>
               </div>
             ) : error ? (
-              <div className="py-12 text-center text-red-600 dark:text-red-400 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-red-300 dark:border-red-900/50">
+              <div className="py-12 text-center text-red-600 bg-white rounded-xl border border-dashed border-red-300">
                 <p>{error}</p>
               </div>
             ) : filteredPosts.length > 0 ? (
@@ -374,7 +379,7 @@ export default function Search() {
                 )}
               </motion.div>
             ) : (
-              <div className="py-12 text-center text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+              <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
                 <SearchIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />
                 <p>
                   {isRTL

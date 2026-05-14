@@ -1,187 +1,222 @@
 import { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L, { divIcon } from "leaflet";
-import { UserCircle } from "lucide-react";
+import L from "leaflet";
 import { useLanguage } from "../../context/LanguageContext";
-import { renderToString } from "react-dom/server";
 import { postApi, type BackendMapMarker } from "@/lib/api";
+import MapPopup from "../map/MapPopup";
+import { en } from "../../data/english";
+import { ar } from "../../data/arabic";
 
-// Fix leafet default icon issue
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
-
-const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
-const createCustomIcon = (type: "missing" | "found", count: number) => {
+// --- دالة إنشاء الماركر بدون أي Shadow خارجي ---
+const createCustomIcon = (type: "missing" | "found") => {
   const isMissing = type === "missing";
-  const iconColor = isMissing ? "text-red-50" : "text-green-50";
-  const bgColor = isMissing
-    ? "bg-red-500 border-red-600"
-    : "bg-green-500 border-green-600";
+  const color = isMissing ? "#ef4444" : "#22c55e";
 
-  const htmlString = renderToString(
-    <div
-      className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-md ${bgColor}`}
-    >
-      <UserCircle className={`w-5 h-5 ${iconColor}`} />
-      <div className="absolute -top-2 -right-2 bg-white text-xs font-bold text-slate-800 w-5 h-5 rounded-full flex items-center justify-center shadow-sm border border-slate-200">
-        {count}
+  const htmlContent = `
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+      ${
+        isMissing
+          ? `
+        <div style="
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background-color: ${color};
+          opacity: 0.4;
+          animation: map-pulse 2s ease-out infinite;
+        "></div>
+      `
+          : ""
+      }
+      <div style="
+        position: relative;
+        z-index: 10;
+        width: 28px;
+        height: 28px;
+        background-color: ${color};
+        border-radius: 50%;
+        border: 2px solid white;
+        /* ضل خفيف جداً وناعم غير ملحوظ */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <div style="
+          position: absolute;
+          bottom: -3px;
+          width: 6px;
+          height: 6px;
+          background-color: ${color};
+          transform: rotate(45deg);
+          border-right: 1.5px solid white;
+          border-bottom: 1.5px solid white;
+        "></div>
       </div>
-    </div>,
-  );
+    </div>
+  `;
 
-  return divIcon({
-    className: "custom-leaflet-icon",
-    html: htmlString,
+  return L.divIcon({
+    html: htmlContent,
+    className: "custom-marker-clean",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
     popupAnchor: [0, -15],
   });
 };
 
-type GroupedMapMarker = BackendMapMarker & {
-  count: number;
-  lat: number;
-  lng: number;
-};
-
-const groupMarkers = (markers: BackendMapMarker[]): GroupedMapMarker[] => {
-  const groups = new Map<string, GroupedMapMarker>();
-
-  markers.forEach((marker) => {
-    if (marker.lat == null || marker.lng == null) return;
-    const key = `${marker.lat}_${marker.lng}_${marker.type}`;
-    const existing = groups.get(key);
-
-    if (existing) {
-      existing.count += 1;
-      if (!existing.name && marker.name) existing.name = marker.name;
-      if (!existing.city && marker.city) existing.city = marker.city;
-      if (!existing.address && marker.address)
-        existing.address = marker.address;
-      if (!existing.lastSeenDate && marker.lastSeenDate)
-        existing.lastSeenDate = marker.lastSeenDate;
-    } else {
-      groups.set(key, {
-        ...marker,
-        count: 1,
-        lat: marker.lat,
-        lng: marker.lng,
-      });
-    }
-  });
-
-  return Array.from(groups.values());
+const CITY_COORDS: Record<string, [number, number]> = {
+  Cairo: [30.0444, 31.2357],
+  القاهرة: [30.0444, 31.2357],
+  Alexandria: [31.2001, 29.9187],
+  الإسكندرية: [31.2001, 29.9187],
+  Giza: [30.0131, 31.2089],
+  الجيزة: [30.0131, 31.2089],
+  Aswan: [24.0889, 32.8998],
+  أسوان: [24.0889, 32.8998],
+  Luxor: [25.6872, 32.6396],
+  الأقصر: [25.6872, 32.6396],
+  Asyut: [27.1783, 31.1859],
+  أسيوط: [27.1783, 31.1859],
+  Sohag: [26.557, 31.6948],
+  سوهاج: [26.557, 31.6948],
+  Ismailia: [30.5965, 32.2715],
+  الإسماعيلية: [30.5965, 32.2715],
+  "Port Said": [31.2565, 32.2841],
+  بورسعيد: [31.2565, 32.2841],
+  Suez: [29.9668, 32.5498],
+  السويس: [29.9668, 32.5498],
+  Mansoura: [31.0409, 31.3785],
+  المنصورة: [31.0409, 31.3785],
+  Tanta: [30.7865, 31.0004],
+  طنطا: [30.7865, 31.0004],
+  Zagazig: [30.5877, 31.5167],
+  الزقازيق: [30.5877, 31.5167],
+  Fayyum: [29.3084, 30.8428],
+  الفيوم: [29.3084, 30.8428],
+  Minya: [28.1099, 30.7503],
+  المنيا: [28.1099, 30.7503],
 };
 
 export default function LiveMap() {
   const { language } = useLanguage();
   const isRTL = language === "ar";
+  const tMapPage = isRTL ? ar.mapPage : en.mapPage;
   const [markers, setMarkers] = useState<BackendMapMarker[]>([]);
 
   useEffect(() => {
-    const fetchMarkers = async () => {
-      try {
-        const response = await postApi.getMapMarkers({
-          status: "active",
-          limit: 1000,
-        });
-        setMarkers(response.markers || []);
-      } catch (error) {
-        console.error("Failed to load map markers", error);
-      }
-    };
-    fetchMarkers();
+    // جلب كل الحالات (الـ 102 حالة مفقودة)
+    postApi
+      .getMapMarkers({ status: "active", limit: 5000 })
+      .then((res) => setMarkers(res.markers || []))
+      .catch((err) => console.error("LiveMap markers fetch error:", err));
   }, []);
 
-  const groupedMarkers = useMemo(() => groupMarkers(markers), [markers]);
+  const finalMarkers = useMemo(() => {
+    const seen = new Set();
+    return markers
+      .map((m) => {
+        let lat = Number(m.lat);
+        let lng = Number(m.lng);
+        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
+          const coords = CITY_COORDS[m.city];
+          if (coords) [lat, lng] = coords;
+        }
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
 
-  const missingCount = useMemo(
-    () => markers.filter((marker) => marker.type === "missing").length,
-    [markers],
-  );
-  const foundCount = useMemo(
-    () => markers.filter((marker) => marker.type === "found").length,
-    [markers],
-  );
+        let key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+        let shift = 0.002;
+        while (seen.has(key)) {
+          lat += (Math.random() - 0.5) * shift;
+          lng += (Math.random() - 0.5) * shift;
+          key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+        }
+        seen.add(key);
+        return { ...m, lat, lng };
+      })
+      .filter((m): m is any => m !== null);
+  }, [markers]);
 
   return (
-    <div className="w-full h-100 md:h-125 rounded-2xl overflow-hidden border-2 border-primary-dark shadow-sm relative z-0">
-      <div className="absolute inset-0 z-0">
-        <MapContainer
-          center={[27.8206, 30.8025]}
-          zoom={6}
-          scrollWheelZoom={false}
-          dragging={true}
-          touchZoom={true}
-          doubleClickZoom={true}
-          style={{ width: "100%", height: "100%" }}
-          className="w-full h-full z-10 custom-map-tiles"
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          />
+    <div className="w-full h-100 md:h-125 rounded-3xl overflow-hidden relative border border-slate-200 bg-slate-50">
+      <style>{`
+        /* 1. النبض */
+        @keyframes map-pulse {
+          0% { transform: scale(1); opacity: 0.6; }
+          100% { transform: scale(3); opacity: 0; }
+        }
 
-          {groupedMarkers.map((loc) => (
-            <Marker
-              key={`${loc.id}_${loc.type}_${loc.lat}_${loc.lng}`}
-              position={[loc.lat, loc.lng]}
-              icon={createCustomIcon(loc.type, loc.count)}
-            >
-              <Popup className="custom-popup">
-                <div
-                  className="font-sans flex flex-col gap-2 p-2 rtl:text-right"
-                  dir={isRTL ? "rtl" : "ltr"}
-                >
-                  <h3 className="font-bold text-tertiary text-sm m-0">
-                    {loc.name || (isRTL ? "حالة" : "Case")}
-                  </h3>
-                  <span className="text-[11px] text-slate-500">
-                    {loc.city || loc.address || "-"}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-700">
-                    {loc.type === "missing"
-                      ? isRTL
-                        ? "مفقود"
-                        : "Missing"
-                      : isRTL
-                        ? "معثور عليه"
-                        : "Found"}
-                  </span>
-                  {loc.count > 1 && (
-                    <span className="text-[11px] text-slate-500">
-                      {loc.count} {isRTL ? "حالات" : "cases"}
-                    </span>
-                  )}
-                  {loc.lastSeenDate && (
-                    <span className="text-[11px] text-slate-500">
-                      {isRTL ? "تاريخ" : "Date:"}{" "}
-                      {new Date(loc.lastSeenDate).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
-      <div className="absolute top-4 right-4 z-50 bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg border border-slate-200 text-slate-800">
-        <div className="flex items-center gap-3">
-          <span className="w-3 h-3 rounded-full bg-red-500 shadow-sm"></span>
-          <span className="text-sm font-semibold">
-            {missingCount} {isRTL ? "مفقود" : "Missing"}
-          </span>
-        </div>
-        <div className="mt-2 flex items-center gap-3">
-          <span className="w-3 h-3 rounded-full bg-green-500 shadow-sm"></span>
-          <span className="text-sm font-semibold">
-            {foundCount} {isRTL ? "معثور عليه" : "Found"}
+        /* 2. مسح الظلال الافتراضية لأيقونات Leaflet (الحل الجذري) */
+        .leaflet-marker-shadow, 
+        .leaflet-shadow-pane,
+        .leaflet-marker-icon { 
+          display: none !important; 
+          background: transparent !important; 
+          border: none !important; 
+          box-shadow: none !important; 
+        }
+
+        /* 3. إظهار الأيقونات المخصصة فقط */
+        .custom-marker-clean {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: none !important;
+          border: none !important;
+        }
+
+        .leaflet-container { z-index: 1 !important; font-family: inherit; }
+
+        /* ستايل الـ Popup */
+        .custom-popup .leaflet-popup-content-wrapper {
+          border-radius: 20px;
+          padding: 0;
+          overflow: hidden;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+      `}</style>
+
+      <MapContainer
+        center={[27.8206, 30.8025]}
+        zoom={6}
+        scrollWheelZoom={false}
+        className="w-full h-full"
+      >
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        />
+
+        {finalMarkers.map((loc: any) => (
+          <Marker
+            key={loc.id}
+            position={[loc.lat, loc.lng]}
+            icon={createCustomIcon(loc.type)}
+          >
+            <Popup closeButton={false} minWidth={280} className="custom-popup">
+              <MapPopup
+                post={{ ...loc, name: loc.name || (isRTL ? "حالة" : "Case") }}
+                isRTL={isRTL}
+                t={tMapPage}
+              />
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+
+      {/* الـ Badge */}
+      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+        <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+          <span className="text-[12px] font-bold text-slate-700">
+            {markers.filter((m) => m.type === "missing").length}{" "}
+            {isRTL ? "مفقود" : "Missing"}
           </span>
         </div>
       </div>

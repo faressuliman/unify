@@ -4,7 +4,7 @@ import { compare } from "../../utils/Hash/compare.js";
 import { generatetoken } from "../../utils/token/generateToken.js";
 import { sendEmail } from "../../service/sendEmail.js";
 import { html } from "../../utils/sendEmail.events/template.js";
-import { encrypt } from './../../utils/encrypt/encrypt.js';
+import { encrypt } from "./../../utils/encrypt/encrypt.js";
 import cloudinary from "../../utils/cloudinary/index.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
@@ -17,9 +17,13 @@ export const register = async (req, res, next) => {
   }
 
   let idImagePath;
-  if (req.file) {
-    idImagePath = req.file.path;
+  // When using upload.fields(), the files are placed in req.files
+  if (req.files && req.files.idPicture && req.files.idPicture.length > 0) {
+    idImagePath = req.files.idPicture[0].path;
     // AI Verification removed for testing
+  } else if (req.file) {
+    // Fallback just in case
+    idImagePath = req.file.path;
   }
 
   const hashedPassword = await Hash({ key: password });
@@ -100,7 +104,7 @@ export const forgotPassword = async (req, res, next) => {
   await sendEmail(
     email,
     "Password Reset OTP - UNIFY",
-    html({ message: "Your password reset OTP is:", code: otp })
+    html({ message: "Your password reset OTP is:", code: otp }),
   );
 
   return res.status(200).json({ message: "OTP sent to your email" });

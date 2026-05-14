@@ -1,110 +1,140 @@
 import { postApi } from "./api";
 
-const DUMMY_CASES = [
-  {
-    postType: "missing" as const,
-    firstName: "Omar",
-    lastName: "Hassan",
-    age: 8,
-    ageUnit: "years" as const,
-    gender: "male" as const,
-    hairColour: "Black",
-    eyeColour: "Brown",
-    clothesDescription:
-      "Wearing a yellow t-shirt with a cartoon logo and blue jeans.",
-    city: "Alexandria",
-    lastSeenLocation: "San Stefano club entrance",
-    lastSeenDate: "2023-10-10",
-    latitude: 31.24,
-    longitude: 29.96,
-  },
-  {
-    postType: "missing" as const,
-    firstName: "Laila",
-    lastName: "Mahmoud",
-    age: 5,
-    ageUnit: "years" as const,
-    gender: "female" as const,
-    hairColour: "Brown",
-    eyeColour: "Green",
-    clothesDescription: "Pink dress and white shoes. Carrying a small doll.",
-    city: "Cairo",
-    lastSeenLocation: "Al Azhar Park, near the fountains",
-    lastSeenDate: "2023-11-02",
-    latitude: 30.04,
-    longitude: 31.26,
-  },
-  {
-    postType: "missing" as const,
-    firstName: "Kareem",
-    lastName: "Ali",
-    age: 12,
-    ageUnit: "years" as const,
-    gender: "male" as const,
-    hairColour: "Black",
-    eyeColour: "Brown",
-    clothesDescription: "School uniform: light blue shirt and dark blue pants.",
-    city: "Giza",
-    lastSeenLocation: "Dokki, Street 9",
-    lastSeenDate: "2023-11-15",
-    latitude: 30.038,
-    longitude: 31.21,
-  },
-  {
-    postType: "found" as const,
-    firstName: "Unknown",
-    lastName: "Child",
-    age: 4,
-    ageUnit: "years" as const,
-    gender: "male" as const,
-    hairColour: "Blonde",
-    eyeColour: "Blue",
-    clothesDescription:
-      "Found wearing a red sweater and grey sweatpants. Cannot speak clearly.",
-    city: "Mansoura",
-    foundLocation: "Gihan Street, next to the central hospital",
-    affiliation: "hospital",
-    organizationName: "Mansoura Central Hospital",
-    reporterPhone: "01001234567",
-    latitude: 31.0409,
-    longitude: 31.3785,
-  },
-  {
-    postType: "found" as const,
-    firstName: "Unknown",
-    lastName: "Girl",
-    age: 6,
-    ageUnit: "years" as const,
-    gender: "female" as const,
-    hairColour: "Black",
-    eyeColour: "Brown",
-    clothesDescription:
-      "Green jacket, missing one shoe. She says her name is 'Nour'.",
-    city: "Aswan",
-    foundLocation: "Corniche El Nile",
-    affiliation: "shelter",
-    organizationName: "Aswan Hope Shelter",
-    reporterPhone: "01112223334",
-    latitude: 24.0889,
-    longitude: 32.8998,
-  },
-  {
-    postType: "missing" as const,
-    firstName: "Youssef",
-    lastName: "Ibrahim",
-    age: 15,
-    ageUnit: "years" as const,
-    gender: "male" as const,
-    hairColour: "Brown",
-    eyeColour: "Hazel",
-    clothesDescription: "Black hoodie, ripped blue jeans, black cap.",
-    city: "Tanta",
-    lastSeenLocation: "Tanta Railway Station",
-    lastSeenDate: "2023-11-20",
-    latitude: 30.7865,
-    longitude: 31.0004,
-  },
+// النقاط المرجعية الرئيسية لتوزيع الحالات عليها مع إضافة عشوائية للإحداثيات
+const EGYPT_REGIONS = [
+  { name: "Cairo", lat: 30.0444, lng: 31.2357 },
+  { name: "Alexandria", lat: 31.2001, lng: 29.9187 },
+  { name: "Aswan", lat: 24.0889, lng: 32.8998 },
+  { name: "Luxor", lat: 25.6872, lng: 32.6396 },
+  { name: "Asyut", lat: 27.1783, lng: 31.1859 },
+  { name: "Sohag", lat: 26.557, lng: 31.6948 },
+  { name: "Ismailia", lat: 30.5965, lng: 32.2715 },
+  { name: "Port Said", lat: 31.2565, lng: 32.2841 },
+  { name: "Suez", lat: 29.9668, lng: 32.5498 },
+  { name: "Mansoura", lat: 31.0409, lng: 31.3785 },
+  { name: "Tanta", lat: 30.7865, lng: 31.0004 },
+  { name: "Zagazig", lat: 30.5877, lng: 31.5167 },
+  { name: "Fayyum", lat: 29.3084, lng: 30.8428 },
+  { name: "Minya", lat: 28.1099, lng: 30.7503 },
+  { name: "Qena", lat: 26.1642, lng: 32.7267 },
+  { name: "Beni Suef", lat: 28.0871, lng: 30.7531 },
+  { name: "Hurghada", lat: 27.2579, lng: 33.8116 },
+  { name: "Sharm El-Sheikh", lat: 27.9158, lng: 34.3299 },
+  { name: "Marsa Matrouh", lat: 31.3525, lng: 27.2373 },
+  { name: "Al Kharga", lat: 26.1551, lng: 32.716 },
+  { name: "Banha", lat: 30.4667, lng: 31.1833 },
+  { name: "Kafr El Sheikh", lat: 31.1107, lng: 30.9388 },
+  { name: "Dakhla Oasis", lat: 25.5167, lng: 28.9667 },
+  { name: "Siwa Oasis", lat: 29.2, lng: 25.5167 },
+  { name: "Al Arish", lat: 31.1316, lng: 33.7984 },
+  { name: "Sallum", lat: 31.5167, lng: 25.15 },
+  { name: "Halayeb", lat: 22.2155, lng: 36.6385 },
 ];
+
+function getRandomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getRandomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateRandomCases(count: number) {
+  const firstNamesMale = [
+    "Omar",
+    "Ahmed",
+    "Ali",
+    "Mahmoud",
+    "Youssef",
+    "Kareem",
+    "Tarek",
+    "Mostafa",
+    "Ziad",
+    "Hassan",
+    "Khaled",
+    "Amr",
+    "Mazen",
+    "Yassin",
+  ];
+  const firstNamesFemale = [
+    "Laila",
+    "Nour",
+    "Fatma",
+    "Mariam",
+    "Salma",
+    "Hana",
+    "Aisha",
+    "Habiba",
+    "Nada",
+    "Yasmin",
+    "Mona",
+    "Dina",
+    "Heba",
+    "Jana",
+  ];
+  const lastNames = [
+    "Hassan",
+    "Ibrahim",
+    "Ali",
+    "Mahmoud",
+    "Mohamed",
+    "Fawzy",
+    "Kamal",
+    "Tarek",
+    "Sami",
+    "Gaber",
+    "Farouk",
+    "El-Sayed",
+    "Osman",
+  ];
+  const eyeColors = ["Brown", "Black", "Blue", "Green", "Hazel"];
+  const hairColors = ["Black", "Brown", "Blonde", "Grey", "White"];
+
+  const cases = [];
+  for (let i = 0; i < count; i++) {
+    const isMissing = Math.random() > 0.5;
+    const gender = Math.random() > 0.5 ? "male" : "female";
+    const firstName =
+      gender === "male"
+        ? getRandomItem(firstNamesMale)
+        : getRandomItem(firstNamesFemale);
+    const lastName = getRandomItem(lastNames);
+    const region = getRandomItem(EGYPT_REGIONS);
+
+    // إحداثيات عشوائية تماماً داخل النطاق الجغرافي لجمهورية مصر العربية لضمان عدم التكرار أبداً
+    const randomLat = 22.1 + Math.random() * (31.2 - 22.1);
+    const randomLng = 25.0 + Math.random() * (34.8 - 25.0);
+
+    const caseData: any = {
+      postType: isMissing ? "missing" : "found",
+      firstName: isMissing ? firstName : "Unknown",
+      lastName: isMissing ? lastName : gender === "male" ? "Boy" : "Girl",
+      age: getRandomInt(2, 60),
+      ageUnit: "years",
+      gender: gender,
+      hairColour: getRandomItem(hairColors),
+      eyeColour: getRandomItem(eyeColors),
+      clothesDescription: `Wearing random generated outfit #${getRandomInt(100, 999)}.`,
+      city: region.name,
+      latitude: randomLat,
+      longitude: randomLng,
+    };
+
+    if (isMissing) {
+      caseData.lastSeenLocation = `Near ${region.name} Area`;
+      const date = new Date();
+      date.setDate(date.getDate() - getRandomInt(1, 60));
+      caseData.lastSeenDate = date.toISOString().split("T")[0];
+    } else {
+      caseData.foundLocation = `Found somewhere around ${region.name}`;
+      caseData.affiliation = "none";
+      caseData.reporterPhone =
+        "01" + Math.floor(100000000 + Math.random() * 900000000).toString();
+    }
+    cases.push(caseData);
+  }
+  return cases;
+}
 
 // Helper function to download random avatar avatars and convert them to valid File objects
 async function getDummyImageFile(name: string): Promise<File> {
@@ -125,7 +155,8 @@ export const seedDummyData = async (
   onProgress?: (msg: string) => void,
 ) => {
   let count = 0;
-  for (const caseData of DUMMY_CASES) {
+  const generatedCases = generateRandomCases(10); // إنشاء 10 حالات عشوائية في كل ضغطة
+  for (const caseData of generatedCases) {
     try {
       if (onProgress)
         onProgress(`Generating dummy image for ${caseData.firstName}...`);

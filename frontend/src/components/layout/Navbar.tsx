@@ -31,7 +31,6 @@ import {
   useRef,
   useCallback,
 } from "react";
-import { ThemeToggle } from "../ui/ThemeToggle";
 import { notificationApi } from "../../lib/api";
 import { getSocket } from "../../lib/socket";
 import unifyLogo from "../../assets/unify.png";
@@ -290,8 +289,8 @@ export function Navbar() {
       className={`${isAuthLikePage || currentPage === "map" ? "relative" : "sticky"} top-0 z-50 w-full transition-all duration-300 
         ${
           isScrolledActive
-            ? "bg-white/95 dark:bg-slate-900/95 border-b shadow-md backdrop-blur-md border-gray-200/50 dark:border-slate-700/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none"
-            : "bg-white/95 dark:bg-slate-900/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 dark:border-slate-700/50 pointer-events-auto"
+            ? "bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none"
+            : "bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto"
         }`}
       dir={isRTL ? "rtl" : "ltr"}
     >
@@ -300,7 +299,7 @@ export function Navbar() {
           className={`w-full flex h-20 items-center justify-between transition-all duration-300
           ${
             isScrolledActive
-              ? "2xl:bg-white/95 dark:2xl:bg-slate-900/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 dark:2xl:border-slate-700/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6"
+              ? "2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6"
               : "2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none"
           }`}
         >
@@ -324,14 +323,14 @@ export function Navbar() {
           </div>
 
           {/* Center: Navigation */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 dark:border-slate-700/50 bg-white dark:bg-slate-800 hidden 2xl:flex">
+          <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden 2xl:flex">
             <nav className="hidden 2xl:flex items-center gap-2  px-3 py-2  ">
               <button
                 onClick={() => handleNavClick("search")}
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "search"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <Search
@@ -346,7 +345,7 @@ export function Navbar() {
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "create-post"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <PlusCircle
@@ -363,7 +362,7 @@ export function Navbar() {
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "poster-builder"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <FileImage
@@ -380,7 +379,7 @@ export function Navbar() {
                 className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
                   currentPage === "map"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent hover:bg-white dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 hover:shadow-sm"
+                    : "bg-transparent hover:bg-white text-gray-700 hover:shadow-sm"
                 }`}
               >
                 <MapPin
@@ -395,7 +394,6 @@ export function Navbar() {
 
           {/* Right: User actions */}
           <div className="flex items-center gap-2 shrink-0">
-            <ThemeToggle />
             {isAuthenticated ? (
               <>
                 {/* Language Toggle */}
@@ -404,8 +402,8 @@ export function Navbar() {
                   disabled={isLanguageLocked}
                   className={`hidden 2xl:flex relative w-10 h-10 rounded-full items-center justify-center transition-all duration-200 border-none ${
                     isLanguageLocked
-                      ? "bg-gray-100 dark:bg-slate-700 cursor-not-allowed opacity-60"
-                      : "bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer"
+                      ? "bg-gray-100 cursor-not-allowed opacity-60"
+                      : "bg-gray-100 hover:bg-gray-200 cursor-pointer"
                   }`}
                   aria-label="Change Language"
                   title={
@@ -424,7 +422,7 @@ export function Navbar() {
                 {/* Messages */}
                 <button
                   onClick={() => handleNavClick("chat")}
-                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                   aria-label="Messages"
                 >
                   <Mail className="h-5 w-5 text-gray-700" strokeWidth={2} />
@@ -436,7 +434,7 @@ export function Navbar() {
                 {/* Notifications */}
                 <button
                   onClick={handleNotificationClick}
-                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                  className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                   aria-label="Notifications"
                 >
                   <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
@@ -451,7 +449,7 @@ export function Navbar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="hidden 2xl:flex w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                      className="hidden 2xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                       aria-label="User menu"
                     >
                       <User className="h-5 w-5 text-gray-700" strokeWidth={2} />

@@ -98,10 +98,6 @@ export const createPost = async (req, res, next) => {
   return res.status(201).json({ message: "Post created successfully", post });
 };
 
-// Backfill `nameSearchKey` for any legacy posts that were created before the
-// field existed. Runs at most once per process (or after restarts) so that
-// cross-script search returns correct results without needing a manual
-// migration step.
 let _searchKeyBackfilled = false;
 const backfillSearchKeys = async () => {
   if (_searchKeyBackfilled) return;
@@ -115,7 +111,6 @@ const backfillSearchKeys = async () => {
       await doc.save();
     }
   } catch (err) {
-    // Non-fatal; just log and continue.
     console.warn("[posts] nameSearchKey backfill failed:", err?.message || err);
   }
 };
@@ -151,16 +146,12 @@ export const getPosts = async (req, res, next) => {
   if (firstName || lastName) {
     const rawName = [firstName, lastName].filter(Boolean).join(" ").trim();
     if (rawName) {
-      // Build cross-script matchers so a user typing "أحمد" also matches
-      // "Ahmed" in the stored Latin name and vice versa.
       const orClauses = [];
       const escapedRaw = escapeRegex(rawName);
       orClauses.push({ name: new RegExp(escapedRaw, "i") });
 
       const isArabic = containsArabic(rawName);
       const searchKey = toSearchKey(rawName);
-      // Require ≥2 chars in the consonant skeleton to avoid spurious hits
-      // (e.g. "Ali" → "l" would otherwise match every record).
       if (searchKey && searchKey.replace(/\s+/g, "").length >= 2) {
         orClauses.push({
           nameSearchKey: new RegExp(escapeRegex(searchKey), "i"),
@@ -213,7 +204,7 @@ export const getPostById = async (req, res, next) => {
   return res.status(200).json({ post });
 };
 
-// ─── Get Map Markers ──────────────────────────────────────────────────────────
+// ─── Get Map Markers (Legacy/Admin) ──────────────────────────────────────────
 const CITY_COORDS = {
   Cairo: [30.0444, 31.2357],
   القاهرة: [30.0444, 31.2357],
@@ -330,4 +321,52 @@ export const deletePost = async (req, res, next) => {
 
   await post.deleteOne();
   return res.status(200).json({ message: "Post deleted" });
+};
+
+// ─── NEW: Public Map & Stats (No Auth Required) ──────────────────────────────
+
+export const getPublicMap = async (req, res, next) => {
+  // جلب الحالات النشطة (مفقودين أو تم العثور عليهم) لظهور الـ 102 حالة عندك
+  const posts = await Post.find({
+    status: "active",
+    postType: { $in: ["missing", "found"] },
+  })
+    .populate("locationId", "latitude longitude address")
+    .select("name postType postImages city locationId lastSeenDate");
+
+  const cases = posts
+    .map((p) => {
+      const isLocated = p.locationId?.latitude && p.locationId?.longitude;
+      const fallbackCoords = p.city ? CITY_COORDS[p.city] : undefined;
+      const [lat, lng] = isLocated
+        ? [p.locationId.latitude, p.locationId.longitude]
+        : fallbackCoords || [null, null];
+
+      return {
+        _id: p._id,
+        name: p.name,
+        status: p.postType,
+        image: p.postImages?.[0],
+        location: { lat, lng },
+        city: p.city,
+        date: p.lastSeenDate,
+      };
+    })
+    .filter((c) => c.location.lat !== null);
+
+  return res.status(200).json({ success: true, cases });
+};
+
+export const getPublicStats = async (req, res, next) => {
+  const missingCount = await Post.countDocuments({
+    postType: "missing",
+    status: "active",
+  });
+  const foundCount = await Post.countDocuments({ postType: "found" });
+
+  return res.status(200).json({
+    success: true,
+    activeMissing: missingCount,
+    foundCases: foundCount,
+  });
 };

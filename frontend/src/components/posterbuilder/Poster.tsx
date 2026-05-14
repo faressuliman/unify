@@ -365,7 +365,7 @@ const Poster = () => {
                           onChange={(e) => {
                             const value = e.target.value
                               .replace(/[^\d+]/g, "")
-                              .slice(0, 11);
+                              .slice(0, 15);
                             setContactPhone(value);
                           }}
                           placeholder={t("poster.mobilePlaceholder")}
@@ -420,22 +420,22 @@ const Poster = () => {
 
             {/* Preview Column */}
             <motion.div
-              className="hidden lg:flex w-full bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[800px]"
+              className="hidden lg:flex w-full bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24 lg:max-w-[450px] xl:max-w-[500px]"
               variants={itemVariants}
             >
               <div
                 ref={previewRef}
-                className="w-full mx-auto max-w-[860px] bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
+                className="w-full mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
               >
                 {/* Header */}
-                <div className="bg-red-700 py-6 text-center">
+                <div className="bg-red-700 py-3 sm:py-4 text-center">
                   <h2
-                    className={`text-4xl font-black text-white font-sans ${isRTL ? "tracking-normal" : "tracking-widest uppercase"}`}
+                    className={`text-2xl sm:text-3xl font-black text-white font-sans ${isRTL ? "tracking-normal" : "tracking-widest uppercase"}`}
                   >
                     {t("poster.previewMissing")}
                   </h2>
                   <p
-                    className={`text-red-100 text-[0.65rem] font-bold mt-2 font-sans ${isRTL ? "tracking-normal" : "tracking-[0.2em] uppercase"}`}
+                    className={`text-red-100 text-[0.6rem] sm:text-[0.65rem] font-bold mt-1 font-sans ${isRTL ? "tracking-normal" : "tracking-[0.2em] uppercase"}`}
                   >
                     {t("poster.previewHelp")}
                   </p>
@@ -482,16 +482,16 @@ const Poster = () => {
                 </div>
 
                 {/* Details Section */}
-                <div className="p-8 bg-white flex flex-col gap-8">
-                  <div className="grid grid-cols-2 gap-8 font-sans">
+                <div className="p-5 sm:p-6 bg-white flex flex-col gap-4 sm:gap-5">
+                  <div className="grid grid-cols-2 gap-4 sm:gap-5 font-sans">
                     <div className="flex flex-col">
                       <span
-                        className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                        className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? "tracking-normal normal-case" : "uppercase tracking-[0.2em]"}`}
                       >
                         {t("poster.age")}
                       </span>
                       <span
-                        className="text-2xl font-black text-slate-900 leading-none"
+                        className="text-xl font-black text-slate-900 leading-none"
                         style={isRTL ? { letterSpacing: "0" } : {}}
                       >
                         {age && ageUnit
@@ -501,12 +501,12 @@ const Poster = () => {
                     </div>
                     <div className="flex flex-col">
                       <span
-                        className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                        className={`text-[0.65rem] font-bold text-slate-400 mb-1.5 ${isRTL ? "tracking-normal normal-case" : "uppercase tracking-[0.2em]"}`}
                       >
                         {t("poster.height")}
                       </span>
                       <span
-                        className="text-2xl font-black text-slate-900 leading-none"
+                        className="text-xl font-black text-slate-900 leading-none"
                         style={isRTL ? { letterSpacing: "0" } : {}}
                       >
                         {height
@@ -516,40 +516,40 @@ const Poster = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col border-t border-slate-100 pt-6">
+                  <div className="flex flex-col border-t border-slate-100 pt-4">
                     <span
-                      className={`text-[0.65rem] font-bold text-slate-400 mb-2 font-sans ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                      className={`text-[0.65rem] font-bold text-slate-400 mb-2 font-sans ${isRTL ? "tracking-normal normal-case" : "uppercase tracking-[0.2em]"}`}
                     >
                       {t("poster.lastSeen")}
                     </span>
                     <span
-                      className="text-lg font-bold text-slate-800 line-clamp-1 font-sans"
+                      className="text-base font-bold text-slate-800 line-clamp-1 font-sans"
                       style={isRTL ? { letterSpacing: "0" } : {}}
                     >
                       {lastSeen || t("poster.notProvided")}
                     </span>
                   </div>
 
-                  <div className="flex flex-col border-t border-slate-100 pt-6">
+                  <div className="flex flex-col border-t border-slate-100 pt-4">
                     <span
-                      className={`text-[0.65rem] font-bold text-slate-400 mb-2 font-sans ${isRTL ? "tracking-none normal-case" : "uppercase tracking-[0.2em]"}`}
+                      className={`text-[0.65rem] font-bold text-slate-400 mb-2 font-sans ${isRTL ? "tracking-normal normal-case" : "uppercase tracking-[0.2em]"}`}
                     >
                       {t("poster.descClothing")}
                     </span>
                     <p
-                      className="text-base font-medium text-slate-600 leading-relaxed line-clamp-3 font-sans"
+                      className="text-sm font-medium text-slate-600 leading-relaxed line-clamp-3 font-sans"
                       style={isRTL ? { letterSpacing: "0" } : {}}
                     >
                       {clothing || t("poster.noDesc")}
                     </p>
                   </div>
 
-                  <div className="mt-2 bg-red-50 border border-red-100 rounded-[1.25rem] p-6 text-center shadow-sm">
-                    <div className="bg-red-700 text-white px-2 sm:px-6 py-4 rounded-xl font-black text-base sm:text-xl shadow-lg flex flex-col items-center justify-center gap-2 sm:gap-3 leading-tight">
+                  <div className="mt-1 bg-red-50 border border-red-100 rounded-[1rem] p-4 text-center shadow-sm">
+                    <div className="bg-red-700 text-white px-4 py-3 rounded-lg font-black text-sm sm:text-base shadow-md flex flex-col items-center justify-center gap-1.5 leading-tight">
                       <div className="flex items-center gap-2">
                         <FontAwesomeIcon
                           icon={faCloudArrowUp}
-                          className={`text-base shrink-0 ${isRTL ? "-rotate-90" : "rotate-90"}`}
+                          className={`text-sm shrink-0 ${isRTL ? "-rotate-90" : "rotate-90"}`}
                         />
                         <span className="font-sans uppercase tracking-[0.18em] text-sm sm:text-base">
                           {t("poster.contactAuth")}

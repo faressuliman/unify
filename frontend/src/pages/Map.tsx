@@ -43,35 +43,35 @@ L.Marker.prototype.options.icon = L.icon({
 
 const CITY_COORDS: Record<string, [number, number]> = {
   Cairo: [30.0444, 31.2357],
-  "ط§ظ„ظ‚ط§ظ‡ط±ط©": [30.0444, 31.2357],
+  القاهرة: [30.0444, 31.2357],
   Alexandria: [31.2001, 29.9187],
-  "ط§ظ„ط¥ط³ظƒظ†ط¯ط±ظٹط©": [31.2001, 29.9187],
+  الإسكندرية: [31.2001, 29.9187],
   Giza: [30.0131, 31.2089],
-  "ط§ظ„ط¬ظٹط²ط©": [30.0131, 31.2089],
+  الجيزة: [30.0131, 31.2089],
   Aswan: [24.0889, 32.8998],
-  "ط£ط³ظˆط§ظ†": [24.0889, 32.8998],
+  أسوان: [24.0889, 32.8998],
   Luxor: [25.6872, 32.6396],
-  "ط§ظ„ط£ظ‚طµط±": [25.6872, 32.6396],
+  الأقصر: [25.6872, 32.6396],
   Asyut: [27.1783, 31.1859],
-  "ط£ط³ظٹظˆط·": [27.1783, 31.1859],
+  أسيوط: [27.1783, 31.1859],
   Sohag: [26.557, 31.6948],
-  "ط³ظˆظ‡ط§ط¬": [26.557, 31.6948],
+  سوهاج: [26.557, 31.6948],
   Ismailia: [30.5965, 32.2715],
-  "ط§ظ„ط¥ط³ظ…ط§ط¹ظٹظ„ظٹط©": [30.5965, 32.2715],
+  الإسماعيلية: [30.5965, 32.2715],
   "Port Said": [31.2565, 32.2841],
-  "ط¨ظˆط±ط³ط¹ظٹط¯": [31.2565, 32.2841],
+  بورسعيد: [31.2565, 32.2841],
   Suez: [29.9668, 32.5498],
-  "ط§ظ„ط³ظˆظٹط³": [29.9668, 32.5498],
+  السويس: [29.9668, 32.5498],
   Mansoura: [31.0409, 31.3785],
-  "ط§ظ„ظ…ظ†طµظˆط±ط©": [31.0409, 31.3785],
+  المنصورة: [31.0409, 31.3785],
   Tanta: [30.7865, 31.0004],
-  "ط·ظ†ط·ط§": [30.7865, 31.0004],
+  طنطا: [30.7865, 31.0004],
   Zagazig: [30.5877, 31.5167],
-  "ط§ظ„ط²ظ‚ط§ط²ظٹظ‚": [30.5877, 31.5167],
+  الزقازيق: [30.5877, 31.5167],
   Fayyum: [29.3084, 30.8428],
-  "ط§ظ„ظپظٹظˆظ…": [29.3084, 30.8428],
+  الفيوم: [29.3084, 30.8428],
   Minya: [28.1099, 30.7503],
-  "ط§ظ„ظ…ظ†ظٹط§": [28.1099, 30.7503],
+  المنيا: [28.1099, 30.7503],
 };
 
 const DEFAULT_CENTER: [number, number] = [27.8206, 30.8025]; // Central Egypt
@@ -166,7 +166,7 @@ type MapFilters = {
   keyword: string;
   city: string;
   dateMissing: string;
-  postType: "missing" | "found";
+  postType: "all" | "missing" | "found";
 };
 
 type MapPageDictionary = {
@@ -201,13 +201,13 @@ export default function Map() {
     keyword: "",
     city: "",
     dateMissing: "",
-    postType: "missing",
+    postType: "all",
   });
   const [appliedFilters, setAppliedFilters] = useState<MapFilters>({
     keyword: "",
     city: "",
     dateMissing: "",
-    postType: "missing",
+    postType: "all",
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -223,6 +223,7 @@ export default function Map() {
   );
 
   const statusOptions = [
+    { value: "all", label: isRTL ? "الكل" : "All" },
     { value: "missing", label: t.missing },
     { value: "found", label: t.found },
   ];
@@ -242,18 +243,57 @@ export default function Map() {
     const fetchMarkers = async () => {
       try {
         const response = await postApi.getMapMarkers({
-          postType: appliedFilters.postType,
+          postType:
+            appliedFilters.postType === "all"
+              ? undefined
+              : appliedFilters.postType,
           city: appliedFilters.city || undefined,
           dateMissing: appliedFilters.dateMissing || undefined,
           keyword: appliedFilters.keyword || undefined,
           status: "active",
-          limit: 1000,
+          limit: 10000,
         });
 
         const fetchedMarkers = response.markers || [];
 
+        const seen = new Set<string>();
         setPosts(
           fetchedMarkers
+            .map((m) => {
+              let lat = Number(m.lat);
+              let lng = Number(m.lng);
+
+              if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
+                const coords = CITY_COORDS[m.city];
+                if (coords) {
+                  lat = coords[0];
+                  lng = coords[1];
+                }
+              }
+
+              if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
+                const originalLat = lat;
+                const originalLng = lng;
+                let radius = 0.03;
+                let angle = Math.random() * Math.PI * 2;
+                let key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+                let attempts = 0;
+                while (seen.has(key) && attempts < 300) {
+                  lat = originalLat + Math.cos(angle) * radius;
+                  lng = originalLng + Math.sin(angle) * radius;
+                  key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+                  angle += Math.PI / 4;
+                  radius += 0.01;
+                  attempts++;
+                }
+                seen.add(key);
+              }
+              return {
+                ...m,
+                lat,
+                lng,
+              };
+            })
             .map((m) => ({
               ...m,
               position: [m.lat, m.lng] as [number, number],
@@ -436,6 +476,36 @@ export default function Map() {
       className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-8 pb-16 font-sans transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
+      <style>{`
+        /* Modern rounded shape for the popup */
+        .custom-popup .leaflet-popup-content-wrapper {
+          border-radius: 20px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+          border: 1px solid #f1f5f9;
+        }
+        .dark .custom-popup .leaflet-popup-content-wrapper {
+          background-color: #0f172a;
+          border-color: #1e293b;
+        }
+        .custom-popup .leaflet-popup-content {
+          margin: 8px 12px !important; 
+        }
+        /* The bottom arrow pointer */
+        .custom-popup .leaflet-popup-tip {
+          box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+          border-bottom: 1px solid #f1f5f9;
+          border-right: 1px solid #f1f5f9;
+        }
+        .dark .custom-popup .leaflet-popup-tip {
+          background-color: #0f172a;
+          border-color: #1e293b;
+        }
+        /* Optional: Uncomment below to completely hide the pointer arrow for a floating bubble look */
+        /*
+        .custom-popup .leaflet-popup-tip-container { display: none; }
+        .custom-popup { margin-bottom: 15px; }
+        */
+      `}</style>
       <PageHeader
         navigatedTo={isRTL ? "الخريطة" : "Map"}
         title={t.title}

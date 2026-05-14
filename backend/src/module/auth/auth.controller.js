@@ -11,12 +11,20 @@ import {
 import * as authService from "./auth.service.js";
 
 const router = Router();
-
 router.post(
   "/register",
-  multerHost(filetypes.image, "unify/ids").single("idPicture"),
-  validation(registerSchema),
-  asynchandler(authService.register)
+  // Use the imported multerHost instead of CommonJS require
+  multerHost(filetypes?.image || []).fields([
+    {
+      name: "idPicture",
+      maxCount: 1,
+    },
+    {
+      name: "selfiePicture",
+      maxCount: 1,
+    },
+  ]),
+  asynchandler(authService.register),
 );
 
 router.post("/login", validation(loginSchema), asynchandler(authService.login));
@@ -24,13 +32,13 @@ router.post("/login", validation(loginSchema), asynchandler(authService.login));
 router.post(
   "/forgot-password",
   validation(forgotPasswordSchema),
-  asynchandler(authService.forgotPassword)
+  asynchandler(authService.forgotPassword),
 );
 
 router.post(
   "/reset-password",
   validation(resetPasswordSchema),
-  asynchandler(authService.resetPassword)
+  asynchandler(authService.resetPassword),
 );
 
 export default router;
