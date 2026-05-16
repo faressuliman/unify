@@ -20,9 +20,7 @@ const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 const AboutUs = lazy(() => import("../pages/AboutUs"));
-const Notifications = lazy(() => import("../pages/Notifications"));
-const Chat = lazy(() => import("../pages/Chat"));
-const Admin = lazy(() => import("../pages/Admin"));
+const Donate = lazy(() => import("../pages/Donate"));
 
 export const router = createBrowserRouter([
   {
@@ -139,6 +137,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
+<<<<<<< HEAD
         path: "notifications",
         element: (
           <ProtectedRoute>
@@ -158,6 +157,15 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+=======
+        path: "donate",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <Donate />
+          </Suspense>
+        ),
+      }
+>>>>>>> eab17eaff518e430dcc0808997b8fbb04763f453
     ],
   },
 ]);

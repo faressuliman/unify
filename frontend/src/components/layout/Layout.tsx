@@ -38,6 +38,7 @@ export function Layout({ children }: LayoutProps) {
       <LoadingScreen />
       <Navbar />
       <ScrollToTopButton />
+      <DonateFloatingButton />
       {children}
       {!isAuthPage && <Footer />}
     </div>
