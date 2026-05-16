@@ -17,7 +17,7 @@ export default function Footer() {
   const quickLinkPaths = [
     "/search",
     "/poster-builder",
-    "#",
+    "/create-post",
     "/contact",
     "/about-us",
   ];

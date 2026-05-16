@@ -55,24 +55,7 @@ export default function MapSection() {
           <p className="text-gray-500 mt-1 text-sm">{t.subtitle}</p>
         </motion.div>
 
-        {/* شريط الأرقام الحقيقية */}
-        <div className="flex justify-center gap-4 mb-8">
-          <div className="bg-white border border-red-100 px-5 py-2 rounded-2xl shadow-sm flex items-center gap-3">
-            <span className="flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-            <span className="text-sm font-bold text-slate-800">
-              {stats.missing} {isRTL ? "مفقود" : "Missing"}
-            </span>
-          </div>
-          <div className="bg-white border border-green-100 px-5 py-2 rounded-2xl shadow-sm flex items-center gap-3">
-            <span className="h-3 w-3 rounded-full bg-green-500"></span>
-            <span className="text-sm font-bold text-slate-800">
-              {stats.found} {isRTL ? "تم إيجادهم" : "Found"}
-            </span>
-          </div>
-        </div>
+
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}

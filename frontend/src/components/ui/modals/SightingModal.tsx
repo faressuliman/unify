@@ -6,9 +6,11 @@ import FormTextArea from "@/components/ui/FormTextArea";
 import SelectMenu from "@/components/ui/SelectMenu";
 import SubmitButton from "@/components/ui/SubmitButton";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import { sightingApi } from "@/lib/api";
+import { sightingApi, chatApi } from "@/lib/api";
 import { en } from "../../../data/english";
 import { ar } from "../../../data/arabic";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface SightingModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface SightingModalProps {
   personName: string;
   isRTL: boolean;
   postId: string;
+  postUserId?: string;
 }
 
 export default function SightingModal({
@@ -24,10 +27,13 @@ export default function SightingModal({
   personName,
   isRTL,
   postId,
+  postUserId,
 }: SightingModalProps) {
   const t = isRTL
     ? ar.recentUpdates.missingModal
     : en.recentUpdates.missingModal;
+
+  const { token } = useAuth();
 
   const [formData, setFormData] = useState({
     confidence: "",
@@ -99,7 +105,7 @@ export default function SightingModal({
       await sightingApi.createSighting({
         missingPersonId: postId,
         confidence: formData.confidence,
-        seenAt: formData.date || new Date().toISOString(), // In real app, standardise date
+        seenAt: formData.date, 
         address: formData.location,
         description: formData.wearing,
         additionalDetails: formData.additional,
@@ -107,6 +113,17 @@ export default function SightingModal({
         reporterPhone: formData.contactPhone,
       });
 
+      if (token && postUserId) {
+        try {
+          const { chat } = await chatApi.startChat(postUserId, token);
+          const messageContent = `Sighting Report Details:\nConfidence: ${formData.confidence}\nDate: ${formData.date}\nLocation: ${formData.location}\nWearing: ${formData.wearing}\nAdditional Info: ${formData.additional}\nContact: ${formData.contactName} (${formData.contactPhone})`;
+          await chatApi.sendMessage(chat._id, messageContent, null, token);
+        } catch (err) {
+          console.error("Failed to send sighting details to chat", err);
+        }
+      }
+
+      toast.success(isRTL ? 'تم إرسال التقرير بنجاح' : 'Sighting reported successfully');
       onOpenChange(false);
       setFormData({
         confidence: "",
@@ -120,7 +137,8 @@ export default function SightingModal({
       setSubmitAttempted(false);
     } catch (error) {
       console.error(error);
-      // optionally show an error message here
+      const err = error as Error;
+      toast.error(err.message || 'Failed to submit sighting');
     } finally {
       setIsLoading(false);
     }
@@ -199,7 +217,7 @@ export default function SightingModal({
                     <FormInput
                       id="sighting-date"
                       name="date"
-                      type="text"
+                      type="datetime-local"
                       label={t.dateLabel}
                       value={formData.date}
                       onChange={handleChange}

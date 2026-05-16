@@ -21,22 +21,13 @@ const claimSchema = new mongoose.Schema(
     },
     documentPath: {
       type: String,
-      required: true, // الملف إلزامي عشان الـ OCR يشتغل
+      required: true,
     },
-    // --- حقول التحقق الجديدة ---
+    // --- حقول التحقق ---
     status: {
       type: String,
-      enum: ["pending_ocr", "pending_review", "approved", "rejected"],
-      default: "pending_ocr",
-    },
-    ocrResult: {
-      // بنخزن هنا النص اللي الـ AI قراه من البطاقة للرجوع إليه
-      type: String,
-    },
-    ocrMatched: {
-      // هل الـ AI لقى تطابق في الأسماء ولا لأ؟
-      type: Boolean,
-      default: false,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
     },
     // -------------------------
     reviewedBy: {

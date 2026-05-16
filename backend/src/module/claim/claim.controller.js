@@ -14,7 +14,6 @@ import * as claimService from "./claim.service.js";
 const router = Router();
 
 // --- إنشاء طلب (Claim) جديد ---
-// التعديل: ملتر هنا هو اللي هيستقبل "document" عشان الـ OCR يشتغل في الـ Service
 router.post(
   "/",
   authenticate,
@@ -23,7 +22,7 @@ router.post(
     "unify/claims",
   ).single("document"),
   validation(createClaimSchema),
-  asynchandler(claimService.createClaim), // دي الدالة اللي كتبناها وبها الـ Tesseract
+  asynchandler(claimService.createClaim),
 );
 
 // جلب طلباتي (لليوزر العادي)

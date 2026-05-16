@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { FileSearch, Search } from "lucide-react";
 import FormInput from "../ui/FormInput";
@@ -7,7 +7,6 @@ import SelectMenu from "../ui/SelectMenu";
 import LocalizedDateInput from "../ui/LocalizedDateInput";
 import ErrorMessage from "../ui/ErrorMessage";
 import SubmitButton from "../ui/SubmitButton";
-import ImageUpload from "../ui/ImageUpload";
 import { useLanguage } from "../../context/LanguageContext";
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from "../../data/cities";
 import {
@@ -52,7 +51,6 @@ export default function SearchFiltersPanel({
 }: SearchFiltersPanelProps) {
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
-  const [searchImage, setSearchImage] = useState<File | null>(null);
   const [submitError, setSubmitError] = useState("");
 
   const { register, control, handleSubmit, reset, setValue, getValues } =
@@ -64,9 +62,7 @@ export default function SearchFiltersPanel({
     control,
     defaultValue: defaultSearchFilters,
   });
-  const hasAtLeastOneInput =
-    Object.values(watchedFilters).some((value) => value?.trim() !== "") ||
-    Boolean(searchImage);
+
   const hasActiveFilters = Object.values(watchedFilters).some(
     (value) => value?.trim() !== "",
   );
@@ -114,7 +110,6 @@ export default function SearchFiltersPanel({
   const clearAllAndReset = () => {
     reset(defaultSearchFilters);
     onApplyFilters(defaultSearchFilters, false);
-    setSearchImage(null);
     setSubmitError("");
   };
 
@@ -123,7 +118,7 @@ export default function SearchFiltersPanel({
       (value) => value.trim() !== "",
     );
 
-    if (!hasAnyFilter && !searchImage) {
+    if (!hasAnyFilter) {
       setSubmitError(
         t("search.atLeastOneInputError") ||
           (isRTL
@@ -172,26 +167,13 @@ export default function SearchFiltersPanel({
         </h3>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-6 space-y-6">
-        <div className="space-y-3">
-          <ImageUpload
-            label={t("search.uploadImage") || "Upload Image for AI Recognition"}
-            onImageChange={(file) => setSearchImage(file)}
-            title={t("search.uploadSpaceTitle") || "Click to Upload Photo"}
-            dragDropText={t("search.dragDrop") || "or drag and drop"}
-            subtitle={t("search.uploadHint") || "JPG, PNG up to 10MB"}
-            buttonText={t("search.chooseFile") || "Choose File"}
-            changeText={t("search.changePhoto") || "Change Photo"}
-            removeText={t("search.remove") || "Remove"}
-          />
-        </div>
-
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-white px-4 text-gray-500 font-medium">
-              {t("search.orUseFilters") || "OR USE FILTERS"}
+              {t("search.orUseFilters") || "USE FILTERS"}
             </span>
           </div>
         </div>
@@ -202,11 +184,11 @@ export default function SearchFiltersPanel({
               type="button"
               onClick={clearAllAndReset}
               className={`group relative text-sm font-semibold transition-colors cursor-pointer ${
-                hasActiveFilters || searchImage
+                hasActiveFilters
                   ? "text-secondary hover:text-secondary/80 after:absolute after:inset-s-0 after:-bottom-0.5 after:h-0.5 after:w-full after:bg-secondary after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100"
                   : "text-gray-400 cursor-not-allowed"
               }`}
-              disabled={!hasActiveFilters && !searchImage}
+              disabled={!hasActiveFilters}
             >
               {t("search.clearAll") || "Clear all"}
             </button>

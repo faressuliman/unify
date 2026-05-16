@@ -12,7 +12,7 @@ const sightingReportSchema = new mongoose.Schema(
       enum: ["not_sure", "possibly", "pretty_sure", "very_sure"],
       required: true,
     },
-    seenAt: { type: Date, required: true },
+    seenAt: { type: String, required: true },
     location: {
       address: { type: String },
       latitude: { type: Number },

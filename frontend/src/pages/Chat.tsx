@@ -73,9 +73,6 @@ export default function Chat() {
         setChatsLoading(true);
         const res = await chatApi.getMyChats(token);
         setChats(res.chats || []);
-        if (res.chats && res.chats.length > 0 && !activeChatId) {
-          setActiveChatId(res.chats[0]._id);
-        }
       } catch (err) {
         console.error("Failed to fetch chats", err);
       } finally {
@@ -267,11 +264,14 @@ export default function Chat() {
           >
             {!activeChat ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-500 px-6">
-                <MessageCircle className="h-10 w-10 text-slate-300 mb-3" />
+                <MessageCircle className="h-16 w-16 text-slate-300 mb-4" />
+                <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                  {isRTL ? "رسائلك" : "Your Messages"}
+                </h3>
                 <p className="text-sm">
                   {isRTL
-                    ? "اختر محادثة لعرض الرسائل."
-                    : "Select a chat to view messages."}
+                    ? "أرسل رسالة لبدء محادثة"
+                    : "send a message to start a chat"}
                 </p>
               </div>
             ) : (
