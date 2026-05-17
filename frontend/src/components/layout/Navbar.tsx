@@ -120,7 +120,7 @@ export function Navbar() {
 
     hasPrefetchedCoreRoutes.current = true;
     prefetchCoreRoutes();
-  }, {});
+  }, []);
 
   const preloadAuthRoutes = () => {
     if (hasPrefetchedAuthRoutes.current) {

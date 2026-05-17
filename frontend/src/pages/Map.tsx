@@ -9,22 +9,12 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { renderToString } from "react-dom/server";
-import {
-  ListFilter,
-  Search,
-  Info,
-  X,
-  UserCircle,
-  MapPin,
-  Calendar,
-} from "lucide-react";
+import { ListFilter, Search, Info, X, MapPin, Calendar } from "lucide-react";
 import { SheetClose } from "../components/ui/sheet";
 import { useLanguage } from "../context/LanguageContext";
 import { en } from "../data/english";
 import { ar } from "../data/arabic";
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from "../data/cities";
-import MapDrawer from "../components/map/MapDrawer";
 import PageHeader from "../components/ui/PageHeader";
 import FormInput from "../components/ui/FormInput";
 import SelectMenu from "../components/ui/SelectMenu";
@@ -32,7 +22,7 @@ import LocalizedDateInput from "../components/ui/LocalizedDateInput";
 import SegmentedControl from "../components/ui/SegmentedControl";
 import SubmitButton from "../components/ui/SubmitButton";
 import MapPopup from "../components/map/MapPopup";
-import { postApi, type BackendMapMarker } from "../lib/api";
+import { postApi } from "../lib/api";
 
 // إحداثيات المدن كبديل (Fallback)
 const CITY_COORDS: Record<string, [number, number]> = {
@@ -180,8 +170,8 @@ export default function Map() {
     dateMissing: "",
     postType: "all",
   });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [posts, setPosts] = useState<any[]>([]);
+  const [wheelZoomEnabled, setWheelZoomEnabled] = useState(false);
 
   const cityOptions = useMemo(
     () => [
@@ -257,7 +247,6 @@ export default function Map() {
   const handleSubmitFilters = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAppliedFilters(draftFilters);
-    setIsFilterOpen(false);
   };
 
   const renderFiltersContent = (
@@ -330,6 +319,7 @@ export default function Map() {
             value={draftFilters.dateMissing}
             onChange={(v) => setDraftFilters((p) => ({ ...p, dateMissing: v }))}
             isRTL={isRTL}
+            placeholder={isRTL ? t.datePlaceholderArabic : t.datePlaceholder}
           />
         </div>
         <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
@@ -390,11 +380,16 @@ export default function Map() {
         </aside>
 
         <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:h-[calc(100vh-140px)] flex flex-col z-0">
-          <div className="absolute inset-0 z-0">
+          <div
+            className="absolute inset-0 z-0"
+            onMouseEnter={() => setWheelZoomEnabled(true)}
+            onMouseLeave={() => setWheelZoomEnabled(false)}
+          >
             <MapContainer
               center={DEFAULT_CENTER}
               zoom={6}
               zoomControl={false}
+              scrollWheelZoom={wheelZoomEnabled}
               style={{ width: "100%", height: "100%" }}
             >
               <MapUpdater center={mapCenterStr} zoom={mapZoom} />
@@ -407,6 +402,10 @@ export default function Map() {
                   key={post.id}
                   position={post.position}
                   icon={createMarkerIcon(post.type)}
+                  eventHandlers={{
+                    mouseover: (e) => e.target.openPopup(),
+                    mouseout: (e) => e.target.closePopup(),
+                  }}
                 >
                   <Popup
                     className="custom-popup"
@@ -421,7 +420,7 @@ export default function Map() {
           </div>
 
           {/* Floating Stats - Glassmorphism Design */}
-          <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+          <div className="absolute top-4 right-4 z-1000 flex flex-col gap-2">
             <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
               <span className="text-[12px] font-bold text-slate-700">

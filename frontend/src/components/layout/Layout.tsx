@@ -5,6 +5,7 @@ import { Navbar } from "./Navbar";
 import LoadingScreen from "../ui/LoadingScreen";
 import ScrollToTopButton from "../ui/ScrollToTopButton";
 import Footer from "./Footer";
+import DonateFloatingButton from "../ui/DonateFloatingButton";
 
 interface LayoutProps {
   children: ReactNode;

@@ -198,6 +198,10 @@ export default function LiveMap() {
             key={loc.id}
             position={[loc.lat, loc.lng]}
             icon={createCustomIcon(loc.type)}
+            eventHandlers={{
+              mouseover: (e) => e.target.openPopup(),
+              mouseout: (e) => e.target.closePopup(),
+            }}
           >
             <Popup closeButton={false} minWidth={280} className="custom-popup">
               <MapPopup
@@ -211,7 +215,7 @@ export default function LiveMap() {
       </MapContainer>
 
       {/* الـ Badge */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+      <div className="absolute top-4 right-4 z-1000 flex flex-col gap-2">
         <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
           <span className="text-[12px] font-bold text-slate-700">

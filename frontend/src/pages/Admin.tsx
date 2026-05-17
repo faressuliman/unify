@@ -300,14 +300,17 @@ export default function Admin() {
     }
   };
 
-  const handleReviewClaim = async (decision: "approved" | "rejected") => {
+  const handleReviewClaim = async (
+    decision: "approved" | "rejected",
+    notes?: string,
+  ) => {
     if (!token || !reviewingClaim) return;
     try {
       setSubmittingReview(decision);
       await adminApi.adminReviewClaim(
         reviewingClaim._id,
         decision,
-        reviewNotes.trim() || undefined,
+        notes?.trim() || undefined,
         token,
       );
       toast.success(
@@ -1538,7 +1541,7 @@ function ReviewClaimModal({
   notes: string;
   onNotesChange: (v: string) => void;
   onClose: () => void;
-  onSubmit: (decision: "approved" | "rejected") => void;
+  onSubmit: (decision: "approved" | "rejected", notes?: string) => void;
   submitting: "approved" | "rejected" | null;
   t: Copy;
   isRTL: boolean;
@@ -1657,7 +1660,7 @@ function ReviewClaimModal({
             {t.claims.cancel}
           </button>
           <button
-            onClick={() => onSubmit("rejected")}
+            onClick={() => onSubmit("rejected", notes.trim() || undefined)}
             disabled={submitting !== null}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
           >
@@ -1669,7 +1672,7 @@ function ReviewClaimModal({
             {t.claims.reject}
           </button>
           <button
-            onClick={() => onSubmit("approved")}
+            onClick={() => onSubmit("approved", notes.trim() || undefined)}
             disabled={submitting !== null}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50"
           >

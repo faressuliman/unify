@@ -410,8 +410,8 @@ export const ar = {
       requiredError: "هذا الحقل مطلوب",
       sightingNotice: "سيتم إرسال بلاغك إلى العائلة والسلطات بأمان.",
     },
-<<<<<<< HEAD
   },
+
   howItWorks: {
     title: "كيف تعمل منصة يونيفاي",
     subtitle: "دليل خطوة بخطوة لإعادة الاتصال بأحبائك",
@@ -442,6 +442,41 @@ export const ar = {
       },
     ],
   },
+  "donate.everySecond": "كل ثانية تفرق",
+  "donate.helpUsBring": "ساعدنا في إيجادهم",
+  "donate.themHome": "وإعادتهم للمنزل.",
+  "donate.heroDescription":
+    "العائلات تنتظر. تبرعك يدعم التكنولوجيا والجهود الميدانية للم شمل المفقودين.",
+  "donate.donateNowCTA": "تبرع الآن",
+  "donate.secureBadge": "100% آمن وموثوق",
+  "donate.whereItGoesTitle": "أين تذهب أموالك؟",
+  "donate.whereItGoesDesc":
+    "كل دولار تتبرع به يدعم بشكل مباشر البنية التحتية والموارد البشرية المطلوبة لتسريع عمليات البحث.",
+  "donate.faceRecogTitle": "تكنولوجيا التعرف على الوجوه",
+  "donate.faceRecogDesc":
+    "تمويل آلاف عمليات المطابقة عبر بيانات ضخمة كل دقيقة.",
+  "donate.serverCostsTitle": "البنية التحتية للخوادم",
+  "donate.serverCostsDesc":
+    "إبقاء المنصة متصلة وسريعة ومتاحة على مدار الساعة دون انقطاع.",
+  "donate.volunteerSupportTitle": "دعم المتطوعين",
+  "donate.volunteerSupportDesc":
+    "تمويل أدوات التنسيق البيانات لفرق البحث الميدانية.",
+  "donate.dataSecurityTitle": "أمن البيانات",
+  "donate.dataSecurityDesc":
+    "ضمان بقاء التقارير ومعلومات الاتصال مشفرة ومحمية.",
+  "donate.secureDonation": "تبرع آمن",
+  "donate.oneTime": "مرة واحدة",
+  "donate.monthly": "شهري",
+  "donate.selectAmount": "اختر المبلغ",
+  "donate.customAmount": "مبلغ آخر",
+  "donate.yourDetails": "بياناتك",
+  "donate.placeholderName": "الاسم بالكامل",
+  "donate.placeholderEmail": "البريد الإلكتروني",
+  "donate.donateCTA": "تبرع بـ",
+  "donate.simulationMsg": "تبرعك يساعد في إعادتهم للمنزل. (هذه محاكاة)",
+  "donate.thankYou": "شكراً لك",
+  "donate.fillDetails": "يرجى إدخال الاسم والبريد الإلكتروني.",
+  "donate.selectAmountAlert": "يرجى اختيار أو إدخال مبلغ التبرع.",
   liveMap: {
     title: "خريطة البلاغات المباشرة",
     subtitle: "نظرة عامة وقت الحقيقي للحالات النشطة والإحصائيات على مستوى مصر",
@@ -472,183 +507,4 @@ export const ar = {
     emergencyNumber: "12345",
     rights: "© " + new Date().getFullYear() + " يونيفاي. جميع الحقوق محفوظة.",
   },
-=======
-    hero: {
-        title: "نجمع شمل العائلات، ونعيد الأمل",
-        subtitle: "منصة مدعومة بالذكاء الاصطناعي ومعتمدة من وزارة التضامن الاجتماعي لمساعدتكم في العثور على أحبائكم وإعادتهم إلى عائلاتهم.",
-        placeholder: "ابحث عن مفقود (الاسم، الصورة)...",
-        searchButton: "بحث يونيفاي"
-    },
-    recentUpdates: {
-        title: "آخر التحديثات",
-        subtitle: "حالات اشتباه مدعومة بالذكاء الاصطناعي وتسجيلات حديثة",
-        loadMore: "تحميل المزيد من الحالات",
-        buttons: {
-            seen: "ربما رأيتهم",
-            details: "عرض التفاصيل"
-        },
-        foundModal: {
-            foundReport: 'بلاغ شخص معثور عليه',
-            unknown: 'غير معروف',
-            notAvailable: 'غير متاح',
-            authorizedTeam: 'فريق مختص',
-            photoProtected: 'الصورة محمية',
-            photoVisibleAfterVerification: 'تظهر الصورة الكاملة بعد التحقق من المطالبة',
-            age: 'العمر',
-            physicalDescription: 'الوصف الجسدي',
-            clothingDescription: 'وصف الملابس',
-            foundLocation: 'مكان العثور',
-            city: 'المدينة',
-            postedBy: 'تم النشر بواسطة',
-            reportDate: 'تاريخ البلاغ',
-            claimAsFamilyMember: 'مطالبة كفرد من العائلة',
-            claimSummary: 'إذا كانت لديك معلومات عن هذا الشخص، يرجى الضغط على "مطالبة كفرد من العائلة" لبدء عملية التحقق. تتم مراجعة جميع المطالبات بواسطة جهات مختصة.',
-            claimTitle: 'مطالبة كفرد من العائلة',
-            claimSubtitle: 'قم برفع مستندات التحقق لإثبات صلتك بـ {name}',
-            relationshipLabel: 'صف صلتك بالشخص',
-            relationshipPlaceholder: 'مثال: أنا ابنه/ابنته، أخوه/أخته، والده/والدته، الزوج/الزوجة... يرجى توضيح صلتك وكيف تعرف هذا الشخص.',
-            relationshipHelp: 'قدّم وصفاً مفصلاً لعلاقتك بهذا الشخص',
-            relationshipError: 'يرجى كتابة 15 حرفاً على الأقل لوصف صلتك.',
-            documentLabel: 'مستند التحقق',
-            documentTitle: 'رفع مستند التحقق',
-            documentHint: 'ارفع مستنداً يثبت صلتك: بطاقة رقم قومي، شهادة ميلاد، صورة عائلية، أو أي مستند يحتوي على الاسمين.',
-            documentButton: 'اختيار ملف',
-            documentChange: 'تغيير المستند',
-            documentRemove: 'إزالة',
-            documentError: 'يرجى رفع صورة مستند تحقق.',
-            claimNotice: 'ستتم مراجعة مطالبتك من قبل جهات مختصة. ستصلك إشعارات عند اكتمال التحقق.',
-            cancel: 'إلغاء',
-            submitClaim: 'إرسال المطالبة'
-        },
-        missingModal: {
-            missingReport: 'بلاغ شخص مفقود',
-            unknown: 'غير معروف',
-            notAvailable: 'غير متاح',
-            photoProtected: 'الصورة محمية',
-            photoVisibleAfterVerification: 'تظهر الصورة الكاملة للمستخدمين المصرح لهم',
-            age: 'العمر',
-            physicalDescription: 'الوصف الجسدي',
-            clothingDescription: 'وصف الملابس',
-            lastSeenLocation: 'مكان آخر ظهور',
-            city: 'المدينة',
-            postedBy: 'تم النشر بواسطة',
-            reportDate: 'تاريخ البلاغ',
-            seenThem: 'ربما رأيتهم',
-            sightingSummary: 'إذا كنت قد رأيت هذا الشخص، يرجى تقديم التفاصيل لمساعدة عائلته في العثور عليه. سيتم الحفاظ على سرية هويتك.',
-            sightingTitle: 'الإبلاغ عن رؤية',
-            sightingSubtitle: 'قدم تفاصيل حول متى وأين رأيت {name}',
-            confidenceLabel: 'ما مدى تأكدك من أنه هو؟',
-            confidenceOptions: {
-                notSure: 'لست متأكداً',
-                possibly: 'ربما',
-                prettySure: 'متأكد إلى حد ما',
-                verySure: 'متأكد جداً'
-            },
-            dateLabel: 'متى رأيتهم؟',
-            datePlaceholder: 'التاريخ والوقت التقريبي',
-            locationLabel: 'أين رأيتهم؟',
-            locationPlaceholder: 'تفاصيل الموقع المحددة',
-            wearingLabel: 'ماذا كانوا يرتدون؟',
-            wearingPlaceholder: 'تفاصيل الملابس',
-            additionalLabel: 'تفاصيل إضافية',
-            additionalPlaceholder: 'أي معلومات أخرى مفيدة (اختياري)',
-            contactNameLabel: 'اسمك',
-            contactNamePlaceholder: 'أدخل اسمك',
-            contactPhoneLabel: 'رقم هاتفك',
-            contactPhonePlaceholder: 'أدخل رقم هاتفك',
-            submitSighting: 'إرسال البلاغ',
-            cancel: 'إلغاء',
-            requiredError: 'هذا الحقل مطلوب',
-            sightingNotice: 'سيتم إرسال بلاغك إلى العائلة والسلطات بأمان.'
-        }
-    },
-    howItWorks: {
-        title: "كيف تعمل منصة يونيفاي",
-        subtitle: "دليل خطوة بخطوة لإعادة الاتصال بأحبائك",
-        steps: [
-            {
-                title: "إنشاء حساب",
-                desc: "سجل باستخدام بريدك الإلكتروني وأنشئ حساباً آمناً للبدء."
-            },
-            {
-                title: "بحث أو نشر",
-                desc: "تصفح الأشخاص المفقودين أو أنشئ منشوراً عن مفقودك."
-            },
-            {
-                title: "تقديم مطالبة",
-                desc: "هل وجدت تطابقاً؟ قدم مطالبتك مع إثبات القرابة."
-            },
-            {
-                title: "تحقق الإدارة",
-                desc: "يقوم فريقنا بمراجعة والتحقق من جميع المطالبات لضمان المصداقية والأمان."
-            },
-            {
-                title: "تواصل بأمان",
-                desc: "بمجرد التحقق، تواصل من خلال منصة المحادثة الآمنة الخاصة بنا."
-            },
-            {
-                title: "لم الشمل",
-                desc: "نسق لقاءً آمناً مع أحبائك."
-            }
-        ]
-    },
-    'donate.everySecond': 'كل ثانية تفرق',
-    'donate.helpUsBring': 'ساعدنا في إيجادهم',
-    'donate.themHome': 'وإعادتهم للمنزل.',
-    'donate.heroDescription': 'العائلات تنتظر. تبرعك يدعم التكنولوجيا والجهود الميدانية للم شمل المفقودين.',
-    'donate.donateNowCTA': 'تبرع الآن',
-    'donate.secureBadge': '100% آمن وموثوق',
-    'donate.whereItGoesTitle': 'أين تذهب أموالك؟',
-    'donate.whereItGoesDesc': 'كل دولار تتبرع به يدعم بشكل مباشر البنية التحتية والموارد البشرية المطلوبة لتسريع عمليات البحث.',
-    'donate.faceRecogTitle': 'تكنولوجيا التعرف على الوجوه',
-    'donate.faceRecogDesc': 'تمويل آلاف عمليات المطابقة عبر بيانات ضخمة كل دقيقة.',
-    'donate.serverCostsTitle': 'البنية التحتية للخوادم',
-    'donate.serverCostsDesc': 'إبقاء المنصة متصلة وسريعة ومتاحة على مدار الساعة دون انقطاع.',
-    'donate.volunteerSupportTitle': 'دعم المتطوعين',
-    'donate.volunteerSupportDesc': 'تمويل أدوات التنسيق البيانات لفرق البحث الميدانية.',
-    'donate.dataSecurityTitle': 'أمن البيانات',
-    'donate.dataSecurityDesc': 'ضمان بقاء التقارير ومعلومات الاتصال مشفرة ومحمية.',
-    'donate.secureDonation': 'تبرع آمن',
-    'donate.oneTime': 'مرة واحدة',
-    'donate.monthly': 'شهري',
-    'donate.selectAmount': 'اختر المبلغ',
-    'donate.customAmount': 'مبلغ آخر',
-    'donate.yourDetails': 'بياناتك',
-    'donate.placeholderName': 'الاسم بالكامل',
-    'donate.placeholderEmail': 'البريد الإلكتروني',
-    'donate.donateCTA': 'تبرع بـ',
-    'donate.simulationMsg': 'تبرعك يساعد في إعادتهم للمنزل. (هذه محاكاة)',
-    'donate.thankYou': 'شكراً لك',
-    'donate.fillDetails': 'يرجى إدخال الاسم والبريد الإلكتروني.',
-    'donate.selectAmountAlert': 'يرجى اختيار أو إدخال مبلغ التبرع.',
-    liveMap: {
-        title: "خريطة البلاغات المباشرة",
-        subtitle: "نظرة عامة وقت الحقيقي للحالات النشطة والإحصائيات على مستوى مصر",
-        loading: "جاري تحميل الخريطة...",
-        cases: "حالات نشطة",
-        safe: "منطقة آمنة",
-        danger: "تنبيه عالي",
-        alert: "تنبيه متوسط"
-    },
-    footer: {
-        brand: "يونيفاي",
-        description: "نعمل على إعادة ربط الأشخاص المفقودين بعائلاتهم باستخدام الذكاء الاصطناعي، والتحقق من الهوية، وإشراف السلطات. عائلتك هي أولويتنا.",
-        quickLinksTitle: "روابط سريعة",
-        quickLinks: [
-            "البحث عن شخص",
-            "صانع الملصقات",
-            "الإبلاغ عن شخص",
-            "تواصل معنا",
-            "من نحن"
-        ],
-        contactTitle: "تواصل معنا",
-        email: "support@unify.eg",
-        phone: "+20 100 123 4567",
-        location: "الإسكندرية، مصر",
-        emergencyTitle: "الخط الساخن للطوارئ",
-        emergencyDesc: "متاح على مدار الساعة للحالات الطارئة:",
-        emergencyNumber: "12345",
-        rights: "© " + new Date().getFullYear() + " يونيفاي. جميع الحقوق محفوظة."
-    }
->>>>>>> eab17eaff518e430dcc0808997b8fbb04763f453
 };

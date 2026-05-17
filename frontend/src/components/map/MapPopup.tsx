@@ -72,6 +72,7 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
           </div>
           <button
             type="button"
+            aria-label={isRTL ? "إغلاق" : "Close"}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
@@ -134,6 +135,7 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
         {/* Action Button */}
         <button
           type="button"
+          aria-label={t.viewDetails}
           onClick={() => setIsModalOpen(true)}
           className="w-full inline-flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/90 text-white font-bold py-2.5 rounded-xl text-sm shadow-md shadow-secondary/20 transition-all active:scale-[0.98] cursor-pointer"
         >

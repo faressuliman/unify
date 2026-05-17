@@ -55,6 +55,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const didAutoSelectChat = useRef(false);
 
   const activeChat = useMemo(
     () => chats.find((c) => c._id === activeChatId) || null,
@@ -82,6 +83,13 @@ export default function Chat() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    if (!activeChatId && chats.length > 0 && !didAutoSelectChat.current) {
+      setActiveChatId(chats[0]._id);
+      didAutoSelectChat.current = true;
+    }
+  }, [activeChatId, chats]);
 
   useEffect(() => {
     if (!activeChatId || !token) return;

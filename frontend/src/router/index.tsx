@@ -18,7 +18,9 @@ const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 const AboutUs = lazy(() => import("../pages/AboutUs"));
-const Donate = lazy(() => import("../pages/Donate"));
+const Admin = lazy(() => import("../pages/Admin"));
+const Notifications = lazy(() => import("../pages/Notifications"));
+const Chat = lazy(() => import("../pages/Chat"));
 
 export const router = createBrowserRouter([
   {
