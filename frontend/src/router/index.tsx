@@ -5,8 +5,6 @@ import ErrorFallback from "../components/ui/ErrorFallback";
 import LoadingScreen from "../components/ui/LoadingScreen";
 import ProtectedRoute from "./ProtectedRoute";
 
-
-
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));
 const Search = lazy(() => import("../pages/Search"));
@@ -137,7 +135,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-<<<<<<< HEAD
         path: "notifications",
         element: (
           <ProtectedRoute>
@@ -157,15 +154,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-=======
-        path: "donate",
-        element: (
-          <Suspense fallback={<LoadingScreen />}>
-            <Donate />
-          </Suspense>
-        ),
-      }
->>>>>>> eab17eaff518e430dcc0808997b8fbb04763f453
     ],
   },
 ]);
