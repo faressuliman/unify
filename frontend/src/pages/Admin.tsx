@@ -49,7 +49,7 @@ export default function Admin() {
   const [activeSection, setActiveSection] = useState<Section>('claims');
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
-  // Stats — used both by Overview and to drive the badge counts in the sidebar
+  // Stats, used both by Overview and to drive the badge counts in the sidebar
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -1849,8 +1849,8 @@ function getCopy(isRTL: boolean): Copy {
       reviewTitle: 'Review verification request',
       approve: 'Approve account',
       reject: 'Reject',
-      approved: 'Account verified — confirmation email sent.',
-      rejected: 'Verification rejected — explanation email sent.',
+      approved: 'Account verified, confirmation email sent.',
+      rejected: 'Verification rejected, explanation email sent.',
       fullName: 'Full name',
       email: 'Email',
       phone: 'Phone',
@@ -1859,7 +1859,7 @@ function getCopy(isRTL: boolean): Copy {
       registered: 'Registered',
       noId: "This user didn't upload an ID document.",
       rejectionReason: 'Reason for rejection (optional)',
-      rejectionReasonPlaceholder: 'e.g. The ID photo is too blurry — please re-register with a clearer image.',
+      rejectionReasonPlaceholder: 'e.g. The ID photo is too blurry, please re-register with a clearer image.',
     },
     posts: {
       title: 'All posts',

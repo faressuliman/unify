@@ -50,7 +50,7 @@ export const login = async (req, res, next) => {
   const isMatch = await compare({ key: password, hashed: user.password });
   if (!isMatch) return next(new Error("Invalid credentials", { cause: 401 }));
 
-  // Identity verification gate — admins may always sign in, regular users
+  // Identity verification gate, admins may always sign in, regular users
   // must wait until the admin team approves their submitted ID document.
   if (!user.isVerified && user.role !== "admin") {
     return next(

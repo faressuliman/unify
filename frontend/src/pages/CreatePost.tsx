@@ -292,7 +292,7 @@ const CreatePost = () => {
                         message={
                             language === 'ar'
                                 ? 'تم تثبيت اللغة على العربية أثناء إنشاء المنشور لتجنب خلط المحتوى. أكمل النموذج بنفس اللغة، ثم يمكنك تبديل اللغة لاحقًا.'
-                                : 'The interface language is locked while you create a post so the content stays consistent. Finish in the same language—you can switch again afterwards.'
+                                : 'The interface language is locked while you create a post so the content stays consistent. Finish in the same language, you can switch again afterwards.'
                         }
                         className="mt-4 mb-2"
                     />

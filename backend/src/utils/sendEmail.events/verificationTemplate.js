@@ -43,7 +43,7 @@ export const verificationApprovedTemplate = ({ name, loginUrl }) =>
   baseTemplate({
     headline: "Your account has been verified",
     body: `<p>Hi <strong>${name}</strong>,</p>
-           <p>Great news — our team has reviewed your identity document and your UNIFY account has been <strong>verified</strong>. You can now log in and start using all features of the platform.</p>
+           <p>Great news, our team has reviewed your identity document and your UNIFY account has been <strong>verified</strong>. You can now log in and start using all features of the platform.</p>
            <p>Thank you for helping us keep the community safe.</p>`,
     ctaLabel: "Log in to UNIFY",
     ctaUrl: loginUrl || "http://localhost:5173/login",

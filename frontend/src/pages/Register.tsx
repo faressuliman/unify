@@ -166,7 +166,7 @@ const Register = () => {
                 idPicture: formData.idPicture,
             });
             // Account is created in a "pending verification" state on the
-            // backend — surface that explicitly so the user knows why they
+            // backend, surface that explicitly so the user knows why they
             // can't log in immediately and that we'll email them.
             toast.success(
                 isRTL ? 'تم إنشاء حسابك بنجاح' : 'Account created successfully',
