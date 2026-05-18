@@ -49,7 +49,7 @@ export default function Admin() {
   const [activeSection, setActiveSection] = useState<Section>('claims');
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
-  // Stats, used both by Overview and to drive the badge counts in the sidebar
+  // Stats — used both by Overview and to drive the badge counts in the sidebar
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -980,7 +980,7 @@ function UsersPanel({
             content, which is what was making the role/status pills appear
             "centred" relative to their headers.
           */}
-          <table className="w-full text-sm table-fixed min-w-[860px]">
+          <table className="w-full text-sm table-fixed min-w-215">
             <colgroup>
               <col style={{ width: '22%' }} />
               <col style={{ width: '28%' }} />

@@ -2,6 +2,9 @@ import Post from "../../DB/models/post.model.js";
 import MapData from "../../DB/models/mapData.model.js";
 import { pagination } from "../../utils/feature/pagination.js";
 import cloudinary from "../../utils/cloudinary/index.js";
+import axios from "axios";
+import FormData from "form-data";
+import { cosineSimilarity } from "../../utils/feature/cosineSimilarity.js";
 import {
   toSearchKey,
   escapeRegex,
@@ -10,22 +13,68 @@ import {
   latinToArabic,
 } from "../../utils/language/transliterate.js";
 
-function euclideanDistance(vec1, vec2) {
-  if (!vec1 || !vec2 || vec1.length !== vec2.length) return Infinity;
-  let sum = 0;
-  for (let i = 0; i < vec1.length; i++) {
-    sum += Math.pow(vec1[i] - vec2[i], 2);
-  }
-  return Math.sqrt(sum);
-}
-
 // ─── Search by Image (AI Face Matching) ───────────────────────────────────────
-export const searchByImage = async (req, res, next) => {
-  if (req.file) {
-    await cloudinary.uploader.destroy(req.file.filename);
+export const searchByFace = async (req, res, next) => {
+  if (!req.file) {
+    return next(new Error("Please upload an image", { cause: 400 }));
   }
-  return res.status(501).json({
-    message: "Image Search is temporarily disabled while testing other functionality."
+
+  // 1. Forward to FastAPI AI Service
+  const formData = new FormData();
+  formData.append('image', req.file.buffer, {
+    filename: req.file.originalname,
+    contentType: req.file.mimetype,
+  });
+
+  let aiResponse;
+  try {
+    aiResponse = await axios.post('http://127.0.0.1:8000/get-face-encoding', formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+    });
+  } catch (err) {
+    return next(new Error("AI service is currently unavailable.", { cause: 503 }));
+  }
+
+  if (!aiResponse.data.success || !aiResponse.data.encoding) {
+    return next(new Error("Failed to extract face encoding. Ensure the image is clear and contains a face.", { cause: 400 }));
+  }
+
+  const { encoding: searchEncoding } = aiResponse.data;
+
+  // 2. Fetch all reports from DB that have face encodings stored
+  const reports = await Post.find({
+    faceEncoding: { $exists: true, $not: { $size: 0 } },
+    status: "active"
+  }).lean();
+
+  // 3. Compute cosine similarity for each document
+  const matches = [];
+  const THRESHOLD = 0.60;
+
+  for (const report of reports) {
+    const score = cosineSimilarity(searchEncoding, report.faceEncoding);
+    
+    if (score >= THRESHOLD) {
+      matches.push({
+        _id: report._id,
+        name: report.name,
+        photos: report.postImages,
+        similarity: score,
+        postType: report.postType,
+        city: report.city
+      });
+    }
+  }
+
+  // 4. Sort descending by similarity and take top 5
+  matches.sort((a, b) => b.similarity - a.similarity);
+  const top5Matches = matches.slice(0, 5);
+
+  return res.status(200).json({
+    success: true,
+    matches: top5Matches
   });
 };
 

@@ -50,3 +50,17 @@ export const multerDisk = (subfolder = "uploads") => {
 
   return multer({ storage });
 };
+
+export const multerMemory = (customeValidation = []) => {
+  const storage = multer.memoryStorage();
+
+  function fileFilter(req, file, cb) {
+    if (customeValidation.length === 0 || customeValidation.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type: ${file.mimetype}`), false);
+    }
+  }
+
+  return multer({ storage, fileFilter });
+};
