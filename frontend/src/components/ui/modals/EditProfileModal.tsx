@@ -21,7 +21,6 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
   
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [birthDate, setBirthDate] = useState('');
   const [idPicture, setIdPicture] = useState<File | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,15 +29,6 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
     if (isOpen && profile) {
       setName(profile.name || '');
       setPhoneNumber(profile.phoneNumber || '');
-      if (profile.birthDate) {
-        // format date for yyyy-MM-dd input
-        try {
-          const d = new Date(profile.birthDate);
-          setBirthDate(d.toISOString().split('T')[0]);
-        } catch {
-          setBirthDate('');
-        }
-      }
       setIdPicture(null);
     }
   }, [isOpen, profile]);
@@ -53,7 +43,6 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
       
       if (name && name !== profile?.name) formData.append('name', name);
       if (phoneNumber && phoneNumber !== profile?.phoneNumber) formData.append('phoneNumber', phoneNumber);
-      if (birthDate) formData.append('birthDate', birthDate);
       if (idPicture) formData.append('idPicture', idPicture);
       
       const res = await userApi.updateProfile(formData, token);
@@ -115,14 +104,6 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
                 dir="ltr"
                 className={isRTL ? "text-right" : ""}
                 required
-              />
-
-              <FormInput
-                id="edit-birthdate"
-                type="date"
-                label={isRTL ? 'تاريخ الميلاد' : 'Birth Date'}
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
               />
 
               <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm pt-2">

@@ -199,6 +199,11 @@ export default function Notifications() {
                       <p className="text-lg font-medium text-gray-900">
                         {getNotificationText(notification)}
                       </p>
+                      {notification.message && (
+                        <div className="mt-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-800 break-words whitespace-pre-wrap">
+                          <strong>{t('notifications.reason') || 'Reason'}:</strong> {notification.message}
+                        </div>
+                      )}
                       <p className="text-sm text-gray-500 mt-1">
                         {new Date(notification.createdAt).toLocaleDateString(
                           language === 'ar' ? 'ar-EG' : 'en-US',

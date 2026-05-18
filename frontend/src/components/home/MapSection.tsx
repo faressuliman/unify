@@ -4,6 +4,7 @@ import { en } from "../../data/english";
 import { ar } from "../../data/arabic";
 import { MapPin, ArrowDownRight, ArrowDownLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { postApi } from "../../lib/api";
 
 const LiveMap = lazy(() => import("./LiveMap"));
 
@@ -16,16 +17,15 @@ export default function MapSection() {
   const [stats, setStats] = useState({ missing: 0, found: 0 });
 
   useEffect(() => {
-    // نداء للـ API العام (بدون توكن) لجلب الأرقام
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-    fetch(`${apiUrl}/cases/public-stats`)
-      .then((res) => res.json())
-      .then((data) =>
-        setStats({
-          missing: data.activeMissing || 0,
-          found: data.foundCases || 0,
-        }),
-      )
+    postApi.getPublicStats()
+      .then((res) => {
+        if (res.success) {
+          setStats({
+            missing: res.activeMissing || 0,
+            found: res.foundCases || 0,
+          });
+        }
+      })
       .catch((err) => console.error("Stats fetch error:", err));
   }, []);
 

@@ -143,8 +143,12 @@ export default function LiveMap() {
       .filter((m): m is any => m !== null);
   }, [markers]);
 
+  const [wheelZoomEnabled, setWheelZoomEnabled] = useState(false);
+
   return (
-    <div className="w-full h-100 md:h-125 rounded-3xl overflow-hidden relative border border-slate-200 bg-slate-50">
+    <div 
+      className="w-full h-100 md:h-125 rounded-3xl overflow-hidden relative border border-slate-200 bg-slate-50"
+    >
       <style>{`
         /* 1. النبض */
         @keyframes map-pulse {
@@ -185,7 +189,7 @@ export default function LiveMap() {
       <MapContainer
         center={[27.8206, 30.8025]}
         zoom={6}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         className="w-full h-full"
       >
         <TileLayer
@@ -221,6 +225,13 @@ export default function LiveMap() {
           <span className="text-[12px] font-bold text-slate-700">
             {markers.filter((m) => m.type === "missing").length}{" "}
             {isRTL ? "مفقود" : "Missing"}
+          </span>
+        </div>
+        <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+          <span className="text-[12px] font-bold text-slate-700">
+            {markers.filter((m) => m.type === "found").length}{" "}
+            {isRTL ? "تم العثور عليه" : "Found"}
           </span>
         </div>
       </div>

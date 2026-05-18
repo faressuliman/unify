@@ -155,6 +155,7 @@ export const adminReviewClaim = async (req, res, next) => {
       userId: claim.claimUserId,
       postId: claim.postId,
       type: "claim_rejected",
+      message: notes,
     });
   }
 

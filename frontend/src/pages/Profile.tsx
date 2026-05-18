@@ -231,10 +231,14 @@ export default function Profile() {
 
           <div className="flex flex-col md:flex-row items-center md:items-start gap-5 md:gap-6 z-10 w-full md:w-auto">
             <div className="relative shrink-0">
-              <div className="w-24 h-24 bg-[#faebd7] rounded-full flex items-center justify-center p-2">
-                <div className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl">
-                  {profileData?.name?.charAt(0).toUpperCase()}
-                </div>
+              <div className="w-24 h-24 bg-[#faebd7] rounded-full flex items-center justify-center p-2 overflow-hidden">
+                {profileData?.idImagePath ? (
+                  <img src={profileData.idImagePath} alt="Profile" className="w-full h-full object-cover rounded-full border-2 border-white shadow-sm" />
+                ) : (
+                  <div className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl">
+                    {profileData?.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
               <div className="absolute bottom-0 right-0 bg-white rounded-full p-0.5 shadow-sm translate-x-1/4 translate-y-1/4">
                 <CheckCircle
@@ -306,6 +310,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <button
+                    onClick={() => setIsEditModalOpen(true)}
                     className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
                     aria-label={isRTL ? "تعديل" : "Edit"}
                   >
@@ -328,6 +333,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <button
+                    onClick={() => setIsEditModalOpen(true)}
                     className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
                     aria-label={isRTL ? "تعديل" : "Edit"}
                   >
@@ -364,6 +370,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <button
+                    onClick={() => setIsEditModalOpen(true)}
                     className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
                     aria-label={isRTL ? "تعديل" : "Edit"}
                   >
@@ -408,7 +415,7 @@ export default function Profile() {
                 {claims.length > 0 ? (
                   claims.map((claim) => {
                     const postName =
-                      typeof claim.postId === "object"
+                      typeof claim.postId === "object" && claim.postId !== null
                         ? (claim.postId as BackendPost).name || "Unknown"
                         : "Unknown";
                     const statusText = isRTL

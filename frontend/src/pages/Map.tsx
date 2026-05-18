@@ -171,7 +171,6 @@ export default function Map() {
     postType: "all",
   });
   const [posts, setPosts] = useState<any[]>([]);
-  const [wheelZoomEnabled, setWheelZoomEnabled] = useState(false);
 
   const cityOptions = useMemo(
     () => [
@@ -382,14 +381,12 @@ export default function Map() {
         <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:h-[calc(100vh-140px)] flex flex-col z-0">
           <div
             className="absolute inset-0 z-0"
-            onMouseEnter={() => setWheelZoomEnabled(true)}
-            onMouseLeave={() => setWheelZoomEnabled(false)}
           >
             <MapContainer
               center={DEFAULT_CENTER}
               zoom={6}
               zoomControl={false}
-              scrollWheelZoom={wheelZoomEnabled}
+              scrollWheelZoom={true}
               style={{ width: "100%", height: "100%" }}
             >
               <MapUpdater center={mapCenterStr} zoom={mapZoom} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { HeartHandshake, UserSearch, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import { postApi } from '../../lib/api';
 
 type UnifyWindow = Window & {
   __unifyLoadingComplete?: boolean;
@@ -14,6 +15,17 @@ export default function Stats() {
     return Boolean((window as UnifyWindow).__unifyLoadingComplete);
   });
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [stats, setStats] = useState({ activeMissing: 0, foundCases: 0 });
+
+  useEffect(() => {
+    postApi.getPublicStats()
+      .then((res) => {
+        if (res.success) {
+          setStats({ activeMissing: res.activeMissing || 0, foundCases: res.foundCases || 0 });
+        }
+      })
+      .catch((err) => console.error("Stats fetch error:", err));
+  }, []);
 
   useEffect(() => {
     if ((window as UnifyWindow).__unifyLoadingComplete) {
@@ -95,13 +107,13 @@ export default function Stats() {
                           </div>
                           <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
-                              {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
+                              {isRTL ? 'تم العثور عليهم' : 'Reunited & Found'}
                             </p>
                             <p className="text-xl font-bold text-slate-800 whitespace-nowrap">
-                              {isRTL ? '124 عائلة' : '124 Families'}
+                              {stats.foundCases} {isRTL ? 'حالة' : 'Cases'}
                             </p>
                             <p className="text-[10px] text-secondary font-bold mt-0.5 whitespace-nowrap">
-                              {isRTL ? '+12% عن الشهر الماضي' : '+12% from last month'}
+                              {isRTL ? 'تم إغلاقها بنجاح' : 'Successfully closed'}
                             </p>
                           </div>
                         </motion.div>
@@ -123,10 +135,10 @@ export default function Stats() {
                               {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
                             </p>
                             <p className="text-xl font-bold text-slate-800 whitespace-nowrap">
-                              {isRTL ? '2,450 حالة' : '2,450 Cases'}
+                              {stats.activeMissing} {isRTL ? 'حالة' : 'Cases'}
                             </p>
                             <p className="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">
-                              {isRTL ? 'يتم التحديث كل 10 دقائق' : 'Updates every 10 mins'}
+                              {isRTL ? 'يتم التحديث لحظياً' : 'Real-time updates'}
                             </p>
                           </div>
                         </motion.div>
@@ -201,13 +213,13 @@ export default function Stats() {
                   </div>
                   <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
-                      {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
+                      {isRTL ? 'تم العثور عليهم' : 'Reunited & Found'}
                     </p>
                     <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
-                      {isRTL ? '124 عائلة' : '124 Families'}
+                      {stats.foundCases} {isRTL ? 'حالة' : 'Cases'}
                     </p>
                     <p className="text-[10px] lg:text-xs text-secondary font-bold mt-0.5 whitespace-nowrap">
-                      {isRTL ? '+12% عن الشهر الماضي' : '+12% from last month'}
+                      {isRTL ? 'تم إغلاقها بنجاح' : 'Successfully closed'}
                     </p>
                   </div>
                 </motion.div>
@@ -228,10 +240,10 @@ export default function Stats() {
                       {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
                     </p>
                     <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
-                      {isRTL ? '2,450 حالة' : '2,450 Cases'}
+                      {stats.activeMissing} {isRTL ? 'حالة' : 'Cases'}
                     </p>
                     <p className="text-[10px] lg:text-xs text-gray-400 mt-0.5 whitespace-nowrap">
-                      {isRTL ? 'يتم التحديث كل 10 دقائق' : 'Updates every 10 mins'}
+                      {isRTL ? 'يتم التحديث لحظياً' : 'Real-time updates'}
                     </p>
                   </div>
                 </motion.div>

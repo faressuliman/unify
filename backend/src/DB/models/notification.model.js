@@ -9,6 +9,7 @@ const notificationSchema = new mongoose.Schema(
       enum: ["new_sighting", "new_claim", "claim_approved", "claim_rejected"],
       required: true,
     },
+    message: { type: String },
     isRead: { type: Boolean, default: false },
     deliveredVia: { type: String, enum: ["email", "push", "in-app"], default: "in-app" },
   },

@@ -53,9 +53,9 @@ export default function Chat() {
   const [newMsg, setNewMsg] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const [unreadChatIds, setUnreadChatIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const didAutoSelectChat = useRef(false);
 
   const activeChat = useMemo(
     () => chats.find((c) => c._id === activeChatId) || null,
@@ -83,13 +83,6 @@ export default function Chat() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
-
-  useEffect(() => {
-    if (!activeChatId && chats.length > 0 && !didAutoSelectChat.current) {
-      setActiveChatId(chats[0]._id);
-      didAutoSelectChat.current = true;
-    }
-  }, [activeChatId, chats]);
 
   useEffect(() => {
     if (!activeChatId || !token) return;
@@ -141,16 +134,29 @@ export default function Chat() {
         next.unshift(chat);
         return next;
       });
+      if (msg.chatId !== activeChatId) {
+        setUnreadChatIds(prev => new Set(prev).add(msg.chatId));
+      }
     };
     socket.on("chat:message", handleSidebarPing);
     return () => {
       socket.off("chat:message", handleSidebarPing);
     };
-  }, [user]);
+  }, [user, activeChatId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && activeChatId) {
+        setActiveChatId(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeChatId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,10 +209,10 @@ export default function Chat() {
       />
 
       <main className="w-full max-w-400 mx-auto px-6 lg:px-12">
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs grid grid-cols-1 md:grid-cols-[280px_1fr] h-[70vh] min-h-125">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs grid grid-cols-1 md:grid-cols-4 h-[70vh] min-h-125">
           {/* Sidebar */}
           <aside
-            className={`border-${isRTL ? "l" : "r"} border-slate-100 flex flex-col ${activeChatId ? "hidden md:flex" : "flex"}`}
+            className={`border-${isRTL ? "l" : "r"} border-slate-100 flex flex-col md:col-span-1 ${activeChatId ? "hidden md:flex" : "flex"}`}
           >
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-secondary" />
@@ -233,7 +239,14 @@ export default function Chat() {
                     return (
                       <li key={chat._id}>
                         <button
-                          onClick={() => setActiveChatId(chat._id)}
+                          onClick={() => {
+                            setActiveChatId(chat._id);
+                            setUnreadChatIds((prev) => {
+                              const newSet = new Set(prev);
+                              newSet.delete(chat._id);
+                              return newSet;
+                            });
+                          }}
                           className={`w-full text-start flex items-center gap-3 px-5 py-3 transition-colors ${
                             isActive
                               ? "bg-primary/15 border-s-4 border-secondary"
@@ -244,10 +257,15 @@ export default function Chat() {
                             {initial}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-tertiary truncate">
-                              {partner?.name || (isRTL ? "مستخدم" : "User")}
+                            <p className="font-semibold text-tertiary truncate flex justify-between items-center">
+                              <span>{partner?.name || (isRTL ? "مستخدم" : "User")}</span>
+                              {unreadChatIds.has(chat._id) && (
+                                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                  {isRTL ? "جديد" : "New"}
+                                </span>
+                              )}
                             </p>
-                            <p className="text-xs text-slate-500 truncate">
+                            <p className="text-xs text-slate-500 truncate mt-0.5">
                               {new Date(chat.createdAt).toLocaleDateString(
                                 isRTL ? "ar-EG" : "en-US",
                                 {
@@ -268,7 +286,7 @@ export default function Chat() {
 
           {/* Conversation */}
           <section
-            className={`flex flex-col ${activeChatId ? "flex" : "hidden md:flex"}`}
+            className={`flex flex-col md:col-span-3 ${activeChatId ? "flex" : "hidden md:flex"}`}
           >
             {!activeChat ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-500 px-6">

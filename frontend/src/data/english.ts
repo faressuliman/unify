@@ -8,6 +8,8 @@ export const en = {
     "nav.register": "Register",
     "nav.profile": "Profile",
     "nav.logout": "Logout",
+    "nav.admin": "Admin",
+    "nav.adminSection": "Administration",
     "nav.notifications": "Notifications",
     "nav.messages": "Messages",
     "nav.navigationMenu": "Navigation Menu",

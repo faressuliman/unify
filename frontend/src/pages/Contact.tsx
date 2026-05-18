@@ -7,6 +7,7 @@ import SubmitButton from '@/components/ui/SubmitButton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import { useLanguage } from '../context/LanguageContext';
 import compassImg from '../assets/compass.jpg';
+import { contactApi } from '../lib/api';
 
 const ContactCard = ({ icon, title, detail, delay, href }: { icon: React.ReactNode, title: string, detail: string, delay: number, href?: string }) => {
     const Wrapper = href ? motion.a : motion.div;
@@ -54,9 +55,10 @@ const Contact = () => {
         emergency: 'خط الطوارئ الساخن',
         emergencyDesc: 'متاح للتدخل الفوري 24/7',
         emergencyNum: '12345',
-        success: 'تم إرسال رسالتك بنجاح. سنتواصل معك قريبًا.',
+        success: 'تم إرسال رسالتك بنجاح. سنرسل لك بريداً إلكترونياً بالرد في أقرب وقت ممكن.',
         directContact: 'طرق التواصل المباشر',
-        dropMessage: 'اترك لنا رسالة'
+        dropMessage: 'اترك لنا رسالة',
+        submitError: 'فشل إرسال الرسالة، يرجى المحاولة مرة أخرى.'
     } : {
         title: 'Contact Us',
         subtitle: 'We are here for you. Your message is heard and important.',
@@ -80,9 +82,10 @@ const Contact = () => {
         emergency: 'Emergency Hotline',
         emergencyDesc: 'Available for immediate response 24/7',
         emergencyNum: '12345',
-        success: 'Your message has been sent successfully. We will get back to you soon.',
+        success: 'Your message has been sent successfully. We will send you an email with our reply as soon as possible.',
         directContact: 'Direct Contact Methods',
-        dropMessage: 'Drop Us a Message'
+        dropMessage: 'Drop Us a Message',
+        submitError: 'Failed to send message, please try again.'
     };
 
     const [formData, setFormData] = useState({
@@ -124,13 +127,23 @@ const Contact = () => {
 
         setIsSubmitting(true);
         
-        // Simulate network request
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        try {
+            await contactApi.sendMessage({
+                name: formData.name,
+                email: formData.email,
+                subject: formData.subject,
+                message: formData.message
+            });
 
-        setErrors({});
-        setIsSubmitting(false);
-        setIsSubmitted(true);
-        setFormData({ name: '', email: '', subject: '', message: '' });
+            setErrors({});
+            setIsSubmitting(false);
+            setIsSubmitted(true);
+            setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            setErrors({ submit: t.submitError });
+            setIsSubmitting(false);
+        }
     };
 
     return (

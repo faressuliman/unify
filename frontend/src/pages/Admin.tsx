@@ -21,11 +21,13 @@ import {
   Layers,
   LayoutDashboard,
   ClipboardList,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import AdminDrawer from "../components/admin/AdminDrawer";
+import ContactMessagesPanel from "../components/admin/ContactMessagesPanel";
 import {
   adminApi,
   type AdminUser,
@@ -35,7 +37,7 @@ import {
 } from "../lib/api";
 import { seedDummyData } from "../lib/seedDummyData";
 
-type Section = "overview" | "claims" | "verifications" | "users" | "posts";
+type Section = "overview" | "claims" | "verifications" | "users" | "posts" | "contact_messages";
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 type ClaimsTab = "pending" | "processed";
 
@@ -423,6 +425,12 @@ export default function Admin() {
       badge: stats?.totalPosts,
       tone: "slate",
     },
+    {
+      id: "contact_messages",
+      label: isRTL ? "رسائل التواصل" : "Contact Messages",
+      icon: Mail,
+      tone: "slate",
+    },
   ];
 
   return (
@@ -507,10 +515,14 @@ export default function Admin() {
             </div>
             <header className="flex flex-col items-start gap-2 text-start">
               <h1 className="text-2xl sm:text-3xl font-black text-tertiary dark:text-white">
-                {tCopy.sectionTitles[activeSection]}
+                {activeSection === "contact_messages" 
+                  ? (isRTL ? "رسائل التواصل" : "Contact Messages") 
+                  : tCopy.sectionTitles[activeSection]}
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {tCopy.sectionSubtitles[activeSection]}
+                {activeSection === "contact_messages"
+                  ? (isRTL ? "اقرأ رسائل الدعم ورد عليها." : "Read and reply to support messages.")
+                  : tCopy.sectionSubtitles[activeSection]}
               </p>
             </header>
 
@@ -540,6 +552,10 @@ export default function Admin() {
 
             {activeSection === "overview" && (
               <OverviewPanel stats={stats} loading={statsLoading} t={tCopy} />
+            )}
+
+            {activeSection === "contact_messages" && (
+              <ContactMessagesPanel t={tCopy} isRTL={isRTL} />
             )}
 
             {activeSection === "claims" && (
@@ -2030,6 +2046,7 @@ function getCopy(isRTL: boolean): Copy {
         verifications: "توثيق المستخدمين",
         users: "إدارة المستخدمين",
         posts: "إدارة المنشورات",
+        contact_messages: "رسائل التواصل",
       },
       sectionSubtitles: {
         overview: "لمحة سريعة عن النشاط على المنصة.",
@@ -2037,6 +2054,7 @@ function getCopy(isRTL: boolean): Copy {
         verifications: "مراجعة وثائق الهوية واعتماد الحسابات الجديدة.",
         users: "إدارة المستخدمين، الحظر، والصلاحيات.",
         posts: "مراجعة جميع البلاغات وحذف المنشورات غير المناسبة.",
+        contact_messages: "قراءة الرسائل والرد عليها عبر البريد الإلكتروني.",
       },
       stats: {
         totalUsers: "إجمالي المستخدمين",
@@ -2160,6 +2178,7 @@ function getCopy(isRTL: boolean): Copy {
       verifications: "User Verifications",
       users: "User Management",
       posts: "Posts Management",
+      contact_messages: "Contact Messages",
     },
     sectionSubtitles: {
       overview: "A quick snapshot of platform activity.",
@@ -2167,6 +2186,7 @@ function getCopy(isRTL: boolean): Copy {
       verifications: "Review submitted ID documents and approve new accounts.",
       users: "Manage users, bans, and roles.",
       posts: "Review every report and remove inappropriate posts.",
+      contact_messages: "Read and reply to support messages via email.",
     },
     stats: {
       totalUsers: "Total users",

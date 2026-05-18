@@ -215,6 +215,8 @@ export const postApi = {
     return apiRequest<{ markers: BackendMapMarker[] }>(`posts/map-markers?${searchParams.toString()}`);
   },
 
+  getPublicStats: () => apiRequest<{ success: boolean; activeMissing: number; foundCases: number }>("posts/public-stats"),
+
   createPost: (payload: CreatePostPayload, token: string) => {
     const formData = new FormData();
 
@@ -382,6 +384,7 @@ export interface BackendNotification {
   userId: string;
   postId?: BackendNotificationPost | string;
   type: "new_sighting" | "new_claim" | "claim_approved" | "claim_rejected";
+  message?: string;
   isRead: boolean;
   deliveredVia: "email" | "push" | "in-app";
   createdAt: string;
@@ -476,6 +479,21 @@ export const chatApi = {
   }
 };
 
+export interface ContactMessagePayload {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export const contactApi = {
+  sendMessage: (payload: ContactMessagePayload) =>
+    apiRequest<{ message: string; data: any }>("contact", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+};
+
 export interface DashboardStats {
   totalUsers: number;
   totalPosts: number;
@@ -522,6 +540,20 @@ export interface AdminUsersResponse extends PaginatedResponse {
 
 export interface AdminPendingClaimsResponse extends PaginatedResponse {
   claims: BackendClaim[];
+}
+
+export interface BackendContactMessage {
+  _id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  isReplied?: boolean;
+  createdAt: string;
+}
+
+export interface AdminContactMessagesResponse extends PaginatedResponse {
+  messages: BackendContactMessage[];
 }
 
 export const adminApi = {
@@ -645,6 +677,24 @@ export const adminApi = {
     return apiRequest<{ message: string; claim: BackendClaim }>(`claims/${claimId}/ai-review`, {
       method: "POST",
       body: JSON.stringify({ aiDecision, aiConfidenceScore, notes, verificationType, authorization: token }),
+      token,
+    });
+  },
+  // Contact Messages ────────────────────────────────────────────────────────
+  getContactMessages: async (token: string, params?: { page?: number; limit?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminContactMessagesResponse>(`admin/contact-messages${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
+  replyToContactMessage: async (messageId: string, replyMessage: string, token: string) => {
+    return apiRequest<{ message: string }>(`admin/contact-messages/${messageId}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ replyMessage }),
       token,
     });
   }

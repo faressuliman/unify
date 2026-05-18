@@ -1,6 +1,7 @@
 import User from "../../DB/models/user.model.js";
 import Post from "../../DB/models/post.model.js";
 import Claim from "../../DB/models/claim.model.js";
+import ContactMessage from "../../DB/models/contactMessage.model.js";
 import { pagination } from "../../utils/feature/pagination.js";
 import { sendEmail } from "../../service/sendEmail.js";
 import { decrypt } from "../../utils/encrypt/decrypt.js";
@@ -302,4 +303,61 @@ export const getAllPostsAdmin = async (req, res, next) => {
     totalCount: result.totalCount,
     totalPages: result.totalPages,
   });
+};
+
+// ─── Get Contact Messages ─────────────────────────────────────────────────────
+export const getContactMessages = async (req, res, next) => {
+  const { page, limit } = req.query;
+
+  const result = await pagination({
+    page, limit,
+    model: ContactMessage,
+    filter: {},
+    sort: { createdAt: -1 },
+  });
+
+  return res.status(200).json({
+    messages: result.data,
+    page: result.page,
+    limit: result.limit,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+  });
+};
+
+// ─── Reply to Contact Message ─────────────────────────────────────────────────
+export const replyToContactMessage = async (req, res, next) => {
+  const { id } = req.params;
+  const { replyMessage } = req.body;
+
+  if (!replyMessage) {
+    return next(new Error("Reply message is required", { cause: 400 }));
+  }
+
+  const message = await ContactMessage.findById(id);
+  if (!message) {
+    return next(new Error("Contact message not found", { cause: 404 }));
+  }
+
+  // Send email to the user
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #3b82f6;">Re: ${message.subject}</h2>
+      <p>Dear ${message.name},</p>
+      <p>${replyMessage.replace(/\n/g, '<br/>')}</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="color: #666; font-size: 12px;">Your original message:</p>
+      <blockquote style="color: #666; font-size: 12px; border-left: 3px solid #ccc; padding-left: 10px;">
+        ${message.message.replace(/\n/g, '<br/>')}
+      </blockquote>
+      <p style="color: #999; font-size: 12px; margin-top: 20px;">Support Team @ UNIFY</p>
+    </div>
+  `;
+
+  await sendEmail(message.email, `Re: ${message.subject}`, emailHtml);
+
+  message.isReplied = true;
+  await message.save();
+
+  return res.status(200).json({ message: "Reply sent successfully" });
 };
