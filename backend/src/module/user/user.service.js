@@ -6,7 +6,8 @@ import { decrypt } from "../../utils/encrypt/decrypt.js";
 const decryptPhoneNumber = async (value) => {
   if (!value) return value;
   try {
-    return await decrypt({ key: value, SECRET_KEY: process.env.SECRET_KEY });
+    const decrypted = await decrypt({ key: value, SECRET_KEY: process.env.SECRET_KEY });
+    return decrypted || value;
   } catch (err) {
     return value;
   }
@@ -28,6 +29,7 @@ export const getProfile = async (req, res, next) => {
       birthDate: user.birthDate,
       role: user.role,
       isVerified: user.isVerified,
+      isEmailVerified: user.isEmailVerified,
       idImagePath: user.idImagePath,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
@@ -38,7 +40,7 @@ export const getProfile = async (req, res, next) => {
 
 // ─── Update Profile ───────────────────────────────────────────────────────────
 export const updateProfile = async (req, res, next) => {
-  const { name, phoneNumber, birthDate } = req.body;
+  const { name, phoneNumber, birthDate, email } = req.body;
 
   const updateData = {};
   if (name) updateData.name = name;
@@ -46,6 +48,15 @@ export const updateProfile = async (req, res, next) => {
     updateData.phoneNumber = phoneNumber;
   }
   if (birthDate) updateData.birthDate = birthDate;
+  if (email && email !== req.user.email) {
+    // Check if new email is already in use
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return next(new Error("Email already registered", { cause: 409 }));
+    }
+    updateData.email = email;
+    updateData.isEmailVerified = false;
+  }
   if (req.file) updateData.idImagePath = req.file.path;
 
   const updated = await User.findByIdAndUpdate(req.user._id, updateData, {
@@ -55,6 +66,17 @@ export const updateProfile = async (req, res, next) => {
 
   if (!updated) {
     return next(new Error("User not found", { cause: 404 }));
+  }
+
+  // Send a confirmation email if the email was changed
+  if (email && email !== req.user.email) {
+    import("../../service/sendEmail.js").then(({ sendEmail }) => {
+      sendEmail(
+        email,
+        "Email Updated Successfully",
+        `<p>Hello ${updated.name},</p><p>Your email address has been successfully updated to this new address. If you did not make this change, please contact support immediately.</p>`
+      ).catch(console.error);
+    });
   }
 
   const decryptedPhoneNumber = await decryptPhoneNumber(updated.phoneNumber);
@@ -69,6 +91,7 @@ export const updateProfile = async (req, res, next) => {
       birthDate: updated.birthDate,
       role: updated.role,
       isVerified: updated.isVerified,
+      isEmailVerified: updated.isEmailVerified,
       idImagePath: updated.idImagePath,
       createdAt: updated.createdAt,
       lastLoginAt: updated.lastLoginAt,

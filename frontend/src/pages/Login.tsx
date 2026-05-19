@@ -99,9 +99,9 @@ const Login = () => {
             <div className="w-full lg:w-1/2 flex flex-col justify-start pt-8 lg:pt-12 pb-12 z-10 relative">
                 <div className={`w-full lg:max-w-200 px-6 lg:px-12 flex flex-col items-start text-start ${isRTL ? 'lg:mr-auto' : 'lg:ml-auto'}`}>
                     <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
+                        initial={{ opacity: 0, x: isRTL ? 40 : -40, filter: "blur(8px)" }}
+                        animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                         className="w-full lg:max-w-150"
                     >
                         <PageHeader
@@ -194,9 +194,9 @@ const Login = () => {
                 
                 <div className="relative z-10 w-full max-w-lg text-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
+                        initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                     >
                         <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6">
                             {content.heroTitle}

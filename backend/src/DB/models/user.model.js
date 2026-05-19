@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema(
     },
 
     isVerified: { type: Boolean, default: false },
+    isEmailVerified: { type: Boolean, default: false },
     isdeleted: { type: Boolean, default: false },
     isbanned: { type: Boolean, default: false },
     changeCredentialsTime: { type: Date, default: Date.now },

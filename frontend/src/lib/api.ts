@@ -261,6 +261,7 @@ export interface UserProfileInfo {
   birthDate?: string;
   role: "user" | "admin";
   isVerified: boolean;
+  isEmailVerified?: boolean;
   idImagePath?: string;
   createdAt?: string;
   lastLoginAt?: string;

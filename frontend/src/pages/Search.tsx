@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { Info, Search as SearchIcon } from "lucide-react";
+import {
+  Info,
+  Search as SearchIcon,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import MissingPersonCard from "../components/search/MissingPersonCard";
 import PageHeader from "../components/ui/PageHeader";
@@ -12,6 +18,7 @@ import SearchFiltersPanel, {
 } from "../components/search/SearchFiltersPanel";
 import UnderlineTabSelector from "../components/ui/UnderlineTabSelector";
 import InfoBanner from "../components/ui/InfoBanner";
+import ImageUpload from "../components/ui/ImageUpload";
 import { ApiError, type BackendPost, postApi } from "@/lib/api";
 import type { ProfileData } from "@/components/home/PersonCard";
 import { mapPostFields } from "@/lib/postFormatters";
@@ -135,6 +142,10 @@ export default function Search() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
   // After a successful post creation we land here with `?scrollTo=results` —
   // wait for the results section to render, then smoothly scroll to it so
   // the user sees the cards immediately.
@@ -150,44 +161,44 @@ export default function Search() {
     return () => window.clearTimeout(timer);
   }, [searchParams, isLoading]);
 
+  const handleImageSearch = async (imageFile: File) => {
+    setIsLoading(true);
+    setError("");
+    setIsImageSearchActive(true);
+
+    const formData = new FormData();
+    formData.append("searchImage", imageFile);
+
+    try {
+      const res = await axiosInstance.post("/posts/search-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // The AI API returns raw BackendPosts attached with `matchDistance`
+      const postsFromApi = res.data.posts || [];
+      setRawPosts(postsFromApi);
+    } catch (err: unknown) {
+      setRawPosts([]);
+      if (isAxiosError(err)) {
+        const errorMessage = (
+          err.response?.data as { message?: string } | undefined
+        )?.message;
+        setError(
+          errorMessage ??
+            "Failed to search by image. Make sure there is a visible face.",
+        );
+      } else {
+        setError(
+          "Failed to search by image. Make sure there is a visible face.",
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Image Search Effect
   useEffect(() => {
-    const handleImageSearch = async (imageFile: File) => {
-      setIsLoading(true);
-      setError("");
-      setIsImageSearchActive(true);
-
-      const formData = new FormData();
-      formData.append("searchImage", imageFile);
-
-      try {
-        const res = await axiosInstance.post("/posts/search-image", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        // The AI API returns raw BackendPosts attached with `matchDistance`
-        const postsFromApi = res.data.posts || [];
-        setRawPosts(postsFromApi);
-      } catch (err: unknown) {
-        setRawPosts([]);
-        if (isAxiosError(err)) {
-          const errorMessage = (
-            err.response?.data as { message?: string } | undefined
-          )?.message;
-          setError(
-            errorMessage ??
-              "Failed to search by image. Make sure there is a visible face.",
-          );
-        } else {
-          setError(
-            "Failed to search by image. Make sure there is a visible face.",
-          );
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (initialImage) {
       handleImageSearch(initialImage);
     }
@@ -244,6 +255,21 @@ export default function Search() {
     return applyLocalFilters(posts, appliedFilters);
   }, [posts, appliedFilters]);
 
+  const updateScrollControls = () => {
+    if (!cardsRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = cardsRef.current;
+    setCanScrollLeft(Math.abs(scrollLeft) > 5);
+    setCanScrollRight(
+      Math.round(Math.abs(scrollLeft) + clientWidth) < scrollWidth - 5,
+    );
+  };
+
+  useEffect(() => {
+    updateScrollControls();
+    window.addEventListener("resize", updateScrollControls);
+    return () => window.removeEventListener("resize", updateScrollControls);
+  }, [activeTab, filteredPosts.length, isImageSearchActive]);
+
   const handleApplyFilters = (values: SearchFilters, shouldScroll = true) => {
     setAppliedFilters(values);
 
@@ -283,6 +309,50 @@ export default function Search() {
             }
             className="mt-4 mb-6"
           />
+
+          {/* AI Image Search Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 mb-8"
+          >
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-12 h-12 bg-secondary/10 text-secondary rounded-full flex items-center justify-center mb-3">
+                <Camera className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+                {t("search.uploadImage") || "Upload Image for AI Recognition"}
+              </h2>
+              <p className="text-sm text-slate-500 mt-2 max-w-xl">
+                {t("search.imageSearchDesc") ||
+                  "Upload a photo to find potential matches using our facial recognition system."}
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto w-full">
+              <ImageUpload
+                onImageChange={(file) => {
+                  if (file) handleImageSearch(file);
+                }}
+                title={t("search.uploadSpaceTitle")}
+                dragDropText={t("search.dragDrop")}
+                subtitle={t("search.uploadHint")}
+                buttonText={t("search.chooseFile") || t("search.browseFiles")}
+                changeText={t("search.changePhoto")}
+                removeText={t("search.remove")}
+              />
+            </div>
+          </motion.div>
+
+          {/* Divider: OR USE FILTERS */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="h-px bg-slate-200 flex-1 max-w-[100px]"></div>
+            <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">
+              {t("search.orUseFilters") || "OR USE FILTERS"}
+            </span>
+            <div className="h-px bg-slate-200 flex-1 max-w-[100px]"></div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -353,31 +423,81 @@ export default function Search() {
                 <p>{error}</p>
               </div>
             ) : filteredPosts.length > 0 ? (
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              >
-                {filteredPosts.map((profile, idx) =>
-                  profile.type === "missing" ? (
-                    <MissingPersonCard
-                      key={profile.id}
-                      profile={profile as unknown as ProfileData}
-                      idx={idx}
-                      isRTL={isRTL}
-                    />
-                  ) : (
-                    <FoundPersonCard
-                      key={profile.id}
-                      profile={profile as unknown as ProfileData}
-                      idx={idx}
-                      isRTL={isRTL}
-                    />
-                  ),
+              <div className="relative">
+                <motion.div
+                  ref={cardsRef}
+                  onScroll={updateScrollControls}
+                  key={activeTab}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex overflow-x-auto gap-4 md:gap-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                >
+                  {filteredPosts.map((profile, idx) =>
+                    profile.type === "missing" ? (
+                      <MissingPersonCard
+                        key={profile.id}
+                        profile={profile as unknown as ProfileData}
+                        idx={idx}
+                        isRTL={isRTL}
+                      />
+                    ) : (
+                      <FoundPersonCard
+                        key={profile.id}
+                        profile={profile as unknown as ProfileData}
+                        idx={idx}
+                        isRTL={isRTL}
+                      />
+                    ),
+                  )}
+                </motion.div>
+
+                {filteredPosts.length > 4 && canScrollLeft && (
+                  <button
+                    onClick={() => {
+                      if (cardsRef.current) {
+                        cardsRef.current.scrollBy({
+                          left: isRTL
+                            ? cardsRef.current.clientWidth
+                            : -cardsRef.current.clientWidth,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className={`hidden md:flex absolute ${isRTL ? "-right-5" : "-left-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-white shadow-md rounded-full border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer text-slate-800`}
+                    aria-label="Scroll left"
+                  >
+                    {isRTL ? (
+                      <ChevronRight className="w-6 h-6" />
+                    ) : (
+                      <ChevronLeft className="w-6 h-6" />
+                    )}
+                  </button>
                 )}
-              </motion.div>
+
+                {filteredPosts.length > 4 && canScrollRight && (
+                  <button
+                    onClick={() => {
+                      if (cardsRef.current) {
+                        cardsRef.current.scrollBy({
+                          left: isRTL
+                            ? -cardsRef.current.clientWidth
+                            : cardsRef.current.clientWidth,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className={`hidden md:flex absolute ${isRTL ? "-left-5" : "-right-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-white shadow-md rounded-full border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer text-slate-800`}
+                    aria-label="Scroll right"
+                  >
+                    {isRTL ? (
+                      <ChevronLeft className="w-6 h-6" />
+                    ) : (
+                      <ChevronRight className="w-6 h-6" />
+                    )}
+                  </button>
+                )}
+              </div>
             ) : (
               <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
                 <SearchIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />

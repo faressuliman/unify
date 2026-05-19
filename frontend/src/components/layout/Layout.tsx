@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "./Navbar";
 import LoadingScreen from "../ui/LoadingScreen";
 import ScrollToTopButton from "../ui/ScrollToTopButton";
@@ -40,7 +41,20 @@ export function Layout({ children }: LayoutProps) {
       <Navbar />
       <ScrollToTopButton />
       <DonateFloatingButton />
-      {children}
+
+      <AnimatePresence mode="wait">
+        <motion.main
+          key={pathname}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="w-full"
+        >
+          {children}
+        </motion.main>
+      </AnimatePresence>
+
       {!isAuthPage && <Footer />}
     </div>
   );

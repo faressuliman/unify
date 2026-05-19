@@ -61,6 +61,11 @@ export default function Profile() {
     postId: "",
     postName: "",
   });
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [profileData?.idImagePath]);
 
   const formatBirthDate = (value?: string) => {
     if (!value) return null;
@@ -232,11 +237,16 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-5 md:gap-6 z-10 w-full md:w-auto">
             <div className="relative shrink-0">
               <div className="w-24 h-24 bg-[#faebd7] rounded-full flex items-center justify-center p-2 overflow-hidden">
-                {profileData?.idImagePath ? (
-                  <img src={profileData.idImagePath} alt="Profile" className="w-full h-full object-cover rounded-full border-2 border-white shadow-sm" />
+                {profileData?.idImagePath && !imageError ? (
+                  <img
+                    src={profileData.idImagePath}
+                    alt=""
+                    onError={() => setImageError(true)}
+                    className="w-full h-full object-cover rounded-full border-2 border-white shadow-sm"
+                  />
                 ) : (
-                  <div className="w-full h-full bg-center bg-no-repeat bg-cover rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl">
-                    {profileData?.name?.charAt(0).toUpperCase()}
+                  <div className="w-full h-full rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase">
+                    {profileData?.name?.charAt(0) || "?"}
                   </div>
                 )}
               </div>
@@ -272,7 +282,10 @@ export default function Profile() {
             >
               {isRTL ? "تعديل الملف" : "Edit Profile"}
             </button>
-            <button className="flex-1 md:flex-none px-6 py-2.5 bg-[#fef5da] text-[#1c190d] font-semibold text-sm rounded-[10px] border border-[#faebd7] hover:bg-[#ffe5a0] transition-all cursor-pointer shadow-xs">
+            <button
+              onClick={() => navigate("/create-post")}
+              className="flex-1 md:flex-none px-6 py-2.5 bg-[#fef5da] text-[#1c190d] font-semibold text-sm rounded-[10px] border border-[#faebd7] hover:bg-[#ffe5a0] transition-all cursor-pointer shadow-xs"
+            >
               {isRTL ? "إضافة حالة" : "Report New Case"}
             </button>
           </div>
@@ -299,9 +312,20 @@ export default function Profile() {
                     <div className="mt-0.5 bg-white p-2 rounded-md shadow-xs border border-primary-200">
                       <Mail className="w-4 h-4 text-secondary" />
                     </div>
-                    <div className="text-start min-w-0">
-                      <p className="text-xs text-slate-500 font-medium mb-0.5">
+                    <div className="text-start min-w-0 flex-1">
+                      <p className="text-xs text-slate-500 font-medium mb-0.5 flex items-center gap-2">
                         {isRTL ? "البريد الإلكتروني" : "Email Address"}
+                        {profileData?.isEmailVerified ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full font-medium">
+                            <CheckCircle className="w-3 h-3" />
+                            {isRTL ? "موثق" : "Verified"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full font-medium">
+                            <Clock className="w-3 h-3" />
+                            {isRTL ? "غير موثق" : "Unverified"}
+                          </span>
+                        )}
                       </p>
                       <p className="text-sm font-bold text-tertiary truncate">
                         {profileData?.email ||
@@ -369,13 +393,6 @@ export default function Profile() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
-                    aria-label={isRTL ? "تعديل" : "Edit"}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
                 </div>
                 <div className="flex items-start gap-4 p-3 bg-green-50/50 rounded-lg border border-green-100">
                   <div className="mt-0.5 bg-white p-2 rounded-md shadow-xs border border-primary-200">
@@ -539,7 +556,7 @@ export default function Profile() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4 }}
-                  className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  className="flex overflow-x-auto gap-4 md:gap-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
                   {filteredPosts.length > 0 ? (
                     filteredPosts.map((profile, idx) => (
@@ -590,38 +607,46 @@ export default function Profile() {
 
                 {filteredPosts.length > 2 && canScrollLeft && (
                   <button
-                    onClick={() =>
-                      cardsRef.current?.scrollBy({
-                        left: isRTL ? 320 : -320,
-                        behavior: "smooth",
-                      })
-                    }
-                    className={`hidden lg:flex absolute ${isRTL ? "-right-4" : "-left-4"} top-[42%] -translate-y-1/2 z-10 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.1)] rounded-full p-2 border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer text-tertiary`}
+                    onClick={() => {
+                      if (cardsRef.current) {
+                        cardsRef.current.scrollBy({
+                          left: isRTL
+                            ? cardsRef.current.clientWidth
+                            : -cardsRef.current.clientWidth,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className={`hidden lg:flex absolute ${isRTL ? "-right-5" : "-left-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-white shadow-md rounded-full border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer text-tertiary`}
                     aria-label="Scroll left"
                   >
                     {isRTL ? (
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-6 h-6" />
                     ) : (
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-6 h-6" />
                     )}
                   </button>
                 )}
 
                 {filteredPosts.length > 2 && canScrollRight && (
                   <button
-                    onClick={() =>
-                      cardsRef.current?.scrollBy({
-                        left: isRTL ? -320 : 320,
-                        behavior: "smooth",
-                      })
-                    }
-                    className={`hidden lg:flex absolute ${isRTL ? "-left-4" : "-right-4"} top-[42%] -translate-y-1/2 z-10 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.1)] rounded-full p-2 border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer text-tertiary`}
+                    onClick={() => {
+                      if (cardsRef.current) {
+                        cardsRef.current.scrollBy({
+                          left: isRTL
+                            ? -cardsRef.current.clientWidth
+                            : cardsRef.current.clientWidth,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className={`hidden lg:flex absolute ${isRTL ? "-left-5" : "-right-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-white shadow-md rounded-full border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer text-tertiary`}
                     aria-label="Scroll right"
                   >
                     {isRTL ? (
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-6 h-6" />
                     ) : (
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-6 h-6" />
                     )}
                   </button>
                 )}

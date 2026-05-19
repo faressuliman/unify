@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { en } from "../../data/english";
 import { ar } from "../../data/arabic";
@@ -14,16 +14,16 @@ export default function MapSection() {
   const t = isRTL ? ar.liveMap : en.liveMap;
 
   // إحصائيات حية مرتبطة بالـ Database
-  const [stats, setStats] = useState({ missing: 0, found: 0 });
+  // const [stats, setStats] = useState({ missing: 0, found: 0 });
 
   useEffect(() => {
     postApi.getPublicStats()
       .then((res) => {
         if (res.success) {
-          setStats({
-            missing: res.activeMissing || 0,
-            found: res.foundCases || 0,
-          });
+          // setStats({
+          //   missing: res.activeMissing || 0,
+          //   found: res.foundCases || 0,
+          // });
         }
       })
       .catch((err) => console.error("Stats fetch error:", err));

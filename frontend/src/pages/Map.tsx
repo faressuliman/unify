@@ -7,6 +7,7 @@ import {
   ZoomControl,
   useMap,
 } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { ListFilter, Search, Info, X, MapPin, Calendar } from "lucide-react";
@@ -207,7 +208,6 @@ export default function Map() {
           city: appliedFilters.city || undefined,
           dateMissing: appliedFilters.dateMissing || undefined,
           keyword: appliedFilters.keyword || undefined,
-          status: "active",
           limit: 10000,
         });
 
@@ -221,16 +221,21 @@ export default function Map() {
               if (coords) [lat, lng] = coords;
             }
 
+            // Fallback to Cairo if still no coordinates found so we don't drop any cases
+            if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+              lat = 30.0444;
+              lng = 31.2357;
+            }
+
             let key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
             while (seen.has(key)) {
-              lat += (Math.random() - 0.5) * 0.003;
-              lng += (Math.random() - 0.5) * 0.003;
+              lat += (Math.random() - 0.5) * 0.08;
+              lng += (Math.random() - 0.5) * 0.08;
               key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
             }
             seen.add(key);
             return { ...m, lat, lng, position: [lat, lng] };
-          })
-          .filter((m: any) => m.lat && m.lng);
+          });
 
         setPosts(processed);
       } catch (error) {
@@ -358,10 +363,39 @@ export default function Map() {
           100% { transform: scale(3); opacity: 0; }
         }
         /* مسح الظلال والأنماط الافتراضية */
-        .leaflet-marker-shadow, .leaflet-shadow-pane, .leaflet-marker-icon { 
-          display: none !important; background: transparent !important; border: none !important; box-shadow: none !important; 
+        .leaflet-marker-shadow, .leaflet-shadow-pane { 
+          display: none !important; 
+        }
+        .leaflet-marker-icon:not(.custom-marker-clean):not(.marker-cluster) {
+          display: none !important;
         }
         .custom-marker-clean { display: flex !important; align-items: center !important; justify-content: center !important; background: none !important; border: none !important; }
+        
+        /* Marker Cluster Styling */
+        .marker-cluster {
+          background-clip: padding-box;
+          border-radius: 20px;
+        }
+        .marker-cluster div {
+          width: 30px;
+          height: 30px;
+          margin-left: 5px;
+          margin-top: 5px;
+          text-align: center;
+          border-radius: 15px;
+          font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+          color: white;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .marker-cluster-small { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-small div { background-color: rgba(59, 130, 246, 0.9); }
+        .marker-cluster-medium { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-medium div { background-color: rgba(59, 130, 246, 0.9); }
+        .marker-cluster-large { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-large div { background-color: rgba(59, 130, 246, 0.9); }
         .custom-popup .leaflet-popup-content-wrapper { border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
       `}</style>
 
@@ -394,25 +428,25 @@ export default function Map() {
               <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
               <ZoomControl position="topleft" />
 
-              {posts.map((post) => (
-                <Marker
-                  key={post.id}
-                  position={post.position}
-                  icon={createMarkerIcon(post.type)}
-                  eventHandlers={{
-                    mouseover: (e) => e.target.openPopup(),
-                    mouseout: (e) => e.target.closePopup(),
-                  }}
-                >
-                  <Popup
-                    className="custom-popup"
-                    closeButton={false}
-                    minWidth={280}
+                {posts.map((post) => (
+                  <Marker
+                    key={post.id}
+                    position={post.position}
+                    icon={createMarkerIcon(post.type)}
+                    eventHandlers={{
+                      mouseover: (e) => e.target.openPopup(),
+                      mouseout: (e) => e.target.closePopup(),
+                    }}
                   >
-                    <MapPopup post={post} isRTL={isRTL} t={t} />
-                  </Popup>
-                </Marker>
-              ))}
+                    <Popup
+                      className="custom-popup"
+                      closeButton={false}
+                      minWidth={280}
+                    >
+                      <MapPopup post={post} isRTL={isRTL} t={t} />
+                    </Popup>
+                  </Marker>
+                ))}
             </MapContainer>
           </div>
 

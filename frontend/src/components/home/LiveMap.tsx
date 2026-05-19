@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useLanguage } from "../../context/LanguageContext";
@@ -113,7 +114,7 @@ export default function LiveMap() {
   useEffect(() => {
     // جلب كل الحالات (الـ 102 حالة مفقودة)
     postApi
-      .getMapMarkers({ status: "active", limit: 5000 })
+      .getMapMarkers({ limit: 5000 })
       .then((res) => setMarkers(res.markers || []))
       .catch((err) => console.error("LiveMap markers fetch error:", err));
   }, []);
@@ -126,12 +127,19 @@ export default function LiveMap() {
         let lng = Number(m.lng);
         if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
           const coords = CITY_COORDS[m.city];
-          if (coords) [lat, lng] = coords;
+          if (coords) {
+            [lat, lng] = coords;
+          }
         }
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+        
+        // Fallback to Cairo if still no coordinates found so we don't drop any cases
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+          lat = 30.0444;
+          lng = 31.2357;
+        }
 
         let key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-        let shift = 0.002;
+        let shift = 0.08;
         while (seen.has(key)) {
           lat += (Math.random() - 0.5) * shift;
           lng += (Math.random() - 0.5) * shift;
@@ -139,11 +147,10 @@ export default function LiveMap() {
         }
         seen.add(key);
         return { ...m, lat, lng };
-      })
-      .filter((m): m is any => m !== null);
+      });
   }, [markers]);
 
-  const [wheelZoomEnabled, setWheelZoomEnabled] = useState(false);
+  // const [wheelZoomEnabled, setWheelZoomEnabled] = useState(false);
 
   return (
     <div 
@@ -158,12 +165,12 @@ export default function LiveMap() {
 
         /* 2. مسح الظلال الافتراضية لأيقونات Leaflet (الحل الجذري) */
         .leaflet-marker-shadow, 
-        .leaflet-shadow-pane,
-        .leaflet-marker-icon { 
+        .leaflet-shadow-pane { 
           display: none !important; 
-          background: transparent !important; 
-          border: none !important; 
-          box-shadow: none !important; 
+        }
+
+        .leaflet-marker-icon:not(.custom-marker-clean):not(.marker-cluster) {
+          display: none !important;
         }
 
         /* 3. إظهار الأيقونات المخصصة فقط */
@@ -174,6 +181,32 @@ export default function LiveMap() {
           background: none !important;
           border: none !important;
         }
+        
+        /* ستايل التجمعات (Clusters) */
+        .marker-cluster {
+          background-clip: padding-box;
+          border-radius: 20px;
+        }
+        .marker-cluster div {
+          width: 30px;
+          height: 30px;
+          margin-left: 5px;
+          margin-top: 5px;
+          text-align: center;
+          border-radius: 15px;
+          font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+          color: white;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .marker-cluster-small { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-small div { background-color: rgba(59, 130, 246, 0.9); }
+        .marker-cluster-medium { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-medium div { background-color: rgba(59, 130, 246, 0.9); }
+        .marker-cluster-large { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-large div { background-color: rgba(59, 130, 246, 0.9); }
 
         .leaflet-container { z-index: 1 !important; font-family: inherit; }
 
@@ -197,25 +230,25 @@ export default function LiveMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-        {finalMarkers.map((loc: any) => (
-          <Marker
-            key={loc.id}
-            position={[loc.lat, loc.lng]}
-            icon={createCustomIcon(loc.type)}
-            eventHandlers={{
-              mouseover: (e) => e.target.openPopup(),
-              mouseout: (e) => e.target.closePopup(),
-            }}
-          >
-            <Popup closeButton={false} minWidth={280} className="custom-popup">
-              <MapPopup
-                post={{ ...loc, name: loc.name || (isRTL ? "حالة" : "Case") }}
-                isRTL={isRTL}
-                t={tMapPage}
-              />
-            </Popup>
-          </Marker>
-        ))}
+          {finalMarkers.map((loc: any) => (
+            <Marker
+              key={loc.id}
+              position={[loc.lat, loc.lng]}
+              icon={createCustomIcon(loc.type)}
+              eventHandlers={{
+                mouseover: (e) => e.target.openPopup(),
+                mouseout: (e) => e.target.closePopup(),
+              }}
+            >
+              <Popup closeButton={false} minWidth={280} className="custom-popup">
+                <MapPopup
+                  post={{ ...loc, name: loc.name || (isRTL ? "حالة" : "Case") }}
+                  isRTL={isRTL}
+                  t={tMapPage}
+                />
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
 
       {/* الـ Badge */}

@@ -20,6 +20,7 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
   const { token } = useAuth();
   
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [idPicture, setIdPicture] = useState<File | null>(null);
   
@@ -28,6 +29,7 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
   useEffect(() => {
     if (isOpen && profile) {
       setName(profile.name || '');
+      setEmail(profile.email || '');
       setPhoneNumber(profile.phoneNumber || '');
       setIdPicture(null);
     }
@@ -43,11 +45,22 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
       
       if (name && name !== profile?.name) formData.append('name', name);
       if (phoneNumber && phoneNumber !== profile?.phoneNumber) formData.append('phoneNumber', phoneNumber);
+      // Wait: only send email if it changed. The backend might not support it yet but let's append it anyway
+      if (email && email !== profile?.email) {
+        formData.append('email', email);
+      }
       if (idPicture) formData.append('idPicture', idPicture);
       
       const res = await userApi.updateProfile(formData, token);
       
       toast.success(isRTL ? 'تم تحديث الملف الشخصي بنجاح' : 'Profile updated successfully');
+      
+      if (email && email !== profile?.email) {
+        toast.info(isRTL ? 'يرجى التحقق من بريدك الإلكتروني الجديد لتأكيده' : 'Please check your new email to confirm the change', {
+          duration: 6000,
+        });
+      }
+
       onSuccess(res.user);
       onOpenChange(false);
     } catch (error) {
@@ -95,6 +108,18 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
               />
 
               <FormInput
+                id="edit-email"
+                type="email"
+                label={isRTL ? 'البريد الإلكتروني' : 'Email Address'}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                dir="ltr"
+                className={isRTL ? "text-right" : ""}
+                required
+              />
+
+              <FormInput
                 id="edit-phone"
                 type="tel"
                 label={isRTL ? 'رقم الهاتف' : 'Phone Number'}
@@ -103,7 +128,6 @@ export default function EditProfileModal({ isOpen, onOpenChange, profile, onSucc
                 placeholder="01xxxxxxxxx"
                 dir="ltr"
                 className={isRTL ? "text-right" : ""}
-                required
               />
 
               <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm pt-2">

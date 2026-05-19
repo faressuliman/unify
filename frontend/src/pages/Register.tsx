@@ -299,9 +299,9 @@ const Register = () => {
           className={`w-full lg:max-w-200 px-6 lg:px-12 flex flex-col items-start text-start ${isRTL ? "lg:mr-auto" : "lg:ml-auto"}`}
         >
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, x: isRTL ? 40 : -40, filter: "blur(8px)" }}
+            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full lg:max-w-150"
           >
             <PageHeader
@@ -359,7 +359,7 @@ const Register = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <LocalizedDateInput
                     id="birthDate"
@@ -571,23 +571,23 @@ const Register = () => {
         </div>
       </div>
 
-      <div className="hidden lg:flex w-1/2 relative bg-slate-900 items-center justify-center p-12 overflow-hidden">
+      <div className="hidden lg:flex w-1/2 relative bg-slate-900 items-start justify-center p-12 pt-32 lg:pt-40 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{ backgroundImage: `url(${compassImg})` }}
         ></div>
-        <div className="absolute inset-0 bg-linear-to-tr from-slate-900/90 via-slate-800/80 to-secondary/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/90 via-slate-800/80 to-secondary/30"></div>
         <div className="absolute inset-0 bg-grid-slate-800/[0.04] bg-position-[bottom_1px_center] mask-[linear-gradient(to_bottom,transparent,black)]"></div>
 
         <div className="relative z-10 w-full max-w-lg">
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6">
               {content.bringing}{" "}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500">
+              <span className="text-amber-400 drop-shadow-sm">
                 {content.families}
               </span>
               <br /> {content.backTogether}
@@ -598,7 +598,7 @@ const Register = () => {
 
             <div className="flex flex-col gap-10 relative mt-12 pl-2">
               <div
-                className={`absolute ${isRTL ? "right-9" : "left-9"} top-8 bottom-4 w-0.5 bg-linear-to-b from-secondary/60 via-secondary/20 to-transparent hidden sm:block rounded-full`}
+                className={`absolute ${isRTL ? "right-9" : "left-9"} top-8 bottom-4 w-0.5 bg-gradient-to-b from-secondary/60 via-secondary/20 to-transparent hidden sm:block rounded-full`}
               ></div>
 
               <FeatureCard

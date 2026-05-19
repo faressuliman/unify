@@ -13,7 +13,8 @@ import {
 const decryptPhoneNumber = async (value) => {
   if (!value) return value;
   try {
-    return await decrypt({ key: value, SECRET_KEY: process.env.SECRET_KEY });
+    const decrypted = await decrypt({ key: value, SECRET_KEY: process.env.SECRET_KEY });
+    return decrypted || value;
   } catch (err) {
     return value;
   }
