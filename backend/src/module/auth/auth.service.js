@@ -12,18 +12,64 @@ export const register = async (req, res, next) => {
   const { name, email, password, phoneNumber, birthDate } = req.body;
 
   const existing = await User.findOne({ email });
-  if (existing) {
+  if (existing && existing.isbanned) {
+    return next(new Error("Account banned", { cause: 403 }));
+  }
+
+  if (existing && !existing.isdeleted) {
     return next(new Error("Email already registered", { cause: 409 }));
   }
 
   let idImagePath;
   if (req.file) {
     idImagePath = req.file.path;
-    // AI Verification removed for testing
+    
+    // AI Verification
+    try {
+      const imgRes = await fetch(idImagePath);
+      const imgBlob = await imgRes.blob();
+
+      const form = new FormData();
+      form.append("image", imgBlob, "id.jpg");
+
+      const aiRes = await fetch("http://127.0.0.1:8000/detect-ai-image", {
+        method: "POST",
+        body: form,
+      });
+      const aiData = await aiRes.json();
+      console.log("[auth.register] AI detection result:", aiData);
+
+      if (aiData.success && typeof aiData.confidence === "number" && aiData.confidence < 90) {
+        return next(
+          new Error(
+            "Registration blocked: We could not verify the authenticity of the ID document.",
+            { cause: 400 },
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("AI Image Detection failed:", error);
+      // We log but continue, so the app doesn't break if the AI microservice is offline
+    }
   }
 
   const hashedPassword = await Hash({ key: password });
   // Removed phone number encryption per user request
+
+  if (existing && existing.isdeleted) {
+    existing.name = name;
+    existing.password = hashedPassword;
+    existing.phoneNumber = phoneNumber;
+    existing.birthDate = birthDate;
+    existing.idImagePath = idImagePath;
+    existing.isdeleted = false;
+    existing.isVerified = false;
+    existing.isbanned = false;
+    existing.changeCredentialsTime = new Date();
+
+    await existing.save();
+    return res.status(200).json({ message: "Registered successfully", user: existing });
+  }
 
   const user = await User.create({
     name,
@@ -44,13 +90,13 @@ export const login = async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) return next(new Error("Invalid credentials", { cause: 401 }));
 
-  if (user.isdeleted) return next(new Error("Account deleted", { cause: 403 }));
+  if (user.isdeleted) return next(new Error("Invalid credentials", { cause: 401 }));
   if (user.isbanned) return next(new Error("Account banned", { cause: 403 }));
 
   const isMatch = await compare({ key: password, hashed: user.password });
   if (!isMatch) return next(new Error("Invalid credentials", { cause: 401 }));
 
-  // Identity verification gate, admins may always sign in, regular users
+  // Identity verification gate — admins may always sign in, regular users
   // must wait until the admin team approves their submitted ID document.
   if (!user.isVerified && user.role !== "admin") {
     return next(

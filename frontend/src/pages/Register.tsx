@@ -103,7 +103,6 @@ const Register = () => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [showPasswords, setShowPasswords] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -120,7 +119,6 @@ const Register = () => {
             ...prev,
             [name]: parsedValue
         }));
-        setSubmitError('');
         
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
@@ -129,7 +127,6 @@ const Register = () => {
 
     const handleBirthDateChange = (value: string) => {
         setFormData(prev => ({ ...prev, birthDate: value }));
-        setSubmitError('');
         if (errors.birthDate) {
             setErrors(prev => ({ ...prev, birthDate: '' }));
         }
@@ -152,8 +149,12 @@ const Register = () => {
         }
 
         setErrors({});
-        setSubmitError('');
         setIsSubmitting(true);
+        const loadingToastId = toast.loading(
+            isRTL
+                ? 'جاري التحقق من صحة بطاقة الهوية، قد يستغرق ذلك لحظات.'
+                : 'Verifying ID authenticity, this may take a moment.'
+        );
 
         try {
             await register({
@@ -166,7 +167,7 @@ const Register = () => {
                 idPicture: formData.idPicture,
             });
             // Account is created in a "pending verification" state on the
-            // backend, surface that explicitly so the user knows why they
+            // backend — surface that explicitly so the user knows why they
             // can't log in immediately and that we'll email them.
             toast.success(
                 isRTL ? 'تم إنشاء حسابك بنجاح' : 'Account created successfully',
@@ -179,8 +180,21 @@ const Register = () => {
             );
             navigate('/');
         } catch (error) {
-            setSubmitError(error instanceof ApiError ? error.message : 'Unable to create account right now.');
+            const errorMsg = error instanceof ApiError ? error.message : 'Unable to create account right now.';
+            const normalized = errorMsg.toLowerCase();
+            
+            if (normalized.includes('account banned')) {
+                toast.error(isRTL ? 'حسابك محظور من المنصة' : 'Your account is banned from the platform');
+            } else if (errorMsg.includes('AI-generated') || errorMsg.includes('identity document')) {
+                toast.error(isRTL ? 'فشل التسجيل' : 'Registration Blocked', {
+                    description: isRTL ? 'يبدو أن الوثيقة المرفقة تم إنشاؤها عبر الذكاء الاصطناعي.' : errorMsg,
+                    duration: 6000,
+                });
+            } else {
+                toast.error(isRTL ? 'تعذر إنشاء الحساب حالياً.' : errorMsg);
+            }
         } finally {
+            toast.dismiss(loadingToastId);
             setIsSubmitting(false);
         }
     };
@@ -204,7 +218,6 @@ const Register = () => {
                             className="mb-8 w-full"
                         />
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {submitError ? <ErrorMessage msg={submitError} className="text-sm" /> : null}
                         <div>
                             <FormInput 
                                 icon={<User className="w-4 h-4" />}

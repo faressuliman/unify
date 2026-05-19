@@ -164,6 +164,16 @@ export default function LocalizedDateInput({
     const candidateYear = Math.min(year, currentYear);
     const candidateMonth = candidateYear === currentYear ? Math.min(month, currentMonth) : month;
     setDisplayMonth(new Date(candidateYear, candidateMonth, 1));
+
+    if (!selectedDate) return;
+
+    const daysInMonth = new Date(candidateYear, candidateMonth + 1, 0).getDate();
+    const nextDay = Math.min(selectedDate.getDate(), daysInMonth);
+    const nextDate = new Date(candidateYear, candidateMonth, nextDay);
+
+    if (nextDate.getTime() <= today.getTime()) {
+      onChange(toInputDate(nextDate));
+    }
   };
 
   const handleSelectDate = (date: Date) => {

@@ -15,6 +15,7 @@ dist
 dist-ssr
 *.local
 .github/copilot-instructions.md
+__pycache__/
 
 # Editor directories and files
 .vscode/*
