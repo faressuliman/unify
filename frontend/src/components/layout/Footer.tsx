@@ -133,7 +133,7 @@ export default function Footer() {
               </h4>
               <ul className="space-y-4">
                 <li className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center roundehttp://localhost:5173/contactd-full bg-white shadow-sm border border-tertiary/5">
                     <Phone className="h-5 w-5 text-secondary border-none rtl:-scale-x-100" />
                   </div>
                   <span

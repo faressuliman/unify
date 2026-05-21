@@ -544,34 +544,40 @@ const Poster = () => {
                     </p>
                   </div>
 
-                  <div className="mt-1 bg-red-50 border border-red-100 rounded-2xl p-2.5 sm:p-3 text-center shadow-sm">
-                    <div className="bg-red-700 text-white px-4 py-2 rounded-xl font-black text-sm shadow-md flex flex-col items-center justify-center gap-1 leading-tight">
+                  <div
+                    className={`mt-1 bg-red-50 border border-red-100 rounded-2xl text-center shadow-sm ${contactType === "both" ? "p-1.5 sm:p-2" : "p-2.5 sm:p-3"}`}
+                  >
+                    <div
+                      className={`bg-red-700 text-white px-4 rounded-xl font-black text-sm shadow-md flex flex-col items-center justify-center leading-tight ${contactType === "both" ? "py-1 gap-0.5" : "py-2 gap-1"}`}
+                    >
                       <div className="flex items-center gap-2">
                         <FontAwesomeIcon
                           icon={faCloudArrowUp}
-                          className={`text-sm shrink-0 ${isRTL ? "-rotate-90" : "rotate-90"}`}
+                          className={`shrink-0 ${isRTL ? "-rotate-90" : "rotate-90"} ${contactType === "both" ? "text-xs" : "text-sm"}`}
                         />
-                        <span className="font-sans uppercase tracking-[0.18em] text-xs sm:text-sm">
+                        <span
+                          className={`font-sans uppercase tracking-[0.18em] ${contactType === "both" ? "text-[10px] sm:text-xs" : "text-xs sm:text-sm"}`}
+                        >
                           {t("poster.contactAuth")}
                         </span>
                       </div>
                       <div
                         dir="ltr"
-                        className={`break-words font-semibold ${contactType === "both" ? "text-xs sm:text-sm" : "text-sm sm:text-base"}`}
+                        className={`break-words font-semibold ${contactType === "both" ? "text-[11px] sm:text-xs leading-tight mt-0.5" : "text-sm sm:text-base"}`}
                       >
                         {contactType === "mobile" &&
                           (contactPhone || t("poster.notProvided"))}
                         {contactType === "email" &&
                           (contactEmail || t("poster.notProvided"))}
                         {contactType === "both" && (
-                          <>
-                            <span className="block">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="block truncate max-w-[200px] sm:max-w-[250px]">
                               {contactPhone || t("poster.notProvided")}
                             </span>
-                            <span className="block">
+                            <span className="block truncate max-w-[200px] sm:max-w-[250px]">
                               {contactEmail || t("poster.notProvided")}
                             </span>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>

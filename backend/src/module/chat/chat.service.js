@@ -67,8 +67,13 @@ export const startChat = async (req, res, next) => {
 
 // ─── Get My Chats ─────────────────────────────────────────────────────────────
 export const getMyChats = async (req, res, next) => {
+  const currentUser = await User.findById(req.user._id).select("blockedUsers");
+  const blocked = currentUser?.blockedUsers || [];
+
   const chats = await Chat.find({
     $or: [{ initiatorUserId: req.user._id }, { responderUserId: req.user._id }],
+    initiatorUserId: { $nin: blocked },
+    responderUserId: { $nin: blocked },
     isActive: true,
   })
     .populate("initiatorUserId", "name")

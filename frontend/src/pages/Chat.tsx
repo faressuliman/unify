@@ -14,6 +14,8 @@ import {
   Flag,
   Trash2,
   XCircle,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import BlockModal from "../components/ui/modals/BlockModal";
@@ -21,6 +23,7 @@ import ReportModal from "../components/ui/modals/ReportModal";
 import DeleteChatModal from "../components/ui/modals/DeleteChatModal";
 import {
   chatApi,
+  contactApi,
   type BackendChat,
   type BackendChatUser,
   type BackendMessage,
@@ -70,11 +73,42 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [openSidebarMenuId, setOpenSidebarMenuId] = useState<string | null>(
+    null,
+  );
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
 
+  const [pinnedChats, setPinnedChats] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem("pinnedChats") || "[]"));
+    } catch {
+      return new Set();
+    }
+  });
+  const [mutedChats, setMutedChats] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem("mutedChats") || "[]"));
+    } catch {
+      return new Set();
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pinnedChats",
+      JSON.stringify(Array.from(pinnedChats)),
+    );
+  }, [pinnedChats]);
+  useEffect(() => {
+    localStorage.setItem("mutedChats", JSON.stringify(Array.from(mutedChats)));
+  }, [mutedChats]);
+
+  const isMuted = activeChatId ? mutedChats.has(activeChatId) : false;
+  const isPinned = activeChatId ? pinnedChats.has(activeChatId) : false;
   const activeChat = useMemo(
     () => chats.find((c) => c._id === activeChatId) || null,
     [chats, activeChatId],
@@ -84,6 +118,37 @@ export default function Chat() {
     if (!activeChat || !user) return null;
     return getOtherUser(activeChat, user.id);
   }, [activeChat, user]);
+
+  // Fetch blocked users to instantly hide their chats
+  useEffect(() => {
+    if (token) {
+      userApi
+        .getBlockedUsers(token)
+        .then((res) =>
+          setBlockedUserIds(new Set(res.blockedUsers.map((u) => u._id))),
+        )
+        .catch(console.error);
+    }
+  }, [token]);
+
+  const sortedChats = useMemo(() => {
+    return [...chats]
+      .filter((c) => {
+        if (!user) return true;
+        const partner = getOtherUser(c, user.id);
+        return partner && !blockedUserIds.has(partner._id);
+      })
+      .sort((a, b) => {
+        const aPinned = pinnedChats.has(a._id);
+        const bPinned = pinnedChats.has(b._id);
+        if (aPinned && !bPinned) return -1;
+        if (!aPinned && bPinned) return 1;
+        // Fallback sorting: chronological (newest first)
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+  }, [chats, pinnedChats, user, blockedUserIds]);
 
   useEffect(() => {
     if (!token) return;
@@ -152,6 +217,9 @@ export default function Chat() {
         next.unshift(chat);
         return next;
       });
+      if (msg.chatId !== activeChatId) {
+        setUnreadChatIds((prev) => new Set(prev).add(msg.chatId));
+      }
     };
     socket.on("chat:message", handleSidebarPing);
     return () => {
@@ -162,6 +230,35 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && activeChatId) {
+        setActiveChatId(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeChatId]);
+
+  // Close dropdown menu when the chat is changed
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [activeChatId]);
+
+  // Handle clicking outside the dropdown menu
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+      if (!(e.target as Element).closest(".sidebar-menu-container")) {
+        setOpenSidebarMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,11 +295,14 @@ export default function Chat() {
     });
 
   const handleDeleteChat = async () => {
-    if (!activeChatId || !token) return;
-    const idToDelete = activeChatId;
+    const idToDelete = chatToDelete || activeChatId;
+    if (!idToDelete || !token) return;
 
     setChats((prev) => prev.filter((c) => c._id !== idToDelete));
-    setActiveChatId(null);
+    if (activeChatId === idToDelete) {
+      setActiveChatId(null);
+    }
+    setChatToDelete(null);
 
     try {
       await chatApi.deleteChat(idToDelete, token);
@@ -224,6 +324,7 @@ export default function Chat() {
 
     try {
       await userApi.blockUser(otherUser._id, token);
+      setBlockedUserIds((prev) => new Set(prev).add(otherUser._id));
       toast.success(isRTL ? "تم الحظر بنجاح" : "Blocked successfully");
     } catch (err) {
       console.error("Failed to block user", err);
@@ -233,25 +334,31 @@ export default function Chat() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 flex flex-col pt-8 pb-12"
+      className={`bg-slate-50 flex flex-col ${activeChatId ? "fixed inset-0 z-50 md:static md:z-auto md:min-h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:pt-8 md:pb-12" : "min-h-[100dvh] pt-4 md:pt-8 pb-4 md:pb-12"}`}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <PageHeader
-        navigatedTo={isRTL ? "الرسائل" : "Messages"}
-        title={isRTL ? "الرسائل" : "Messages"}
-        subtitle={
-          isRTL
-            ? "تحدث مع أصحاب المنشورات بعد الموافقة على المطالبة."
-            : "Chat with post owners after a claim has been approved."
-        }
-        showArrow
-      />
+      <div className={activeChatId ? "hidden md:block" : "block"}>
+        <PageHeader
+          navigatedTo={isRTL ? "الرسائل" : "Messages"}
+          title={isRTL ? "الرسائل" : "Messages"}
+          subtitle={
+            isRTL
+              ? "تحدث مع أصحاب المنشورات بعد الموافقة على المطالبة."
+              : "Chat with post owners after a claim has been approved."
+          }
+          showArrow
+        />
+      </div>
 
-      <main className="w-full max-w-400 mx-auto px-6 lg:px-12">
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs grid grid-cols-1 md:grid-cols-4 h-[70vh] min-h-125">
+      <main
+        className={`w-full max-w-6xl mx-auto flex-1 flex flex-col min-h-0 ${activeChatId ? "px-0 md:px-6 lg:px-8" : "px-2 sm:px-6 lg:px-8"}`}
+      >
+        <div
+          className={`bg-white overflow-hidden grid grid-cols-1 md:grid-cols-4 flex-1 min-h-0 ${activeChatId ? "border-0 md:border border-slate-200 md:rounded-2xl md:shadow-xs md:h-[calc(100vh-12rem)] md:min-h-[500px] md:max-h-[850px]" : "rounded-2xl border border-slate-200 shadow-xs h-[calc(100dvh-2rem)] md:h-[calc(100vh-12rem)] min-h-[350px] md:min-h-[500px] max-h-[850px]"}`}
+        >
           {/* Sidebar */}
           <aside
-            className={`border-${isRTL ? "l" : "r"} border-slate-100 flex flex-col md:col-span-1 ${activeChatId ? "hidden md:flex" : "flex"}`}
+            className={`border-${isRTL ? "l" : "r"} border-slate-100 flex flex-col md:col-span-1 min-w-0 ${activeChatId ? "hidden md:flex" : "flex"}`}
           >
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-secondary" />
@@ -259,7 +366,7 @@ export default function Chat() {
                 {isRTL ? "المحادثات" : "Chats"}
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               {chatsLoading ? (
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="h-5 w-5 text-secondary animate-spin" />
@@ -270,14 +377,111 @@ export default function Chat() {
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-100">
-                  {chats.map((chat) => {
+                  {sortedChats.map((chat) => {
                     const partner = user ? getOtherUser(chat, user.id) : null;
                     const isActive = chat._id === activeChatId;
+                    const isPinned = pinnedChats.has(chat._id);
+                    const isChatMuted = mutedChats.has(chat._id);
                     const initial =
                       partner?.name?.charAt(0)?.toUpperCase() || "?";
-                    return (
-                      <li key={chat._id}>
+
+                    const sidebarMenu = (
+                      <div className="relative shrink-0 sidebar-menu-container ms-auto">
                         <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenSidebarMenuId(
+                              openSidebarMenuId === chat._id ? null : chat._id,
+                            );
+                          }}
+                          className={`p-1.5 rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors ${openSidebarMenuId === chat._id ? "bg-slate-200 text-slate-600" : ""}`}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+
+                        {openSidebarMenuId === chat._id && (
+                          <div
+                            className={`absolute top-full mt-1 w-40 bg-white border border-slate-100 rounded-xl shadow-lg z-50 overflow-hidden ${isRTL ? "left-0" : "right-0"}`}
+                          >
+                            <div className="flex flex-col py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPinnedChats((prev) => {
+                                    const next = new Set(prev);
+                                    if (isPinned) next.delete(chat._id);
+                                    else next.add(chat._id);
+                                    return next;
+                                  });
+                                  setOpenSidebarMenuId(null);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-start"
+                              >
+                                {isPinned ? (
+                                  <PinOff className="h-4 w-4 text-slate-400" />
+                                ) : (
+                                  <Pin className="h-4 w-4 text-slate-400" />
+                                )}
+                                <span>
+                                  {isPinned
+                                    ? isRTL
+                                      ? "إلغاء التثبيت"
+                                      : "Unpin"
+                                    : isRTL
+                                      ? "تثبيت"
+                                      : "Pin"}
+                                </span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMutedChats((prev) => {
+                                    const next = new Set(prev);
+                                    if (isChatMuted) next.delete(chat._id);
+                                    else next.add(chat._id);
+                                    return next;
+                                  });
+                                  setOpenSidebarMenuId(null);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-start"
+                              >
+                                {isChatMuted ? (
+                                  <Bell className="h-4 w-4 text-slate-400" />
+                                ) : (
+                                  <BellOff className="h-4 w-4 text-slate-400" />
+                                )}
+                                <span>
+                                  {isChatMuted
+                                    ? isRTL
+                                      ? "إلغاء الكتم"
+                                      : "Unmute"
+                                    : isRTL
+                                      ? "كتم"
+                                      : "Mute"}
+                                </span>
+                              </button>
+                              <div className="h-px bg-slate-100 my-1"></div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setChatToDelete(chat._id);
+                                  setIsDeleteModalOpen(true);
+                                  setOpenSidebarMenuId(null);
+                                }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-start"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span>{isRTL ? "حذف" : "Delete"}</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    return (
+                      <li key={chat._id} className="relative group">
+                        <div
                           onClick={() => {
                             setActiveChatId(chat._id);
                             setUnreadChatIds((prev) => {
@@ -286,7 +490,7 @@ export default function Chat() {
                               return newSet;
                             });
                           }}
-                          className={`w-full text-start flex items-center gap-3 px-5 py-3 transition-colors ${
+                          className={`w-full cursor-pointer text-start flex items-center gap-3 px-5 py-3 transition-colors ${
                             isActive
                               ? "bg-primary/15 border-s-4 border-secondary"
                               : "bg-transparent hover:bg-slate-50 border-s-4 border-transparent"
@@ -296,10 +500,27 @@ export default function Chat() {
                             {initial}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-tertiary truncate">
-                              {partner?.name || (isRTL ? "مستخدم" : "User")}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate">
+                            <div className="flex items-center w-full min-w-0">
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <span className="font-semibold text-tertiary truncate">
+                                  {partner?.name || (isRTL ? "مستخدم" : "User")}
+                                </span>
+                                {isPinned && (
+                                  <Pin className="h-3 w-3 text-secondary shrink-0" />
+                                )}
+                                {isChatMuted && (
+                                  <BellOff className="h-3 w-3 text-slate-400 shrink-0" />
+                                )}
+                                {sidebarMenu}
+                              </div>
+
+                              {unreadChatIds.has(chat._id) && (
+                                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold ms-2 shrink-0">
+                                  {isRTL ? "جديد" : "New"}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 truncate mt-0.5">
                               {new Date(chat.createdAt).toLocaleDateString(
                                 isRTL ? "ar-EG" : "en-US",
                                 {
@@ -309,7 +530,7 @@ export default function Chat() {
                               )}
                             </p>
                           </div>
-                        </button>
+                        </div>
                       </li>
                     );
                   })}
@@ -320,10 +541,10 @@ export default function Chat() {
 
           {/* Conversation */}
           <section
-            className={`flex flex-col md:col-span-3 ${activeChatId ? "flex" : "hidden md:flex"}`}
+            className={`flex flex-col md:col-span-3 min-w-0 min-h-0 ${activeChatId ? "flex h-full" : "hidden md:flex"}`}
           >
             {!activeChat ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-500 px-6">
+              <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-500 px-6 min-h-0">
                 <MessageCircle className="h-16 w-16 text-slate-300 mb-4" />
                 <h3 className="text-xl font-semibold text-slate-700 mb-2">
                   {isRTL ? "رسائلك" : "Your Messages"}
@@ -336,25 +557,46 @@ export default function Chat() {
               </div>
             ) : (
               <>
-                <header className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
+                <header className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 shrink-0">
                   <button
+                    type="button"
                     onClick={() => setActiveChatId(null)}
-                    className="md:hidden p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="md:hidden p-2 -ml-2 mr-1 rtl:-mr-2 rtl:ml-1 rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer shrink-0"
                     aria-label={isRTL ? "العودة" : "Back"}
                   >
                     {isRTL ? (
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-5 w-5" />
                     ) : (
-                      <ArrowLeft className="h-4 w-4" />
+                      <ArrowLeft className="h-5 w-5" />
                     )}
                   </button>
                   <div className="h-10 w-10 rounded-full bg-secondary/15 text-secondary font-bold flex items-center justify-center shrink-0">
                     {otherUser?.name?.charAt(0)?.toUpperCase() || "?"}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    {!isRTL && (
+                      <>
+                        {isPinned && (
+                          <Pin className="h-4 w-4 text-secondary shrink-0" />
+                        )}
+                        {isMuted && (
+                          <BellOff className="h-4 w-4 text-slate-400 shrink-0" />
+                        )}
+                      </>
+                    )}
                     <p className="font-bold text-tertiary truncate">
                       {otherUser?.name || (isRTL ? "مستخدم" : "User")}
                     </p>
+                    {isRTL && (
+                      <>
+                        {isMuted && (
+                          <BellOff className="h-4 w-4 text-slate-400 shrink-0" />
+                        )}
+                        {isPinned && (
+                          <Pin className="h-4 w-4 text-secondary shrink-0" />
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {/* Dropdown Menu */}
@@ -378,7 +620,65 @@ export default function Chat() {
                         <div className="flex flex-col py-1">
                           <button
                             onClick={() => {
-                              setIsMuted(!isMuted);
+                              if (activeChatId) {
+                                setPinnedChats((prev) => {
+                                  const next = new Set(prev);
+                                  if (isPinned) next.delete(activeChatId);
+                                  else next.add(activeChatId);
+                                  return next;
+                                });
+                              }
+                              setIsMenuOpen(false);
+                              toast.success(
+                                isPinned
+                                  ? isRTL
+                                    ? "تم إلغاء التثبيت"
+                                    : "Unpinned"
+                                  : isRTL
+                                    ? "تم التثبيت"
+                                    : "Pinned",
+                              );
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {isPinned ? (
+                                <PinOff className="h-4 w-4 text-slate-400" />
+                              ) : (
+                                <Pin className="h-4 w-4 text-slate-400" />
+                              )}
+                              <span>
+                                {isPinned
+                                  ? isRTL
+                                    ? "إلغاء التثبيت"
+                                    : "Unpin"
+                                  : isRTL
+                                    ? "تثبيت المحادثة"
+                                    : "Pin chat"}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isPinned ? "bg-secondary/10 text-secondary" : "bg-slate-100 text-slate-500"}`}
+                            >
+                              {isPinned
+                                ? isRTL
+                                  ? "مفعل"
+                                  : "On"
+                                : isRTL
+                                  ? "معطل"
+                                  : "Off"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (activeChatId) {
+                                setMutedChats((prev) => {
+                                  const next = new Set(prev);
+                                  if (isMuted) next.delete(activeChatId);
+                                  else next.add(activeChatId);
+                                  return next;
+                                });
+                              }
                               setIsMenuOpen(false);
                               toast.success(
                                 isMuted
@@ -449,6 +749,7 @@ export default function Chat() {
                           </button>
                           <button
                             onClick={() => {
+                              setChatToDelete(activeChatId);
                               setIsDeleteModalOpen(true);
                               setIsMenuOpen(false);
                             }}
@@ -465,7 +766,7 @@ export default function Chat() {
                   </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-slate-50/40">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/40 min-h-0">
                   {messagesLoading ? (
                     <div className="flex justify-center py-10">
                       <Loader2 className="h-5 w-5 text-secondary animate-spin" />
@@ -485,14 +786,14 @@ export default function Chat() {
                           className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                         >
                           <div
-                            className={`max-w-[80%] rounded-2xl px-4 py-2.5 shadow-xs ${
+                            className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 shadow-xs ${
                               isMine
-                                ? "bg-secondary text-white rounded-br-sm"
-                                : "bg-white text-slate-800 border border-slate-100 rounded-bl-sm"
+                                ? "bg-secondary text-white rounded-br-md"
+                                : "bg-white text-slate-800 border border-slate-100 rounded-bl-md"
                             }`}
                           >
                             {m.content && (
-                              <p className="text-sm whitespace-pre-wrap wrap-break-word">
+                              <p className="text-sm whitespace-pre-wrap break-words">
                                 {m.content}
                               </p>
                             )}
@@ -526,7 +827,7 @@ export default function Chat() {
 
                 <form
                   onSubmit={handleSend}
-                  className="border-t border-slate-100 px-4 py-3 bg-white"
+                  className="border-t border-slate-100 px-4 py-3 bg-white shrink-0"
                 >
                   {attachment && (
                     <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg text-xs">
@@ -552,7 +853,7 @@ export default function Chat() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                       aria-label={isRTL ? "إرفاق ملف" : "Attach file"}
                     >
                       <Paperclip className="h-4 w-4" />
@@ -572,12 +873,12 @@ export default function Chat() {
                       placeholder={
                         isRTL ? "اكتب رسالة..." : "Type a message..."
                       }
-                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:bg-white focus:border-secondary outline-none"
+                      className="flex-1 min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[16px] md:text-sm focus:bg-white focus:border-secondary outline-none"
                     />
                     <button
                       type="submit"
                       disabled={sending || (!newMsg.trim() && !attachment)}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                     >
                       {sending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -608,8 +909,21 @@ export default function Chat() {
         isRTL={isRTL}
         username={otherUser?.name}
         onBlockClick={handleBlockUser}
-        onReportSubmit={(reason, subReasons) => {
-          // Report submission logic handled inside the modal or backend
+        onReportSubmit={async (reason, subReasons) => {
+          if (!user || !otherUser) return;
+          try {
+            const subject = `User Report: ${otherUser.name}`;
+            const messageText = `Reported User: ${otherUser.name} (${otherUser.email || "N/A"})\nReported By: ${user.name || "User"} (${user.email || "N/A"})\n\nReason: ${reason}\nSub-reasons: ${subReasons?.join(", ") || "None"}\nChat ID: ${activeChatId}`;
+            await contactApi.sendMessage({
+              name: user.name || "User Report",
+              email: user.email || "report@unify.eg",
+              subject,
+              message: messageText,
+            });
+          } catch (err) {
+            console.error("Failed to send report", err);
+            toast.error(isRTL ? "فشل إرسال البلاغ" : "Failed to send report");
+          }
         }}
       />
 

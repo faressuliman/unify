@@ -464,7 +464,7 @@ export const en = {
       "Search for a Person",
       "Poster Builder",
       "Report a Person",
-      "Contact",
+      "Contact Us",
       "About Us",
     ],
     contactTitle: "Contact Us",

@@ -19,6 +19,20 @@ router.put(
 );
 
 router.post(
+  "/verify-email",
+  authenticate,
+  asynchandler(userService.verifyEmail),
+);
+
+router.get("/blocked", authenticate, asynchandler(userService.getBlockedUsers));
+
+router.post(
+  "/:userId/unblock",
+  authenticate,
+  asynchandler(userService.unblockUser),
+);
+
+router.post(
   "/:userId/block",
   authenticate,
   asynchandler(userService.blockUser),

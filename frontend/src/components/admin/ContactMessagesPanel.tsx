@@ -6,23 +6,31 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 
 export default function ContactMessagesPanel({
+  t,
   isRTL,
+  onReplied,
 }: {
   t: any;
   isRTL: boolean;
+  onReplied?: () => void;
 }) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<BackendContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [replyingTo, setReplyingTo] = useState<BackendContactMessage | null>(null);
+  const [replyingTo, setReplyingTo] = useState<BackendContactMessage | null>(
+    null,
+  );
 
   const fetchMessages = async (p: number) => {
     if (!token) return;
     try {
       setLoading(true);
-      const res = await adminApi.getContactMessages(token, { page: p, limit: 10 });
+      const res = await adminApi.getContactMessages(token, {
+        page: p,
+        limit: 10,
+      });
       setMessages(res.messages);
       setTotalPages(res.totalPages || 1);
     } catch (err) {
@@ -45,6 +53,7 @@ export default function ContactMessagesPanel({
       setReplyingTo(null);
       // Refresh messages to show the "Replied" badge
       fetchMessages(page);
+      if (onReplied) onReplied();
     } catch (err) {
       console.error("Failed to send reply", err);
       toast.error(isRTL ? "فشل إرسال الرد" : "Failed to send reply");
@@ -71,12 +80,17 @@ export default function ContactMessagesPanel({
       ) : (
         <ul className="divide-y divide-slate-100">
           {messages.map((msg) => (
-            <li key={msg._id} className="p-4 sm:px-5 sm:py-4 hover:bg-slate-50/50 transition-colors">
+            <li
+              key={msg._id}
+              className="p-4 sm:px-5 sm:py-4 hover:bg-slate-50/50 transition-colors"
+            >
               <div className="flex flex-col gap-2 w-full text-start">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <p className="font-bold text-tertiary truncate">{msg.subject}</p>
+                      <p className="font-bold text-tertiary truncate">
+                        {msg.subject}
+                      </p>
                       {msg.isReplied && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold whitespace-nowrap">
                           <Check className="w-3 h-3" />
@@ -84,11 +98,20 @@ export default function ContactMessagesPanel({
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-500 truncate">{msg.name} ({msg.email})</p>
+                    <p className="text-sm text-slate-500 truncate">
+                      {msg.name} ({msg.email})
+                    </p>
                     <p className="text-[11px] text-slate-400 mt-1">
-                      {new Date(msg.createdAt).toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
-                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                      })}
+                      {new Date(msg.createdAt).toLocaleDateString(
+                        isRTL ? "ar-EG" : "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
                     </p>
                   </div>
                   <button
@@ -123,7 +146,9 @@ export default function ContactMessagesPanel({
             {isRTL ? "السابق" : "Prev"}
           </button>
           <span className="text-xs text-slate-500">
-            {isRTL ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}
+            {isRTL
+              ? `صفحة ${page} من ${totalPages}`
+              : `Page ${page} of ${totalPages}`}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -207,7 +232,9 @@ function ReplyModal({
             <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
               {isRTL ? "الرسالة الأصلية" : "Original Message"}
             </p>
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{message.message}</p>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {message.message}
+            </p>
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
@@ -216,7 +243,11 @@ function ReplyModal({
             <textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              placeholder={isRTL ? "اكتب ردك هنا (سيتم إرساله كبريد إلكتروني)..." : "Write your reply here (will be sent as email)..."}
+              placeholder={
+                isRTL
+                  ? "اكتب ردك هنا (سيتم إرساله كبريد إلكتروني)..."
+                  : "Write your reply here (will be sent as email)..."
+              }
               rows={5}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-secondary outline-none resize-none text-slate-700"
             />
@@ -235,7 +266,11 @@ function ReplyModal({
             disabled={sending || !replyText.trim()}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors disabled:opacity-50"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {sending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
             {isRTL ? "إرسال" : "Send Reply"}
           </button>
         </div>

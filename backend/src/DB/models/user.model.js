@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
     lastLoginAt: { type: Date },
     otp: { type: String },
     otpExpiry: { type: Date },
+    blockedUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: { createdAt: "createdAt", updatedAt: false } },
 );

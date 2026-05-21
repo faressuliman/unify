@@ -294,6 +294,13 @@ export interface GetProfileResponse {
   posts: BackendPost[];
 }
 
+export interface BlockedUser {
+  _id: string;
+  name: string;
+  email?: string;
+  idImagePath?: string;
+}
+
 export const userApi = {
   getProfile: (token: string) =>
     apiRequest<GetProfileResponse>("users/profile", {
@@ -312,8 +319,27 @@ export const userApi = {
       },
     );
   },
+  verifyEmail: (otp: string, token: string) =>
+    apiRequest<{ message: string; user: UserProfileInfo }>(
+      "users/verify-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ otp }),
+        token,
+      },
+    ),
   blockUser: (userId: string, token: string) =>
     apiRequest<{ message: string }>(`users/${userId}/block`, {
+      method: "POST",
+      token,
+    }),
+  getBlockedUsers: (token: string) =>
+    apiRequest<{ blockedUsers: BlockedUser[] }>("users/blocked", {
+      method: "GET",
+      token,
+    }),
+  unblockUser: (userId: string, token: string) =>
+    apiRequest<{ message: string }>(`users/${userId}/unblock`, {
       method: "POST",
       token,
     }),
@@ -569,6 +595,8 @@ export interface DashboardStats {
   resolvedPosts: number;
   pendingClaims: number;
   pendingVerifications?: number;
+  pendingContactMessages?: number;
+  pendingUserReports?: number;
 }
 
 export interface AdminUser {
@@ -785,6 +813,37 @@ export const adminApi = {
           verificationType,
           authorization: token,
         }),
+        token,
+      },
+    );
+  },
+  getContactMessages: async (
+    token: string,
+    params?: { page?: number; limit?: number; type?: "contact" | "report" },
+  ) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.type) search.set("type", params.type);
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminContactMessagesResponse>(
+      `admin/contact-messages${qs}`,
+      {
+        method: "GET",
+        token,
+      },
+    );
+  },
+  replyToContactMessage: async (
+    id: string,
+    replyMessage: string,
+    token: string,
+  ) => {
+    return apiRequest<{ message: string }>(
+      `admin/contact-messages/${id}/reply`,
+      {
+        method: "POST",
+        body: JSON.stringify({ replyMessage }),
         token,
       },
     );

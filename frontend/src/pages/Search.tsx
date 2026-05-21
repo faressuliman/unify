@@ -19,7 +19,8 @@ import SearchFiltersPanel, {
 import UnderlineTabSelector from "../components/ui/UnderlineTabSelector";
 import InfoBanner from "../components/ui/InfoBanner";
 import ImageUpload from "../components/ui/ImageUpload";
-import { ApiError, type BackendPost, postApi } from "@/lib/api";
+import { ApiError, type BackendPost, postApi, userApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import type { ProfileData } from "@/components/home/PersonCard";
 import { mapPostFields } from "@/lib/postFormatters";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -118,6 +119,7 @@ export default function Search() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const { token } = useAuth();
 
   // Extract the payload passed from Hero (if any)
   const initialQuery = location.state?.initialQuery || "";
@@ -141,6 +143,7 @@ export default function Search() {
   const [rawPosts, setRawPosts] = useState<BackendPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
 
   const cardsRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -204,6 +207,20 @@ export default function Search() {
     }
   }, [initialImage]);
 
+  // Fetch blocked users to hide their posts from the search results
+  useEffect(() => {
+    if (token) {
+      userApi
+        .getBlockedUsers(token)
+        .then((res) => {
+          setBlockedUserIds(new Set(res.blockedUsers.map((u) => u._id)));
+        })
+        .catch(console.error);
+    } else {
+      setBlockedUserIds(new Set());
+    }
+  }, [token]);
+
   useEffect(() => {
     // If an image search is active, we skip the normal textual fetch!
     if (isImageSearchActive) return;
@@ -247,8 +264,11 @@ export default function Search() {
   // Re-map whenever the language flips so card copy (time, details, names,
   // locations) updates without needing a re-fetch.
   const posts = useMemo(
-    () => rawPosts.map((p) => mapBackendPostToCard(p, isRTL)),
-    [rawPosts, isRTL],
+    () =>
+      rawPosts
+        .map((p) => mapBackendPostToCard(p, isRTL))
+        .filter((p) => !blockedUserIds.has(p.postUserId || "")),
+    [rawPosts, isRTL, blockedUserIds],
   );
 
   const filteredPosts = useMemo(() => {
@@ -366,10 +386,10 @@ export default function Search() {
           <motion.div
             ref={resultsRef}
             className="mb-10"
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.8 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {!isImageSearchActive && (
               <UnderlineTabSelector
@@ -428,9 +448,9 @@ export default function Search() {
                   ref={cardsRef}
                   onScroll={updateScrollControls}
                   key={activeTab}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
                   className="flex overflow-x-auto gap-4 md:gap-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
                   {filteredPosts.map((profile, idx) =>

@@ -212,30 +212,29 @@ export default function Map() {
         });
 
         const seen = new Set<string>();
-        const processed = (response.markers || [])
-          .map((m: any) => {
-            let lat = Number(m.lat);
-            let lng = Number(m.lng);
-            if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
-              const coords = CITY_COORDS[m.city];
-              if (coords) [lat, lng] = coords;
-            }
+        const processed = (response.markers || []).map((m: any) => {
+          let lat = Number(m.lat);
+          let lng = Number(m.lng);
+          if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
+            const coords = CITY_COORDS[m.city];
+            if (coords) [lat, lng] = coords;
+          }
 
-            // Fallback to Cairo if still no coordinates found so we don't drop any cases
-            if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-              lat = 30.0444;
-              lng = 31.2357;
-            }
+          // Fallback to Cairo if still no coordinates found so we don't drop any cases
+          if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+            lat = 30.0444;
+            lng = 31.2357;
+          }
 
-            let key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
-            while (seen.has(key)) {
-              lat += (Math.random() - 0.5) * 0.08;
-              lng += (Math.random() - 0.5) * 0.08;
-              key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
-            }
-            seen.add(key);
-            return { ...m, lat, lng, position: [lat, lng] };
-          });
+          let key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
+          while (seen.has(key)) {
+            lat += (Math.random() - 0.5) * 0.08;
+            lng += (Math.random() - 0.5) * 0.08;
+            key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
+          }
+          seen.add(key);
+          return { ...m, lat, lng, position: [lat, lng] };
+        });
 
         setPosts(processed);
       } catch (error) {
@@ -413,9 +412,7 @@ export default function Map() {
         </aside>
 
         <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:h-[calc(100vh-140px)] flex flex-col z-0">
-          <div
-            className="absolute inset-0 z-0"
-          >
+          <div className="absolute inset-0 z-0">
             <MapContainer
               center={DEFAULT_CENTER}
               zoom={6}
@@ -428,25 +425,25 @@ export default function Map() {
               <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
               <ZoomControl position="topleft" />
 
-                {posts.map((post) => (
-                  <Marker
-                    key={post.id}
-                    position={post.position}
-                    icon={createMarkerIcon(post.type)}
-                    eventHandlers={{
-                      mouseover: (e) => e.target.openPopup(),
-                      mouseout: (e) => e.target.closePopup(),
-                    }}
+              {posts.map((post) => (
+                <Marker
+                  key={post.id}
+                  position={post.position}
+                  icon={createMarkerIcon(post.type)}
+                  eventHandlers={{
+                    mouseover: (e) => e.target.openPopup(),
+                    mouseout: (e) => e.target.closePopup(),
+                  }}
+                >
+                  <Popup
+                    className="custom-popup"
+                    closeButton={false}
+                    minWidth={280}
                   >
-                    <Popup
-                      className="custom-popup"
-                      closeButton={false}
-                      minWidth={280}
-                    >
-                      <MapPopup post={post} isRTL={isRTL} t={t} />
-                    </Popup>
-                  </Marker>
-                ))}
+                    <MapPopup post={post} isRTL={isRTL} t={t} />
+                  </Popup>
+                </Marker>
+              ))}
             </MapContainer>
           </div>
 

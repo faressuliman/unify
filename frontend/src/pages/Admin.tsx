@@ -34,10 +34,18 @@ import {
   type BackendClaim,
   type BackendPost,
   type DashboardStats,
+  type BackendContactMessage,
 } from "../lib/api";
 import { seedDummyData } from "../lib/seedDummyData";
 
-type Section = "overview" | "claims" | "verifications" | "users" | "posts" | "contact_messages";
+type Section =
+  | "overview"
+  | "claims"
+  | "verifications"
+  | "users"
+  | "posts"
+  | "contact_messages"
+  | "user_reports";
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 type ClaimsTab = "pending" | "processed";
 
@@ -427,9 +435,17 @@ export default function Admin() {
     },
     {
       id: "contact_messages",
-      label: isRTL ? "رسائل التواصل" : "Contact Messages",
+      label: tCopy.sectionTitles.contact_messages,
       icon: Mail,
-      tone: "slate",
+      badge: stats?.pendingContactMessages,
+      tone: "amber",
+    },
+    {
+      id: "user_reports",
+      label: tCopy.sectionTitles.user_reports,
+      icon: ShieldAlert,
+      badge: stats?.pendingUserReports,
+      tone: "red",
     },
   ];
 
@@ -515,14 +531,10 @@ export default function Admin() {
             </div>
             <header className="flex flex-col items-start gap-2 text-start">
               <h1 className="text-2xl sm:text-3xl font-black text-tertiary dark:text-white">
-                {activeSection === "contact_messages" 
-                  ? (isRTL ? "رسائل التواصل" : "Contact Messages") 
-                  : tCopy.sectionTitles[activeSection]}
+                {tCopy.sectionTitles[activeSection]}
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {activeSection === "contact_messages"
-                  ? (isRTL ? "اقرأ رسائل الدعم ورد عليها." : "Read and reply to support messages.")
-                  : tCopy.sectionSubtitles[activeSection]}
+                {tCopy.sectionSubtitles[activeSection]}
               </p>
             </header>
 
@@ -555,7 +567,19 @@ export default function Admin() {
             )}
 
             {activeSection === "contact_messages" && (
-              <ContactMessagesPanel t={tCopy} isRTL={isRTL} />
+              <ContactMessagesPanel
+                t={tCopy}
+                isRTL={isRTL}
+                onReplied={fetchStats}
+              />
+            )}
+
+            {activeSection === "user_reports" && (
+              <UserReportsPanel
+                t={tCopy}
+                isRTL={isRTL}
+                onReplied={fetchStats}
+              />
             )}
 
             {activeSection === "claims" && (
@@ -2047,6 +2071,7 @@ function getCopy(isRTL: boolean): Copy {
         users: "إدارة المستخدمين",
         posts: "إدارة المنشورات",
         contact_messages: "رسائل التواصل",
+        user_reports: "بلاغات المستخدمين",
       },
       sectionSubtitles: {
         overview: "لمحة سريعة عن النشاط على المنصة.",
@@ -2055,6 +2080,7 @@ function getCopy(isRTL: boolean): Copy {
         users: "إدارة المستخدمين، الحظر، والصلاحيات.",
         posts: "مراجعة جميع البلاغات وحذف المنشورات غير المناسبة.",
         contact_messages: "قراءة الرسائل والرد عليها عبر البريد الإلكتروني.",
+        user_reports: "مراجعة بلاغات المستخدمين واتخاذ الإجراءات اللازمة.",
       },
       stats: {
         totalUsers: "إجمالي المستخدمين",
@@ -2179,6 +2205,7 @@ function getCopy(isRTL: boolean): Copy {
       users: "User Management",
       posts: "Posts Management",
       contact_messages: "Contact Messages",
+      user_reports: "User Reports",
     },
     sectionSubtitles: {
       overview: "A quick snapshot of platform activity.",
@@ -2187,6 +2214,7 @@ function getCopy(isRTL: boolean): Copy {
       users: "Manage users, bans, and roles.",
       posts: "Review every report and remove inappropriate posts.",
       contact_messages: "Read and reply to support messages via email.",
+      user_reports: "Review user reports and take necessary actions.",
     },
     stats: {
       totalUsers: "Total users",
@@ -2294,4 +2322,241 @@ function getCopy(isRTL: boolean): Copy {
       deleteFailed: "Failed to delete post.",
     },
   };
+}
+
+// ─── User Reports Panel ───────────────────────────────────────────────────────
+function UserReportsPanel({
+  t,
+  isRTL,
+  onReplied,
+}: {
+  t: Copy;
+  isRTL: boolean;
+  onReplied?: () => void;
+}) {
+  const { token } = useAuth();
+  const [messages, setMessages] = useState<BackendContactMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [replyingTo, setReplyingTo] = useState<BackendContactMessage | null>(
+    null,
+  );
+  const [replyMessage, setReplyMessage] = useState("");
+  const [replyLoading, setReplyLoading] = useState(false);
+
+  const fetchReports = async (p: number) => {
+    if (!token) return;
+    try {
+      setLoading(true);
+      const res = await adminApi.getContactMessages(token, {
+        page: p,
+        limit: 10,
+        type: "report",
+      });
+      setMessages(res.messages);
+      setTotalPages(res.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch reports", err);
+      toast.error(isRTL ? "فشل جلب البلاغات" : "Failed to load reports");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchReports(page);
+  }, [token, page]);
+
+  const handleReply = async () => {
+    if (!token || !replyingTo || !replyMessage.trim()) return;
+    try {
+      setReplyLoading(true);
+      await adminApi.replyToContactMessage(replyingTo._id, replyMessage, token);
+      toast.success(isRTL ? "تم إرسال الرد بنجاح" : "Reply sent successfully");
+      setReplyingTo(null);
+      setReplyMessage("");
+      void fetchReports(page);
+      if (onReplied) onReplied();
+    } catch (err) {
+      console.error("Failed to send reply", err);
+      toast.error(isRTL ? "فشل إرسال الرد" : "Failed to send reply");
+    } finally {
+      setReplyLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+      <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <h2 className="text-tertiary font-bold text-start">
+          {t.sectionTitles.user_reports}
+        </h2>
+      </div>
+
+      {loading ? (
+        <div className="p-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 text-secondary animate-spin" />
+        </div>
+      ) : messages.length === 0 ? (
+        <div className="p-12 text-center text-slate-500">
+          <ShieldAlert className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+          {isRTL ? "لا توجد بلاغات حالياً." : "No reports found."}
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {messages.map((msg) => (
+            <li
+              key={msg._id}
+              className="p-4 sm:px-5 sm:py-4 hover:bg-slate-50/50 transition-colors"
+            >
+              <div className="flex flex-col gap-2 w-full text-start">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="font-bold text-tertiary truncate">
+                        {msg.subject}
+                      </p>
+                      {msg.isReplied && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold whitespace-nowrap">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {isRTL ? "تم الرد" : "Replied"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-500 truncate">
+                      {msg.name} ({msg.email})
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      {new Date(msg.createdAt).toLocaleDateString(
+                        isRTL ? "ar-EG" : "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setReplyingTo(msg);
+                      setReplyMessage("");
+                    }}
+                    disabled={msg.isReplied}
+                    className={`shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      msg.isReplied
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                        : "bg-secondary text-white hover:bg-secondary/90"
+                    }`}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    {isRTL ? "رد" : "Reply"}
+                  </button>
+                </div>
+                <div className="mt-2 bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm text-slate-700 whitespace-pre-wrap">
+                  {msg.message}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onChange={setPage}
+        isRTL={isRTL}
+      />
+
+      <AnimatePresence>
+        {replyingTo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-70 bg-slate-950/40 flex items-center justify-center p-4"
+            onClick={() => setReplyingTo(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              dir={isRTL ? "rtl" : "ltr"}
+              className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 shadow-2xl overflow-hidden text-start"
+            >
+              <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-tertiary">
+                    {isRTL ? "الرد على البلاغ" : "Reply to Report"}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {isRTL ? "إلى:" : "To:"} {replyingTo.name} (
+                    {replyingTo.email})
+                  </p>
+                </div>
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  className="h-8 w-8 rounded-full bg-slate-200/60 text-slate-500 hover:bg-slate-200 flex items-center justify-center cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
+                  <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
+                    {isRTL ? "البلاغ الأصلي" : "Original Report"}
+                  </p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                    {replyingTo.message}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                    {isRTL ? "نص الرد" : "Reply Text"}
+                  </label>
+                  <textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    placeholder={
+                      isRTL
+                        ? "اكتب ردك هنا (سيتم إرساله كبريد إلكتروني)..."
+                        : "Write your reply here (will be sent as email)..."
+                    }
+                    rows={5}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-secondary outline-none resize-none text-slate-700"
+                  />
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-end">
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  disabled={replyLoading}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isRTL ? "إلغاء" : "Cancel"}
+                </button>
+                <button
+                  onClick={handleReply}
+                  disabled={replyLoading || !replyMessage.trim()}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {replyLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  {isRTL ? "إرسال" : "Send Reply"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }

@@ -101,9 +101,17 @@ function generateRandomCases(count: number) {
     const lastName = getRandomItem(lastNames);
     const region = getRandomItem(EGYPT_REGIONS);
 
-    // إحداثيات عشوائية تماماً داخل النطاق الجغرافي لجمهورية مصر العربية لضمان عدم التكرار أبداً
-    const randomLat = 22.1 + Math.random() * (31.2 - 22.1);
-    const randomLng = 25.0 + Math.random() * (34.8 - 25.0);
+    // Generating a mix of clustered and widely spread coordinates across Egypt
+    let randomLat, randomLng;
+    if (Math.random() > 0.3) {
+      // 70% chance: Clustered around the chosen city/region (spread +/- 1 degree ~ 110km)
+      randomLat = region.lat + (Math.random() - 0.5) * 2.0;
+      randomLng = region.lng + (Math.random() - 0.5) * 2.0;
+    } else {
+      // 30% chance: Completely random across Egypt's bounds for massive coverage
+      randomLat = 22.0 + Math.random() * (31.5 - 22.0);
+      randomLng = 25.0 + Math.random() * (35.0 - 25.0);
+    }
 
     const caseData: any = {
       postType: isMissing ? "missing" : "found",
@@ -150,12 +158,14 @@ async function getDummyImageFile(name: string): Promise<File> {
   }
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const seedDummyData = async (
   token: string,
   onProgress?: (msg: string) => void,
 ) => {
   let count = 0;
-  const generatedCases = generateRandomCases(10); // إنشاء 10 حالات عشوائية في كل ضغطة
+  const generatedCases = generateRandomCases(100); // Generates a huge number of cases (100) per click
   for (const caseData of generatedCases) {
     try {
       if (onProgress)
@@ -171,6 +181,9 @@ export const seedDummyData = async (
         token,
       );
       count++;
+
+      // Wait for 1.5 seconds before making the next request to bypass the rate limiter
+      await delay(1500);
     } catch (error) {
       console.error(
         `Failed to create dummy post for ${caseData.firstName}`,

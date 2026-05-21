@@ -29,6 +29,7 @@ import {
   XCircle,
   Clock,
   Eye,
+  UserX,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import MissingPersonCard from "../components/search/MissingPersonCard";
@@ -36,6 +37,7 @@ import FoundPersonCard from "../components/search/FoundPersonCard";
 import UnderlineTabSelector from "../components/ui/UnderlineTabSelector";
 import EditProfileModal from "../components/ui/modals/EditProfileModal";
 import SightingsListModal from "../components/ui/modals/SightingsListModal";
+import BlockedUsersModal from "../components/ui/modals/BlockedUsersModal";
 
 export default function Profile() {
   const { t, language } = useLanguage();
@@ -62,6 +64,7 @@ export default function Profile() {
     postName: "",
   });
   const [imageError, setImageError] = useState(false);
+  const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
 
   useEffect(() => {
     setImageError(false);
@@ -413,6 +416,32 @@ export default function Profile() {
                     </p>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => setIsBlockedModalOpen(true)}
+                  className="flex items-center justify-between p-3 bg-red-50/50 hover:bg-red-50 rounded-lg border border-red-100 transition-colors cursor-pointer w-full text-start"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-white p-2 rounded-md shadow-xs border border-red-200">
+                      <UserX className="w-4 h-4 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">
+                        {isRTL ? "المستخدمون المحظورون" : "Blocked Users"}
+                      </p>
+                      <p className="text-xs text-slate-500 font-medium">
+                        {isRTL
+                          ? "إدارة الأشخاص الذين قمت بحظرهم"
+                          : "Manage people you have blocked"}
+                      </p>
+                    </div>
+                  </div>
+                  {isRTL ? (
+                    <ChevronLeft className="w-5 h-5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-slate-400" />
+                  )}
+                </button>
               </div>
             </motion.div>
 
@@ -663,6 +692,15 @@ export default function Profile() {
         onSuccess={(updatedProfile) => setProfileData(updatedProfile)}
         isRTL={isRTL}
       />
+
+      {token && (
+        <BlockedUsersModal
+          isOpen={isBlockedModalOpen}
+          onOpenChange={setIsBlockedModalOpen}
+          isRTL={isRTL}
+          token={token}
+        />
+      )}
 
       {token && sightingsModal.postId && (
         <SightingsListModal

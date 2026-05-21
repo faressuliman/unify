@@ -3,6 +3,7 @@ import Post from "../../DB/models/post.model.js";
 import Chat from "../../DB/models/chat.model.js";
 import { encrypt } from "../../utils/encrypt/encrypt.js";
 import { decrypt } from "../../utils/encrypt/decrypt.js";
+import bcrypt from "bcrypt";
 
 const decryptPhoneNumber = async (value) => {
   if (!value) return value;
@@ -49,6 +50,9 @@ export const updateProfile = async (req, res, next) => {
   const { name, phoneNumber, birthDate, email } = req.body;
 
   const updateData = {};
+  let emailChanged = false;
+  let otpCode = null;
+
   if (name) updateData.name = name;
   if (phoneNumber) {
     updateData.phoneNumber = phoneNumber;
@@ -62,6 +66,14 @@ export const updateProfile = async (req, res, next) => {
     }
     updateData.email = email;
     updateData.isEmailVerified = false;
+    emailChanged = true;
+
+    otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    updateData.otp = bcrypt.hashSync(
+      otpCode,
+      parseInt(process.env.SALT_ROUND || 8),
+    );
+    updateData.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
   }
   if (req.file) updateData.idImagePath = req.file.path;
 
@@ -75,12 +87,16 @@ export const updateProfile = async (req, res, next) => {
   }
 
   // Send a confirmation email if the email was changed
-  if (email && email !== req.user.email) {
+  if (emailChanged && otpCode) {
     import("../../service/sendEmail.js").then(({ sendEmail }) => {
       sendEmail(
         email,
-        "Email Updated Successfully",
-        `<p>Hello ${updated.name},</p><p>Your email address has been successfully updated to this new address. If you did not make this change, please contact support immediately.</p>`,
+        "Verify Your New Email",
+        `<p>Hello ${updated.name},</p>
+         <p>Your email address has been updated. Please verify your new email by entering the following OTP code:</p>
+         <h2 style="color: #4F46E5; letter-spacing: 2px;">${otpCode}</h2>
+         <p>This code will expire in 10 minutes.</p>
+         <p>If you did not make this change, please contact support immediately.</p>`,
       ).catch(console.error);
     });
   }
@@ -105,6 +121,36 @@ export const updateProfile = async (req, res, next) => {
   });
 };
 
+// ─── Verify New Email ─────────────────────────────────────────────────────────
+export const verifyEmail = async (req, res, next) => {
+  const { otp } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (!user) return next(new Error("User not found", { cause: 404 }));
+  if (user.isEmailVerified)
+    return next(new Error("Email is already verified", { cause: 400 }));
+
+  if (!user.otp || !user.otpExpiry)
+    return next(new Error("No OTP requested", { cause: 400 }));
+  if (new Date() > user.otpExpiry)
+    return next(new Error("OTP has expired", { cause: 400 }));
+
+  const isValid = bcrypt.compareSync(otp, user.otp);
+  if (!isValid) return next(new Error("Invalid OTP", { cause: 400 }));
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      isEmailVerified: true,
+      $unset: { otp: 1, otpExpiry: 1 },
+    },
+    { new: true, select: "-password -otp -otpExpiry" },
+  );
+
+  return res
+    .status(200)
+    .json({ message: "Email verified successfully", user: updatedUser });
+};
 // ─── Block User ──────────────────────────────────────────────────────────────
 export const blockUser = async (req, res, next) => {
   const { userId } = req.params;
@@ -123,4 +169,23 @@ export const blockUser = async (req, res, next) => {
   });
 
   return res.status(200).json({ message: "User blocked successfully" });
+};
+
+// ─── Get Blocked Users ────────────────────────────────────────────────────────
+export const getBlockedUsers = async (req, res, next) => {
+  const user = await User.findById(req.user._id).populate(
+    "blockedUsers",
+    "name email idImagePath",
+  );
+  if (!user) return next(new Error("User not found", { cause: 404 }));
+  return res.status(200).json({ blockedUsers: user.blockedUsers || [] });
+};
+
+// ─── Unblock User ─────────────────────────────────────────────────────────────
+export const unblockUser = async (req, res, next) => {
+  const { userId } = req.params;
+  await User.findByIdAndUpdate(req.user._id, {
+    $pull: { blockedUsers: userId },
+  });
+  return res.status(200).json({ message: "User unblocked successfully" });
 };

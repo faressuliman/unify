@@ -131,7 +131,15 @@ export default function HowUnifyWorks() {
                 aria-label="Toggle slide"
               >
                 <ArrowRight
-                  className={`w-5 h-5 ${isRTL ? "rotate-180" : ""}`}
+                  className={`w-5 h-5 transition-transform duration-300 ${
+                    featureSlideIndex === 1
+                      ? isRTL
+                        ? ""
+                        : "rotate-180"
+                      : isRTL
+                        ? "rotate-180"
+                        : ""
+                  }`}
                 />
               </button>
             </div>
