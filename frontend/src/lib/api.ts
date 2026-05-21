@@ -259,6 +259,10 @@ export const postApi = {
       formData.append("organizationName", payload.organizationName);
     if (payload.reporterPhone)
       formData.append("reporterPhone", payload.reporterPhone);
+    if (payload.latitude !== undefined)
+      formData.append("latitude", String(payload.latitude));
+    if (payload.longitude !== undefined)
+      formData.append("longitude", String(payload.longitude));
 
     payload.photos?.forEach((photo) => {
       formData.append("photos", photo);

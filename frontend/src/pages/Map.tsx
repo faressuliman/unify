@@ -431,8 +431,35 @@ export default function Map() {
                   position={post.position}
                   icon={createMarkerIcon(post.type)}
                   eventHandlers={{
-                    mouseover: (e) => e.target.openPopup(),
-                    mouseout: (e) => e.target.closePopup(),
+                    mouseover: (e) => {
+                      const marker = e.target as any;
+                      if (marker._closeTimeout)
+                        clearTimeout(marker._closeTimeout);
+                      marker.openPopup();
+                    },
+                    mouseout: (e) => {
+                      const marker = e.target as any;
+                      if (marker._clicked) return;
+                      marker._closeTimeout = setTimeout(() => {
+                        const popupNode = marker.getPopup()?.getElement();
+                        if (popupNode && popupNode.matches(":hover")) {
+                          // Keep open if hovering over the popup, close when mouse leaves the popup
+                          popupNode.onmouseleave = () => {
+                            if (!marker._clicked) marker.closePopup();
+                          };
+                          return;
+                        }
+                        marker.closePopup();
+                      }, 300); // 300ms delay to allow moving mouse to the popup
+                    },
+                    click: (e) => {
+                      const marker = e.target as any;
+                      marker._clicked = true;
+                    },
+                    popupclose: (e) => {
+                      const marker = e.target as any;
+                      marker._clicked = false;
+                    },
                   }}
                 >
                   <Popup

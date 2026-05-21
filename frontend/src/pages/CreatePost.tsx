@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { UserCircle, Camera, FileText, MapPin, Send, Info } from "lucide-react";
+import { UserCircle, Camera, FileText, MapPin, Send } from "lucide-react";
 import FormInput from "@/components/ui/FormInput";
 import FormTextArea from "@/components/ui/FormTextArea";
 import SubmitButton from "@/components/ui/SubmitButton";

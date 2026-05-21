@@ -121,41 +121,38 @@ export default function LiveMap() {
 
   const finalMarkers = useMemo(() => {
     const seen = new Set();
-    return markers
-      .map((m) => {
-        let lat = Number(m.lat);
-        let lng = Number(m.lng);
-        if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
-          const coords = CITY_COORDS[m.city];
-          if (coords) {
-            [lat, lng] = coords;
-          }
+    return markers.map((m) => {
+      let lat = Number(m.lat);
+      let lng = Number(m.lng);
+      if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
+        const coords = CITY_COORDS[m.city];
+        if (coords) {
+          [lat, lng] = coords;
         }
-        
-        // Fallback to Cairo if still no coordinates found so we don't drop any cases
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-          lat = 30.0444;
-          lng = 31.2357;
-        }
+      }
 
-        let key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-        let shift = 0.08;
-        while (seen.has(key)) {
-          lat += (Math.random() - 0.5) * shift;
-          lng += (Math.random() - 0.5) * shift;
-          key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-        }
-        seen.add(key);
-        return { ...m, lat, lng };
-      });
+      // Fallback to Cairo if still no coordinates found so we don't drop any cases
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        lat = 30.0444;
+        lng = 31.2357;
+      }
+
+      let key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      let shift = 0.08;
+      while (seen.has(key)) {
+        lat += (Math.random() - 0.5) * shift;
+        lng += (Math.random() - 0.5) * shift;
+        key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      }
+      seen.add(key);
+      return { ...m, lat, lng };
+    });
   }, [markers]);
 
   // const [wheelZoomEnabled, setWheelZoomEnabled] = useState(false);
 
   return (
-    <div 
-      className="w-full h-100 md:h-125 rounded-3xl overflow-hidden relative border border-slate-200 bg-slate-50"
-    >
+    <div className="w-full h-100 md:h-125 rounded-3xl overflow-hidden relative border border-slate-200 bg-slate-50">
       <style>{`
         /* 1. النبض */
         @keyframes map-pulse {
@@ -230,25 +227,50 @@ export default function LiveMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-          {finalMarkers.map((loc: any) => (
-            <Marker
-              key={loc.id}
-              position={[loc.lat, loc.lng]}
-              icon={createCustomIcon(loc.type)}
-              eventHandlers={{
-                mouseover: (e) => e.target.openPopup(),
-                mouseout: (e) => e.target.closePopup(),
-              }}
-            >
-              <Popup closeButton={false} minWidth={280} className="custom-popup">
-                <MapPopup
-                  post={{ ...loc, name: loc.name || (isRTL ? "حالة" : "Case") }}
-                  isRTL={isRTL}
-                  t={tMapPage}
-                />
-              </Popup>
-            </Marker>
-          ))}
+        {finalMarkers.map((loc: any) => (
+          <Marker
+            key={loc.id}
+            position={[loc.lat, loc.lng]}
+            icon={createCustomIcon(loc.type)}
+            eventHandlers={{
+              mouseover: (e) => {
+                const marker = e.target as any;
+                if (marker._closeTimeout) clearTimeout(marker._closeTimeout);
+                marker.openPopup();
+              },
+              mouseout: (e) => {
+                const marker = e.target as any;
+                if (marker._clicked) return;
+                marker._closeTimeout = setTimeout(() => {
+                  const popupNode = marker.getPopup()?.getElement();
+                  if (popupNode && popupNode.matches(":hover")) {
+                    popupNode.onmouseleave = () => {
+                      if (!marker._clicked) marker.closePopup();
+                    };
+                    return;
+                  }
+                  marker.closePopup();
+                }, 300);
+              },
+              click: (e) => {
+                const marker = e.target as any;
+                marker._clicked = true;
+              },
+              popupclose: (e) => {
+                const marker = e.target as any;
+                marker._clicked = false;
+              },
+            }}
+          >
+            <Popup closeButton={false} minWidth={280} className="custom-popup">
+              <MapPopup
+                post={{ ...loc, name: loc.name || (isRTL ? "حالة" : "Case") }}
+                isRTL={isRTL}
+                t={tMapPage}
+              />
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
 
       {/* الـ Badge */}
