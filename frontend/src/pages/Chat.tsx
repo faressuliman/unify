@@ -7,12 +7,24 @@ import {
   ArrowLeft,
   ArrowRight,
   X,
+  MoreVertical,
+  Bell,
+  BellOff,
+  UserX,
+  Flag,
+  Trash2,
+  XCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import BlockModal from "../components/ui/modals/BlockModal";
+import ReportModal from "../components/ui/modals/ReportModal";
+import DeleteChatModal from "../components/ui/modals/DeleteChatModal";
 import {
   chatApi,
   type BackendChat,
   type BackendChatUser,
   type BackendMessage,
+  userApi,
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
@@ -56,6 +68,12 @@ export default function Chat() {
   const [unreadChatIds, setUnreadChatIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const activeChat = useMemo(
     () => chats.find((c) => c._id === activeChatId) || null,
@@ -135,7 +153,7 @@ export default function Chat() {
         return next;
       });
       if (msg.chatId !== activeChatId) {
-        setUnreadChatIds(prev => new Set(prev).add(msg.chatId));
+        setUnreadChatIds((prev) => new Set(prev).add(msg.chatId));
       }
     };
     socket.on("chat:message", handleSidebarPing);
@@ -157,6 +175,22 @@ export default function Chat() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeChatId]);
+
+  // Close dropdown menu when the chat is changed
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [activeChatId]);
+
+  // Handle clicking outside the dropdown menu
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMenuOpen]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +225,40 @@ export default function Chat() {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+  const handleDeleteChat = async () => {
+    if (!activeChatId || !token) return;
+    const idToDelete = activeChatId;
+
+    setChats((prev) => prev.filter((c) => c._id !== idToDelete));
+    setActiveChatId(null);
+
+    try {
+      await chatApi.deleteChat(idToDelete, token);
+      toast.success(isRTL ? "تم حذف المحادثة" : "Chat deleted");
+    } catch (err) {
+      console.error("Failed to delete chat", err);
+      toast.error(isRTL ? "فشل حذف المحادثة" : "Failed to delete chat");
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!otherUser?._id || !token) return;
+    const idToDelete = activeChatId;
+
+    if (idToDelete) {
+      setChats((prev) => prev.filter((c) => c._id !== idToDelete));
+      setActiveChatId(null);
+    }
+
+    try {
+      await userApi.blockUser(otherUser._id, token);
+      toast.success(isRTL ? "تم الحظر بنجاح" : "Blocked successfully");
+    } catch (err) {
+      console.error("Failed to block user", err);
+      toast.error(isRTL ? "فشل الحظر" : "Failed to block user");
+    }
+  };
 
   return (
     <div
@@ -258,7 +326,9 @@ export default function Chat() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-tertiary truncate flex justify-between items-center">
-                              <span>{partner?.name || (isRTL ? "مستخدم" : "User")}</span>
+                              <span>
+                                {partner?.name || (isRTL ? "مستخدم" : "User")}
+                              </span>
                               {unreadChatIds.has(chat._id) && (
                                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                                   {isRTL ? "جديد" : "New"}
@@ -321,6 +391,113 @@ export default function Chat() {
                     <p className="font-bold text-tertiary truncate">
                       {otherUser?.name || (isRTL ? "مستخدم" : "User")}
                     </p>
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  <div className="relative" ref={menuRef}>
+                    <button
+                      onClick={() => setIsMenuOpen(!isMenuOpen)}
+                      className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
+                      aria-label={isRTL ? "خيارات المحادثة" : "Chat options"}
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </button>
+                    {isMenuOpen && (
+                      <div
+                        className={`absolute top-full mt-2 w-56 bg-white border border-slate-100 rounded-xl shadow-lg z-50 overflow-hidden ${isRTL ? "left-0" : "right-0"}`}
+                      >
+                        <div className="px-4 py-2 border-b border-slate-50">
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            {isRTL ? "تفاصيل المحادثة" : "Conversation Details"}
+                          </p>
+                        </div>
+                        <div className="flex flex-col py-1">
+                          <button
+                            onClick={() => {
+                              setIsMuted(!isMuted);
+                              setIsMenuOpen(false);
+                              toast.success(
+                                isMuted
+                                  ? isRTL
+                                    ? "تم إلغاء الكتم"
+                                    : "Unmuted"
+                                  : isRTL
+                                    ? "تم كتم الإشعارات"
+                                    : "Muted",
+                              );
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {isMuted ? (
+                                <Bell className="h-4 w-4 text-slate-400" />
+                              ) : (
+                                <BellOff className="h-4 w-4 text-slate-400" />
+                              )}
+                              <span>
+                                {isRTL ? "كتم الرسائل" : "Mute messages"}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isMuted ? "bg-secondary/10 text-secondary" : "bg-slate-100 text-slate-500"}`}
+                            >
+                              {isMuted
+                                ? isRTL
+                                  ? "مفعل"
+                                  : "On"
+                                : isRTL
+                                  ? "معطل"
+                                  : "Off"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsBlockModalOpen(true);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-start"
+                          >
+                            <UserX className="h-4 w-4 text-slate-400" />
+                            <span>{isRTL ? "حظر" : "Block"}</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsReportModalOpen(true);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-start"
+                          >
+                            <Flag className="h-4 w-4 text-slate-400" />
+                            <span>{isRTL ? "إبلاغ" : "Report"}</span>
+                          </button>
+                          <div className="h-px bg-slate-100 my-1"></div>
+                          <button
+                            onClick={() => {
+                              setActiveChatId(null);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-start"
+                          >
+                            <XCircle className="h-4 w-4 text-slate-400" />
+                            <span>
+                              {isRTL ? "إغلاق المحادثة" : "Close chat"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsDeleteModalOpen(true);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-start"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>
+                              {isRTL ? "حذف المحادثة" : "Delete chat"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </header>
 
@@ -452,6 +629,32 @@ export default function Chat() {
           </section>
         </div>
       </main>
+
+      <BlockModal
+        isOpen={isBlockModalOpen}
+        onOpenChange={setIsBlockModalOpen}
+        isRTL={isRTL}
+        username={otherUser?.name || (isRTL ? "مستخدم" : "User")}
+        onBlockConfirm={handleBlockUser}
+      />
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onOpenChange={setIsReportModalOpen}
+        isRTL={isRTL}
+        username={otherUser?.name}
+        onBlockClick={handleBlockUser}
+        onReportSubmit={(reason, subReasons) => {
+          // Report submission logic handled inside the modal or backend
+        }}
+      />
+
+      <DeleteChatModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        isRTL={isRTL}
+        onDeleteConfirm={handleDeleteChat}
+      />
     </div>
   );
 }
