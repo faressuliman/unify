@@ -40,8 +40,8 @@ export const startChat = async (req, res, next) => {
       return next(
         new Error(
           "You can only chat with someone after a claim between you has been approved",
-          { cause: 403 }
-        )
+          { cause: 403 },
+        ),
       );
     }
   }
@@ -68,10 +68,7 @@ export const startChat = async (req, res, next) => {
 // ─── Get My Chats ─────────────────────────────────────────────────────────────
 export const getMyChats = async (req, res, next) => {
   const chats = await Chat.find({
-    $or: [
-      { initiatorUserId: req.user._id },
-      { responderUserId: req.user._id },
-    ],
+    $or: [{ initiatorUserId: req.user._id }, { responderUserId: req.user._id }],
     isActive: true,
   })
     .populate("initiatorUserId", "name")
@@ -98,7 +95,9 @@ export const sendMessage = async (req, res, next) => {
   const attachmentPath = req.file?.path;
 
   if (!content && !attachmentPath) {
-    return next(new Error("Message must have content or attachment", { cause: 400 }));
+    return next(
+      new Error("Message must have content or attachment", { cause: 400 }),
+    );
   }
 
   const message = await Message.create({
@@ -111,7 +110,7 @@ export const sendMessage = async (req, res, next) => {
   // Populate sender for clients that render the name immediately.
   const populated = await Message.findById(message._id).populate(
     "senderUserId",
-    "name"
+    "name",
   );
 
   // Broadcast to anyone subscribed to this chat thread, plus a direct
@@ -149,4 +148,23 @@ export const getChatMessages = async (req, res, next) => {
     .populate("senderUserId", "name");
 
   return res.status(200).json({ messages: messages.reverse() });
+};
+
+// ─── Delete Chat ──────────────────────────────────────────────────────────────
+export const deleteChat = async (req, res, next) => {
+  const { chatId } = req.params;
+
+  const chat = await Chat.findById(chatId);
+  if (!chat) return next(new Error("Chat not found", { cause: 404 }));
+
+  const isParticipant =
+    chat.initiatorUserId.toString() === req.user._id.toString() ||
+    chat.responderUserId.toString() === req.user._id.toString();
+
+  if (!isParticipant) return next(new Error("Unauthorized", { cause: 403 }));
+
+  await Chat.findByIdAndDelete(chatId);
+  await Message.deleteMany({ chatId });
+
+  return res.status(200).json({ message: "Chat deleted successfully" });
 };
