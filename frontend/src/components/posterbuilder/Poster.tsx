@@ -544,20 +544,20 @@ const Poster = () => {
                     </p>
                   </div>
 
-                  <div className="mt-1 bg-red-50 border border-red-100 rounded-[1rem] p-4 text-center shadow-sm">
-                    <div className="bg-red-700 text-white px-4 py-3 rounded-lg font-black text-sm sm:text-base shadow-md flex flex-col items-center justify-center gap-1.5 leading-tight">
+                  <div className="mt-1 bg-red-50 border border-red-100 rounded-2xl p-2.5 sm:p-3 text-center shadow-sm">
+                    <div className="bg-red-700 text-white px-4 py-2 rounded-xl font-black text-sm shadow-md flex flex-col items-center justify-center gap-1 leading-tight">
                       <div className="flex items-center gap-2">
                         <FontAwesomeIcon
                           icon={faCloudArrowUp}
                           className={`text-sm shrink-0 ${isRTL ? "-rotate-90" : "rotate-90"}`}
                         />
-                        <span className="font-sans uppercase tracking-[0.18em] text-sm sm:text-base">
+                        <span className="font-sans uppercase tracking-[0.18em] text-xs sm:text-sm">
                           {t("poster.contactAuth")}
                         </span>
                       </div>
                       <div
                         dir="ltr"
-                        className="break-words text-sm sm:text-base font-semibold"
+                        className={`break-words font-semibold ${contactType === "both" ? "text-xs sm:text-sm" : "text-sm sm:text-base"}`}
                       >
                         {contactType === "mobile" &&
                           (contactPhone || t("poster.notProvided"))}

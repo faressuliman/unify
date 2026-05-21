@@ -1,12 +1,16 @@
 import User from "../../DB/models/user.model.js";
 import Post from "../../DB/models/post.model.js";
+import Chat from "../../DB/models/chat.model.js";
 import { encrypt } from "../../utils/encrypt/encrypt.js";
 import { decrypt } from "../../utils/encrypt/decrypt.js";
 
 const decryptPhoneNumber = async (value) => {
   if (!value) return value;
   try {
-    const decrypted = await decrypt({ key: value, SECRET_KEY: process.env.SECRET_KEY });
+    const decrypted = await decrypt({
+      key: value,
+      SECRET_KEY: process.env.SECRET_KEY,
+    });
     return decrypted || value;
   } catch (err) {
     return value;
@@ -17,7 +21,9 @@ const decryptPhoneNumber = async (value) => {
 export const getProfile = async (req, res, next) => {
   const user = req.user;
 
-  const posts = await Post.find({ userId: user._id }).sort({ createdAt: -1 }).limit(10);
+  const posts = await Post.find({ userId: user._id })
+    .sort({ createdAt: -1 })
+    .limit(10);
   const phoneNumber = await decryptPhoneNumber(user.phoneNumber);
 
   return res.status(200).json({
@@ -74,7 +80,7 @@ export const updateProfile = async (req, res, next) => {
       sendEmail(
         email,
         "Email Updated Successfully",
-        `<p>Hello ${updated.name},</p><p>Your email address has been successfully updated to this new address. If you did not make this change, please contact support immediately.</p>`
+        `<p>Hello ${updated.name},</p><p>Your email address has been successfully updated to this new address. If you did not make this change, please contact support immediately.</p>`,
       ).catch(console.error);
     });
   }
@@ -97,4 +103,24 @@ export const updateProfile = async (req, res, next) => {
       lastLoginAt: updated.lastLoginAt,
     },
   });
+};
+
+// ─── Block User ──────────────────────────────────────────────────────────────
+export const blockUser = async (req, res, next) => {
+  const { userId } = req.params;
+
+  // Add the user to the current user's blocked list
+  await User.findByIdAndUpdate(req.user._id, {
+    $addToSet: { blockedUsers: userId },
+  });
+
+  // Erase any existing chats between them
+  await Chat.findOneAndDelete({
+    $or: [
+      { initiatorUserId: req.user._id, responderUserId: userId },
+      { initiatorUserId: userId, responderUserId: req.user._id },
+    ],
+  });
+
+  return res.status(200).json({ message: "User blocked successfully" });
 };

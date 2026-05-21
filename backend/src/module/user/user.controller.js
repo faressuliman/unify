@@ -15,7 +15,13 @@ router.put(
   authenticate,
   multerHost(filetypes.image, "unify/ids").single("idPicture"),
   validation(updateProfileSchema),
-  asynchandler(userService.updateProfile)
+  asynchandler(userService.updateProfile),
+);
+
+router.post(
+  "/:userId/block",
+  authenticate,
+  asynchandler(userService.blockUser),
 );
 
 export default router;
