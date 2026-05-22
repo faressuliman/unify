@@ -6,10 +6,13 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 
 export default function ContactMessagesPanel({
+  t,
   isRTL,
+  onReplied,
 }: {
-  t: any;
+  t: { sectionTitles?: { contact_messages?: string } };
   isRTL: boolean;
+  onReplied?: () => void;
 }) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<BackendContactMessage[]>([]);
@@ -45,6 +48,7 @@ export default function ContactMessagesPanel({
       setReplyingTo(null);
       // Refresh messages to show the "Replied" badge
       fetchMessages(page);
+      if (onReplied) onReplied();
     } catch (err) {
       console.error("Failed to send reply", err);
       toast.error(isRTL ? "فشل إرسال الرد" : "Failed to send reply");
@@ -55,7 +59,8 @@ export default function ContactMessagesPanel({
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
       <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <h2 className="text-tertiary font-bold text-start">
-          {isRTL ? "رسائل التواصل" : "Contact Messages"}
+          {t?.sectionTitles?.contact_messages ||
+            (isRTL ? "رسائل التواصل" : "Contact Messages")}
         </h2>
       </div>
 
@@ -184,7 +189,7 @@ function ReplyModal({
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? "rtl" : "ltr"}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 shadow-2xl overflow-hidden text-start"
+        className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden text-start"
       >
         <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between">
           <div>

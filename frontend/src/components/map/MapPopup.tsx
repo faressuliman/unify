@@ -56,7 +56,7 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
         <div className="flex justify-between items-start mb-4">
           <div className="flex flex-col gap-1.5 text-start pr-4 rtl:pr-0 rtl:pl-4">
             <span
-              className={`inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${post.type === "missing" ? "bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400"}`}
+              className={`inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${post.type === "missing" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}
             >
               {post.type === "missing"
                 ? isRTL
@@ -66,14 +66,14 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
                   ? "معثور عليه"
                   : "Found"}
             </span>
-            <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-2">
+            <h3 className="font-extrabold text-slate-800 text-lg leading-tight line-clamp-2">
               {post.name}
             </h3>
           </div>
           <button
             type="button"
             aria-label={isRTL ? "إغلاق" : "Close"}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+            className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full w-7 h-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               map.closePopup();
@@ -86,14 +86,14 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
         {/* Details Area */}
         <div className="flex flex-col gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 text-blue-500 shrink-0 shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-blue-500 shrink-0 shadow-sm">
               <Calendar className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0 text-start flex-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase">
                 {post.type === "missing" ? t.dateLost : t.dateFound || "Date"}
               </span>
-              <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">
+              <span className="font-semibold text-sm text-slate-700 truncate">
                 {post.lastSeenDate
                   ? new Date(post.lastSeenDate).toLocaleDateString()
                   : post.createdAt
@@ -104,28 +104,28 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 text-amber-500 shrink-0 shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-amber-500 shrink-0 shadow-sm">
               <User className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0 text-start flex-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase">
                 {t.currentAge}
               </span>
-              <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">
+              <span className="font-semibold text-sm text-slate-700 truncate">
                 {extractAge(post.age ?? "", post.details) || "?"}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 text-emerald-500 shrink-0 shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-emerald-500 shrink-0 shadow-sm">
               <MapPin className="w-4 h-4" />
             </div>
             <div className="flex flex-col min-w-0 text-start flex-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase">
                 {t.homeAddress || "Address"}
               </span>
-              <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">
+              <span className="font-semibold text-sm text-slate-700 line-clamp-1">
                 {post.address || post.city || post.location || t.notProvided}
               </span>
             </div>

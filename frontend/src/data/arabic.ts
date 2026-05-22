@@ -133,6 +133,8 @@ export const ar = {
         allNeighborhoods: 'جميع الأحياء',
         timeframe: 'الإطار الزمني',
         dateMissing: 'تاريخ الفقدان',
+        datePlaceholder: 'DD/MM/YYYY',
+        datePlaceholderArabic: 'DD/MM/YYYY',
         showStatus: 'إظهار الحالة',
         missing: 'مفقود',
         found: 'تم العثور عليه',

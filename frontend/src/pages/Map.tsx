@@ -22,6 +22,7 @@ import LocalizedDateInput from "../components/ui/LocalizedDateInput";
 import SegmentedControl from "../components/ui/SegmentedControl";
 import SubmitButton from "../components/ui/SubmitButton";
 import MapPopup from "../components/map/MapPopup";
+import MapDrawer from "../components/map/MapDrawer";
 import { postApi } from "../lib/api";
 
 // إحداثيات المدن كبديل (Fallback)
@@ -171,6 +172,7 @@ export default function Map() {
     postType: "all",
   });
   const [posts, setPosts] = useState<any[]>([]);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const cityOptions = useMemo(
     () => [
@@ -207,30 +209,33 @@ export default function Map() {
           city: appliedFilters.city || undefined,
           dateMissing: appliedFilters.dateMissing || undefined,
           keyword: appliedFilters.keyword || undefined,
-          status: "active",
           limit: 10000,
         });
 
         const seen = new Set<string>();
-        const processed = (response.markers || [])
-          .map((m: any) => {
-            let lat = Number(m.lat);
-            let lng = Number(m.lng);
-            if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
-              const coords = CITY_COORDS[m.city];
-              if (coords) [lat, lng] = coords;
-            }
+        const processed = (response.markers || []).map((m: any) => {
+          let lat = Number(m.lat);
+          let lng = Number(m.lng);
+          if ((!lat || !lng || isNaN(lat) || isNaN(lng)) && m.city) {
+            const coords = CITY_COORDS[m.city];
+            if (coords) [lat, lng] = coords;
+          }
 
-            let key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
-            while (seen.has(key)) {
-              lat += (Math.random() - 0.5) * 0.003;
-              lng += (Math.random() - 0.5) * 0.003;
-              key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
-            }
-            seen.add(key);
-            return { ...m, lat, lng, position: [lat, lng] };
-          })
-          .filter((m: any) => m.lat && m.lng);
+          // Fallback to Cairo if still no coordinates found so we don't drop any cases
+          if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+            lat = 30.0444;
+            lng = 31.2357;
+          }
+
+          let key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
+          while (seen.has(key)) {
+            lat += (Math.random() - 0.5) * 0.08;
+            lng += (Math.random() - 0.5) * 0.08;
+            key = `${lat?.toFixed(4)},${lng?.toFixed(4)}`;
+          }
+          seen.add(key);
+          return { ...m, lat, lng, position: [lat, lng] };
+        });
 
         setPosts(processed);
       } catch (error) {
@@ -248,21 +253,18 @@ export default function Map() {
     setAppliedFilters(draftFilters);
   };
 
-  const renderFiltersContent = (
-    showCloseButton = false,
-    enableScroll = true,
-  ) => (
+  const renderFiltersContent = (showCloseButton = false) => (
     <form
       onSubmit={handleSubmitFilters}
-      className={`flex flex-col h-full bg-white dark:bg-slate-900 font-sans w-full ${enableScroll ? "overflow-y-auto" : "overflow-hidden"}`}
+      className="flex flex-col bg-white font-sans w-full"
     >
-      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+      <div className="p-6 border-b border-slate-100 flex items-start justify-between bg-white">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
             <ListFilter className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100">
+            <h3 className="font-bold text-xl text-slate-800 ">
               {t.filterCases}
             </h3>
             <p className="text-xs font-semibold text-slate-500 uppercase">
@@ -276,8 +278,8 @@ export default function Map() {
           </SheetClose>
         )}
       </div>
-      <div className="p-6 flex flex-col gap-6 flex-1 bg-slate-50/30 dark:bg-slate-950/50">
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+      <div className="p-6 flex flex-col gap-6 bg-slate-50/30">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
             <Search className="w-3.5 h-3.5 text-blue-500" />
             {t.keyword}
@@ -293,7 +295,7 @@ export default function Map() {
             isRTL={isRTL}
           />
         </div>
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
             <MapPin className="w-3.5 h-3.5 text-rose-500" />
             {t.areaRegion}
@@ -307,7 +309,7 @@ export default function Map() {
             isRTL={isRTL}
           />
         </div>
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
             <Calendar className="w-3.5 h-3.5 text-emerald-500" />
             {t.dateMissing}
@@ -321,7 +323,7 @@ export default function Map() {
             placeholder={isRTL ? t.datePlaceholderArabic : t.datePlaceholder}
           />
         </div>
-        <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-4">
             <Info className="w-3.5 h-3.5 text-amber-500" />
             {t.showStatus}
@@ -332,11 +334,11 @@ export default function Map() {
               setDraftFilters((p) => ({ ...p, postType: v as any }))
             }
             options={statusOptions}
-            className="w-full bg-slate-50 p-1 rounded-xl"
+            className="w-full bg-white p-1 rounded-xl"
           />
         </div>
       </div>
-      <div className="p-6 border-t bg-white dark:bg-slate-900 sticky bottom-0 z-10 w-full">
+      <div className="p-6 border-t bg-white w-full">
         <SubmitButton
           type="submit"
           className="w-full h-14 font-bold bg-amber-600 hover:bg-amber-700 rounded-xl"
@@ -349,7 +351,7 @@ export default function Map() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-8 pb-16 font-sans"
+      className="min-h-screen bg-slate-50  flex flex-col pt-8 pb-16 font-sans"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <style>{`
@@ -358,10 +360,39 @@ export default function Map() {
           100% { transform: scale(3); opacity: 0; }
         }
         /* مسح الظلال والأنماط الافتراضية */
-        .leaflet-marker-shadow, .leaflet-shadow-pane, .leaflet-marker-icon { 
-          display: none !important; background: transparent !important; border: none !important; box-shadow: none !important; 
+        .leaflet-marker-shadow, .leaflet-shadow-pane { 
+          display: none !important; 
+        }
+        .leaflet-marker-icon:not(.custom-marker-clean):not(.marker-cluster) {
+          display: none !important;
         }
         .custom-marker-clean { display: flex !important; align-items: center !important; justify-content: center !important; background: none !important; border: none !important; }
+        
+        /* Marker Cluster Styling */
+        .marker-cluster {
+          background-clip: padding-box;
+          border-radius: 20px;
+        }
+        .marker-cluster div {
+          width: 30px;
+          height: 30px;
+          margin-left: 5px;
+          margin-top: 5px;
+          text-align: center;
+          border-radius: 15px;
+          font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+          color: white;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .marker-cluster-small { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-small div { background-color: rgba(59, 130, 246, 0.9); }
+        .marker-cluster-medium { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-medium div { background-color: rgba(59, 130, 246, 0.9); }
+        .marker-cluster-large { background-color: rgba(59, 130, 246, 0.3); }
+        .marker-cluster-large div { background-color: rgba(59, 130, 246, 0.9); }
         .custom-popup .leaflet-popup-content-wrapper { border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
       `}</style>
 
@@ -373,65 +404,106 @@ export default function Map() {
         className="mb-2 w-full max-w-400 mx-auto px-6 lg:px-12"
       />
 
-      <div className="max-w-400 mx-auto w-full px-4 lg:px-8 mt-4 flex-1 flex flex-col lg:flex-row gap-6 relative">
-        <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden sticky top-24 h-[calc(100vh-140px)]">
-          {renderFiltersContent(false, true)}
-        </aside>
+      <div className="max-w-400 mx-auto w-full px-4 lg:px-8 mt-4 flex-1 flex flex-col gap-4 relative">
+        <div className="flex lg:hidden items-center justify-between gap-3">
+          <MapDrawer
+            isOpen={isFiltersOpen}
+            setIsOpen={setIsFiltersOpen}
+            isRTL={isRTL}
+            triggerLabel={t.toggleFilters}
+            content={renderFiltersContent(true)}
+          />
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl text-sm font-bold text-slate-700">
+            <span className="text-slate-500">{t.cases}</span>
+            <span className="text-slate-900">{posts.length}</span>
+          </div>
+        </div>
 
-        <main className="flex-1 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative h-[70vh] min-h-100 lg:h-[calc(100vh-140px)] flex flex-col z-0">
-          <div
-            className="absolute inset-0 z-0"
-          >
-            <MapContainer
-              center={DEFAULT_CENTER}
-              zoom={6}
-              zoomControl={false}
-              scrollWheelZoom={true}
-              style={{ width: "100%", height: "100%" }}
-            >
-              <MapUpdater center={mapCenterStr} zoom={mapZoom} />
-              <MapResizeFix />
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-              <ZoomControl position="topleft" />
+        <div className="flex-1 flex flex-col lg:flex-row gap-6">
+          <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 sticky top-24 self-start">
+            {renderFiltersContent(false)}
+          </aside>
 
-              {posts.map((post) => (
-                <Marker
-                  key={post.id}
-                  position={post.position}
-                  icon={createMarkerIcon(post.type)}
-                  eventHandlers={{
-                    mouseover: (e) => e.target.openPopup(),
-                    mouseout: (e) => e.target.closePopup(),
-                  }}
-                >
-                  <Popup
-                    className="custom-popup"
-                    closeButton={false}
-                    minWidth={280}
+          <main className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative h-[78vh] min-h-[520px] lg:h-[calc(100vh-160px)] flex flex-col z-0">
+            <div className="absolute inset-0 z-0">
+              <MapContainer
+                center={DEFAULT_CENTER}
+                zoom={6}
+                zoomControl={false}
+                scrollWheelZoom={false}
+                style={{ width: "100%", height: "100%" }}
+              >
+                <MapUpdater center={mapCenterStr} zoom={mapZoom} />
+                <MapResizeFix />
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                <ZoomControl position="topleft" />
+
+                {posts.map((post) => (
+                  <Marker
+                    key={post.id}
+                    position={post.position}
+                    icon={createMarkerIcon(post.type)}
+                    eventHandlers={{
+                      mouseover: (e) => {
+                        const marker = e.target as any;
+                        if (marker._closeTimeout)
+                          clearTimeout(marker._closeTimeout);
+                        marker.openPopup();
+                      },
+                      mouseout: (e) => {
+                        const marker = e.target as any;
+                        if (marker._clicked) return;
+                        marker._closeTimeout = setTimeout(() => {
+                          const popupNode = marker.getPopup()?.getElement();
+                          if (popupNode && popupNode.matches(":hover")) {
+                            // Keep open if hovering over the popup, close when mouse leaves the popup
+                            popupNode.onmouseleave = () => {
+                              if (!marker._clicked) marker.closePopup();
+                            };
+                            return;
+                          }
+                          marker.closePopup();
+                        }, 300); // 300ms delay to allow moving mouse to the popup
+                      },
+                      click: (e) => {
+                        const marker = e.target as any;
+                        marker._clicked = true;
+                      },
+                      popupclose: (e) => {
+                        const marker = e.target as any;
+                        marker._clicked = false;
+                      },
+                    }}
                   >
-                    <MapPopup post={post} isRTL={isRTL} t={t} />
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
+                    <Popup
+                      className="custom-popup"
+                      closeButton={false}
+                      minWidth={280}
+                    >
+                      <MapPopup post={post} isRTL={isRTL} t={t} />
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
 
-          {/* Floating Stats - Glassmorphism Design */}
-          <div className="absolute top-4 right-4 z-1000 flex flex-col gap-2">
-            <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
-              <span className="text-[12px] font-bold text-slate-700">
-                {missingCount} {t.missing}
-              </span>
+            {/* Floating Stats - Glassmorphism Design */}
+            <div className="absolute top-4 right-4 z-1000 flex flex-col gap-2">
+              <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+                <span className="text-[12px] font-bold text-slate-700">
+                  {missingCount} {t.missing}
+                </span>
+              </div>
+              <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                <span className="text-[12px] font-bold text-slate-700">
+                  {foundCount} {t.found}
+                </span>
+              </div>
             </div>
-            <div className="bg-white/80 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-              <span className="text-[12px] font-bold text-slate-700">
-                {foundCount} {t.found}
-              </span>
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );

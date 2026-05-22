@@ -13,9 +13,14 @@ router.post(
   "/:chatId/messages",
   authenticate,
   multerHost(filetypes.image, "unify/attachments").single("attachment"),
-  asynchandler(chatService.sendMessage)
+  asynchandler(chatService.sendMessage),
 );
 
-router.get("/:chatId/messages", authenticate, asynchandler(chatService.getChatMessages));
+router.get(
+  "/:chatId/messages",
+  authenticate,
+  asynchandler(chatService.getChatMessages),
+);
+router.delete("/:chatId", authenticate, asynchandler(chatService.deleteChat));
 
 export default router;

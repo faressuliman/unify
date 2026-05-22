@@ -13,13 +13,18 @@ import {
 const decryptPhoneNumber = async (value) => {
   if (!value) return value;
   try {
-    return await decrypt({ key: value, SECRET_KEY: process.env.SECRET_KEY });
+    const decrypted = await decrypt({
+      key: value,
+      SECRET_KEY: process.env.SECRET_KEY,
+    });
+    return decrypted || value;
   } catch (err) {
     return value;
   }
 };
 
-const toPlain = (doc) => (doc && typeof doc.toObject === "function" ? doc.toObject() : doc);
+const toPlain = (doc) =>
+  doc && typeof doc.toObject === "function" ? doc.toObject() : doc;
 
 // ─── Get All Users ────────────────────────────────────────────────────────────
 export const getAllUsers = async (req, res, next) => {
@@ -30,7 +35,8 @@ export const getAllUsers = async (req, res, next) => {
   if (email) filter.email = new RegExp(email, "i");
 
   const result = await pagination({
-    page, limit,
+    page,
+    limit,
     model: User,
     filter,
     sort: { createdAt: -1 },
@@ -60,7 +66,8 @@ export const getAllUsers = async (req, res, next) => {
 export const toggleBanUser = async (req, res, next) => {
   const user = await User.findById(req.params.id);
   if (!user) return next(new Error("User not found", { cause: 404 }));
-  if (user.role === "admin") return next(new Error("Cannot ban admin", { cause: 403 }));
+  if (user.role === "admin")
+    return next(new Error("Cannot ban admin", { cause: 403 }));
 
   user.isbanned = !user.isbanned;
   await user.save();
@@ -76,7 +83,8 @@ export const getPendingClaims = async (req, res, next) => {
   const { page, limit } = req.query;
 
   const result = await pagination({
-    page, limit,
+    page,
+    limit,
     model: Claim,
     filter: { status: "pending" },
     sort: { createdAt: 1 },
@@ -118,7 +126,8 @@ export const getAllClaims = async (req, res, next) => {
   }
 
   const result = await pagination({
-    page, limit,
+    page,
+    limit,
     model: Claim,
     filter,
     sort: { createdAt: -1 },
@@ -153,8 +162,15 @@ export const getAllClaims = async (req, res, next) => {
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 export const getDashboardStats = async (req, res, next) => {
   const [
-    totalUsers, totalPosts, activeMissing,
-    foundPosts, resolvedPosts, pendingClaims, pendingVerifications,
+    totalUsers,
+    totalPosts,
+    activeMissing,
+    foundPosts,
+    resolvedPosts,
+    pendingClaims,
+    pendingVerifications,
+    pendingContactMessages,
+    pendingUserReports,
   ] = await Promise.all([
     User.countDocuments({ isdeleted: false }),
     Post.countDocuments(),
@@ -163,6 +179,14 @@ export const getDashboardStats = async (req, res, next) => {
     Post.countDocuments({ status: "resolved" }),
     Claim.countDocuments({ status: "pending" }),
     User.countDocuments({ isdeleted: false, isVerified: false }),
+    ContactMessage.countDocuments({
+      subject: { $not: /^User Report:/i },
+      isReplied: false,
+    }),
+    ContactMessage.countDocuments({
+      subject: { $regex: /^User Report:/i },
+      isReplied: false,
+    }),
   ]);
 
   return res.status(200).json({
@@ -174,6 +198,8 @@ export const getDashboardStats = async (req, res, next) => {
       resolvedPosts,
       pendingClaims,
       pendingVerifications,
+      pendingContactMessages,
+      pendingUserReports,
     },
   });
 };
@@ -187,11 +213,13 @@ export const getPendingVerifications = async (req, res, next) => {
   if (email) filter.email = new RegExp(email, "i");
 
   const result = await pagination({
-    page, limit,
+    page,
+    limit,
     model: User,
     filter,
     sort: { createdAt: -1 },
-    select: "name email phoneNumber birthDate gender address idImagePath isVerified createdAt",
+    select:
+      "name email phoneNumber birthDate gender address idImagePath isVerified createdAt",
   });
 
   const users = await Promise.all(
@@ -235,7 +263,10 @@ export const verifyUser = async (req, res, next) => {
         : undefined,
     }),
   ).catch((err) =>
-    console.warn("[admin.verifyUser] failed to send approval email:", err?.message),
+    console.warn(
+      "[admin.verifyUser] failed to send approval email:",
+      err?.message,
+    ),
   );
 
   return res.status(200).json({
@@ -273,7 +304,10 @@ export const rejectVerification = async (req, res, next) => {
     "UNIFY account verification update",
     verificationRejectedTemplate({ name: user.name, reason }),
   ).catch((err) =>
-    console.warn("[admin.rejectVerification] failed to send email:", err?.message),
+    console.warn(
+      "[admin.rejectVerification] failed to send email:",
+      err?.message,
+    ),
   );
 
   return res.status(200).json({ message: "Verification rejected" });
@@ -289,7 +323,8 @@ export const getAllPostsAdmin = async (req, res, next) => {
   if (name) filter.name = new RegExp(name, "i");
 
   const result = await pagination({
-    page, limit,
+    page,
+    limit,
     model: Post,
     filter,
     sort: { createdAt: -1 },
@@ -307,12 +342,20 @@ export const getAllPostsAdmin = async (req, res, next) => {
 
 // ─── Get Contact Messages ─────────────────────────────────────────────────────
 export const getContactMessages = async (req, res, next) => {
-  const { page, limit } = req.query;
+  const { page, limit, type = "contact" } = req.query;
+
+  const filter = {};
+  if (type === "report") {
+    filter.subject = { $regex: /^User Report:/i };
+  } else if (type === "contact") {
+    filter.subject = { $not: /^User Report:/i };
+  }
 
   const result = await pagination({
-    page, limit,
+    page,
+    limit,
     model: ContactMessage,
-    filter: {},
+    filter,
     sort: { createdAt: -1 },
   });
 
@@ -344,11 +387,11 @@ export const replyToContactMessage = async (req, res, next) => {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #3b82f6;">Re: ${message.subject}</h2>
       <p>Dear ${message.name},</p>
-      <p>${replyMessage.replace(/\n/g, '<br/>')}</p>
+      <p>${replyMessage.replace(/\n/g, "<br/>")}</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
       <p style="color: #666; font-size: 12px;">Your original message:</p>
       <blockquote style="color: #666; font-size: 12px; border-left: 3px solid #ccc; padding-left: 10px;">
-        ${message.message.replace(/\n/g, '<br/>')}
+        ${message.message.replace(/\n/g, "<br/>")}
       </blockquote>
       <p style="color: #999; font-size: 12px; margin-top: 20px;">Support Team @ UNIFY</p>
     </div>

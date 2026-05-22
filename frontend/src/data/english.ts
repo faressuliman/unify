@@ -133,6 +133,8 @@ export const en = {
         allNeighborhoods: 'All Neighborhoods',
         timeframe: 'TIMEFRAME',
         dateMissing: 'Date Missing',
+        datePlaceholder: 'MM/DD/YYYY',
+        datePlaceholderArabic: 'DD/MM/YYYY',
         showStatus: 'SHOW STATUS',
         missing: 'Missing',
         found: 'Found',

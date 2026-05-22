@@ -1,10 +1,10 @@
+import axios from "axios";
+import FormData from "form-data";
+import fs from "fs";
 import Post from "../../DB/models/post.model.js";
 import MapData from "../../DB/models/mapData.model.js";
 import { pagination } from "../../utils/feature/pagination.js";
 import cloudinary from "../../utils/cloudinary/index.js";
-import axios from "axios";
-import FormData from "form-data";
-import { cosineSimilarity } from "../../utils/feature/cosineSimilarity.js";
 import {
   toSearchKey,
   escapeRegex,
@@ -13,104 +13,82 @@ import {
   latinToArabic,
 } from "../../utils/language/transliterate.js";
 
+// دالة حساب المسافة الرياضية للمطابقة
+function euclideanDistance(vec1, vec2) {
+  if (!vec1 || !vec2 || vec1.length !== vec2.length) return Infinity;
+  let sum = 0;
+  for (let i = 0; i < vec1.length; i++) {
+    sum += Math.pow(vec1[i] - vec2[i], 2);
+  }
+  return Math.sqrt(sum);
+}
+
 // ─── Search by Image (AI Face Matching) ───────────────────────────────────────
-export const searchByFace = async (req, res, next) => {
-  if (!req.file) {
-    return next(new Error("Please upload an image", { cause: 400 }));
-  }
+export const searchByImage = async (req, res, next) => {
+  if (!req.file)
+    return next(new Error("Please upload an image to search", { cause: 400 }));
 
-  // 1. Forward to FastAPI AI Service
-  const formData = new FormData();
-  formData.append('image', req.file.buffer, {
-    filename: req.file.originalname,
-    contentType: req.file.mimetype,
-  });
-
-  let aiResponse;
   try {
-    aiResponse = await axios.post('http://127.0.0.1:8000/get-face-encoding', formData, {
-      headers: {
-        ...formData.getHeaders(),
+    // 1. طلب البصمة من سيرفر البايثون لصورة البحث
+    const form = new FormData();
+    form.append("image", fs.createReadStream(req.file.path));
+
+    const aiResponse = await axios.post(
+      "http://127.0.0.1:8000/get-face-encoding",
+      form,
+      {
+        headers: { ...form.getHeaders() },
+        timeout: 15000,
       },
-    });
-  } catch (err) {
-    return next(new Error("AI service is currently unavailable.", { cause: 503 }));
-  }
+    );
 
-  if (!aiResponse.data.success || !aiResponse.data.encoding) {
-    return next(new Error("Failed to extract face encoding. Ensure the image is clear and contains a face.", { cause: 400 }));
-  }
-
-  const { encoding: searchEncoding } = aiResponse.data;
-
-  // 2. Fetch all reports from DB that have face encodings stored
-  const reports = await Post.find({
-    faceEncoding: { $exists: true, $not: { $size: 0 } },
-    status: "active"
-  }).lean();
-
-  // 3. Compute cosine similarity for each document
-  const matches = [];
-  const THRESHOLD = 0.60;
-
-  for (const report of reports) {
-    const score = cosineSimilarity(searchEncoding, report.faceEncoding);
-    
-    if (score >= THRESHOLD) {
-      matches.push({
-        _id: report._id,
-        name: report.name,
-        photos: report.postImages,
-        similarity: score,
-        postType: report.postType,
-        city: report.city
-      });
+    if (!aiResponse.data.success) {
+      return res
+        .status(400)
+        .json({ message: "No face detected in the search image" });
     }
+
+    const searchVector = aiResponse.data.encoding;
+
+    // 2. جلب كل الحالات النشطة التي تمتلك بصمة وجه
+    const allPosts = await Post.find({
+      faceEncoding: { $exists: true, $ne: [] },
+      status: "active",
+    });
+
+    // 3. المقارنة وحساب نسبة الثقة
+    const matches = allPosts
+      .map((post) => {
+        const distance = euclideanDistance(searchVector, post.faceEncoding);
+        // تحويل المسافة لنسبة مئوية (المسافة الأقل تعني شبه أكبر)
+        const confidence = Math.max(0, 100 - distance * 100).toFixed(2);
+
+        return {
+          ...post._doc,
+          confidence: parseFloat(confidence),
+        };
+      })
+      .filter((p) => p.confidence > 40) // عرض النتائج التي تتخطى 40% شبه
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 6);
+
+    return res.status(200).json({
+      success: true,
+      count: matches.length,
+      results: matches,
+    });
+  } catch (error) {
+    console.error("Image Search Error:", error.message);
+    return next(new Error("AI Search failed. Ensure AI server is running."));
   }
-
-  // 4. Sort descending by similarity and take top 5
-  matches.sort((a, b) => b.similarity - a.similarity);
-  const top5Matches = matches.slice(0, 5);
-
-  return res.status(200).json({
-    success: true,
-    matches: top5Matches
-  });
 };
 
 // ─── Create Post ──────────────────────────────────────────────────────────────
 export const createPost = async (req, res, next) => {
   const {
-    postType, firstName, lastName, age, ageUnit, gender,
-    hairColour, eyeColour, clothesDescription, city,
-    lastSeenLocation, lastSeenDate, foundLocation,
-    affiliation, organizationName, reporterPhone,
-    latitude, longitude,
-  } = req.body;
-
-  let locationId;
-  if (latitude && longitude) {
-    const mapEntry = await MapData.create({
-      address: postType === "missing" ? lastSeenLocation : foundLocation,
-      zoneType: city,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-    });
-    locationId = mapEntry._id;
-  }
-
-  const postImages = req.files?.map((f) => f.path) || [];
-  
-  let faceEncoding = [];
-  // AI Service removed for testing
-
-  const fullName = `${firstName} ${lastName}`.trim();
-
-  const post = await Post.create({
     postType,
-    userId: req.user._id,
-    name: fullName,
-    nameSearchKey: toSearchKey(fullName),
+    firstName,
+    lastName,
     age,
     ageUnit,
     gender,
@@ -124,8 +102,57 @@ export const createPost = async (req, res, next) => {
     affiliation,
     organizationName,
     reporterPhone,
+    latitude,
+    longitude,
+  } = req.body;
+
+  // 1. إنشاء بيانات الخريطة
+  let locationId;
+  if (latitude && longitude) {
+    const mapEntry = await MapData.create({
+      address: postType === "missing" ? lastSeenLocation : foundLocation,
+      zoneType: city,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+    });
+    locationId = mapEntry._id;
+  }
+
+  const postImages = req.files?.map((f) => f.path) || [];
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  // 2. استخراج بصمة الوجه آلياً عند إنشاء البوست
+  let faceEncoding = [];
+  if (postImages.length > 0) {
+    try {
+      const form = new FormData();
+      form.append("image", fs.createReadStream(req.files[0].path));
+
+      const aiResponse = await axios.post(
+        "http://127.0.0.1:8000/get-face-encoding",
+        form,
+        {
+          headers: { ...form.getHeaders() },
+          timeout: 15000,
+        },
+      );
+
+      if (aiResponse.data.success) {
+        faceEncoding = aiResponse.data.encoding;
+      }
+    } catch (err) {
+      console.warn("[AI Service] Encoding extraction skipped:", err.message);
+    }
+  }
+
+  // 3. حفظ البوست النهائي
+  const post = await Post.create({
+    ...req.body,
+    userId: req.user._id,
+    name: fullName,
+    nameSearchKey: toSearchKey(fullName),
     postImages,
-    faceEncoding,
+    faceEncoding: faceEncoding.length > 0 ? faceEncoding : undefined,
     locationId,
     status: "active",
   });
@@ -133,10 +160,8 @@ export const createPost = async (req, res, next) => {
   return res.status(201).json({ message: "Post created successfully", post });
 };
 
-// Backfill `nameSearchKey` for any legacy posts that were created before the
-// field existed. Runs at most once per process (or after restarts) so that
-// cross-script search returns correct results without needing a manual
-// migration step.
+// ─── باقي الدوال (Get, Update, Delete, Stats) ──────────────────────────────────
+
 let _searchKeyBackfilled = false;
 const backfillSearchKeys = async () => {
   if (_searchKeyBackfilled) return;
@@ -150,67 +175,55 @@ const backfillSearchKeys = async () => {
       await doc.save();
     }
   } catch (err) {
-    // Non-fatal; just log and continue.
     console.warn("[posts] nameSearchKey backfill failed:", err?.message || err);
   }
 };
 
-// ─── Get All Posts (with filters + pagination) ────────────────────────────────
 export const getPosts = async (req, res, next) => {
   await backfillSearchKeys();
-
   const {
-    postType, status, gender, city,
-    hairColour, eyeColour, firstName, lastName,
-    ageMin, ageMax, dateMissing, page, limit,
+    postType,
+    status,
+    gender,
+    city,
+    hairColour,
+    eyeColour,
+    firstName,
+    lastName,
+    ageMin,
+    ageMax,
+    dateMissing,
+    page,
+    limit,
   } = req.query;
 
   const filter = {};
   if (postType) filter.postType = postType;
-  if (status) filter.status = status;
-  else filter.status = "active";
+  filter.status = status || "active";
   if (gender) filter.gender = gender;
   if (city) filter.city = new RegExp(escapeRegex(city), "i");
   if (hairColour) filter.hairColour = new RegExp(escapeRegex(hairColour), "i");
   if (eyeColour) filter.eyeColour = new RegExp(escapeRegex(eyeColour), "i");
+
   if (firstName || lastName) {
     const rawName = [firstName, lastName].filter(Boolean).join(" ").trim();
     if (rawName) {
-      // Build cross-script matchers so a user typing "أحمد" also matches
-      // "Ahmed" in the stored Latin name and vice versa.
-      const orClauses = [];
       const escapedRaw = escapeRegex(rawName);
-      orClauses.push({ name: new RegExp(escapedRaw, "i") });
-
-      const isArabic = containsArabic(rawName);
+      const orClauses = [{ name: new RegExp(escapedRaw, "i") }];
       const searchKey = toSearchKey(rawName);
-      // Require ≥2 chars in the consonant skeleton to avoid spurious hits
-      // (e.g. "Ali" → "l" would otherwise match every record).
-      if (searchKey && searchKey.replace(/\s+/g, "").length >= 2) {
-        orClauses.push({ nameSearchKey: new RegExp(escapeRegex(searchKey), "i") });
-      }
-      if (isArabic) {
-        const latin = arabicToLatin(rawName);
-        if (latin && latin.length >= 2) {
-          orClauses.push({ name: new RegExp(escapeRegex(latin), "i") });
-        }
-      } else {
-        const arabic = latinToArabic(rawName);
-        if (arabic && arabic.length >= 2) {
-          orClauses.push({ name: new RegExp(escapeRegex(arabic), "i") });
-        }
+      if (searchKey && searchKey.length >= 2) {
+        orClauses.push({
+          nameSearchKey: new RegExp(escapeRegex(searchKey), "i"),
+        });
       }
       filter.$or = orClauses;
     }
   }
+
   if (ageMin || ageMax) {
     filter.age = {};
     if (ageMin) filter.age.$gte = parseInt(ageMin);
     if (ageMax) filter.age.$lte = parseInt(ageMax);
-  }
-  if (dateMissing) {
-    const date = new Date(dateMissing);
-    filter.lastSeenDate = { $gte: date };
   }
 
   const result = await pagination({
@@ -221,25 +234,52 @@ export const getPosts = async (req, res, next) => {
     sort: { createdAt: -1 },
     populate: [{ path: "userId", select: "name email" }],
   });
-
   return res.status(200).json(result);
 };
 
-// ─── Get Post By ID ───────────────────────────────────────────────────────────
 export const getPostById = async (req, res, next) => {
   const post = await Post.findById(req.params.id)
     .populate("userId", "name email phoneNumber")
     .populate("locationId");
-
   if (!post) return next(new Error("Post not found", { cause: 404 }));
-
   return res.status(200).json({ post });
 };
 
-// ─── Get Map Markers ──────────────────────────────────────────────────────────
+const CITY_COORDS = {
+  Cairo: [30.0444, 31.2357],
+  "القاهرة": [30.0444, 31.2357],
+  Alexandria: [31.2001, 29.9187],
+  "الإسكندرية": [31.2001, 29.9187],
+  Giza: [30.0131, 31.2089],
+  "الجيزة": [30.0131, 31.2089],
+  Aswan: [24.0889, 32.8998],
+  "أسوان": [24.0889, 32.8998],
+  Luxor: [25.6872, 32.6396],
+  "الأقصر": [25.6872, 32.6396],
+  Asyut: [27.1783, 31.1859],
+  "أسيوط": [27.1783, 31.1859],
+  Sohag: [26.557, 31.6948],
+  "سوهاج": [26.557, 31.6948],
+  Ismailia: [30.5965, 32.2715],
+  "الإسماعيلية": [30.5965, 32.2715],
+  "Port Said": [31.2565, 32.2841],
+  "بورسعيد": [31.2565, 32.2841],
+  Suez: [29.9668, 32.5498],
+  "السويس": [29.9668, 32.5498],
+  Mansoura: [31.0409, 31.3785],
+  "المنصورة": [31.0409, 31.3785],
+  Tanta: [30.7865, 31.0003],
+  "طنطا": [30.7865, 31.0003],
+  Zagazig: [30.5877, 31.5167],
+  "الزقازيق": [30.5877, 31.5167],
+  Fayyum: [29.3084, 30.8428],
+  "الفيوم": [29.3084, 30.8428],
+  Minya: [28.1099, 30.7503],
+  "المنيا": [28.1099, 30.7503],
+};
+
 export const getMapMarkers = async (req, res, next) => {
   const { keyword, city, dateMissing, status, postType } = req.query;
-
   const filter = {};
   if (status) filter.status = status;
   if (postType) filter.postType = postType;
@@ -248,56 +288,107 @@ export const getMapMarkers = async (req, res, next) => {
   if (dateMissing) filter.lastSeenDate = { $gte: new Date(dateMissing) };
 
   const posts = await Post.find(filter)
-    .select("name postType status city postImages locationId createdAt age lastSeenDate foundLocation")
+    .select(
+      "name postType status city postImages locationId createdAt age lastSeenDate foundLocation",
+    )
     .populate("locationId", "latitude longitude address");
 
   const markers = posts
-    .filter((p) => p.locationId?.latitude && p.locationId?.longitude)
-    .map((p) => ({
-      id: p._id,
-      name: p.name,
-      type: p.postType,
-      status: p.status,
-      city: p.city,
-      age: p.age,
-      lastSeenDate: p.lastSeenDate,
-      foundLocation: p.foundLocation,
-      createdAt: p.createdAt,
-      image: p.postImages?.[0],
-      lat: p.locationId.latitude,
-      lng: p.locationId.longitude,
-      address: p.locationId.address,
-    }));
+    .map((p) => {
+      const isLocated = p.locationId?.latitude && p.locationId?.longitude;
+      const fallbackCoords = p.city ? CITY_COORDS[p.city] : undefined;
+      const [lat, lng] = isLocated
+        ? [p.locationId.latitude, p.locationId.longitude]
+        : fallbackCoords || [null, null];
+      return {
+        id: p._id,
+        name: p.name,
+        type: p.postType,
+        status: p.status,
+        city: p.city,
+        lat,
+        lng,
+        image: p.postImages?.[0],
+        address:
+          p.locationId?.address ||
+          p.foundLocation ||
+          p.lastSeenLocation ||
+          p.city,
+      };
+    });
 
   return res.status(200).json({ markers });
 };
 
-// ─── Update Post ──────────────────────────────────────────────────────────────
 export const updatePost = async (req, res, next) => {
   const post = await Post.findById(req.params.id);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
-
-  if (post.userId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (
+    post.userId.toString() !== req.user._id.toString() &&
+    req.user.role !== "admin"
+  ) {
     return next(new Error("Unauthorized", { cause: 403 }));
   }
-
   const { status, clothesDescription } = req.body;
   if (status) post.status = status;
   if (clothesDescription) post.clothesDescription = clothesDescription;
   await post.save();
-
   return res.status(200).json({ message: "Post updated", post });
 };
 
-// ─── Delete Post ──────────────────────────────────────────────────────────────
 export const deletePost = async (req, res, next) => {
   const post = await Post.findById(req.params.id);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
-
-  if (post.userId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (
+    post.userId.toString() !== req.user._id.toString() &&
+    req.user.role !== "admin"
+  ) {
     return next(new Error("Unauthorized", { cause: 403 }));
   }
-
   await post.deleteOne();
   return res.status(200).json({ message: "Post deleted" });
+};
+
+export const getPublicMap = async (req, res, next) => {
+  const posts = await Post.find({
+    status: "active",
+    postType: { $in: ["missing", "found"] },
+  })
+    .populate("locationId", "latitude longitude address")
+    .select("name postType postImages city locationId lastSeenDate");
+
+  const cases = posts
+    .map((p) => {
+      const isLocated = p.locationId?.latitude && p.locationId?.longitude;
+      const fallbackCoords = p.city ? CITY_COORDS[p.city] : undefined;
+      const [lat, lng] = isLocated
+        ? [p.locationId.latitude, p.locationId.longitude]
+        : fallbackCoords || [null, null];
+      return {
+        _id: p._id,
+        name: p.name,
+        status: p.postType,
+        image: p.postImages?.[0],
+        location: { lat, lng },
+        city: p.city,
+        date: p.lastSeenDate,
+      };
+    })
+    .filter((c) => c.location.lat !== null);
+  return res.status(200).json({ success: true, cases });
+};
+
+export const getPublicStats = async (req, res, next) => {
+  const missingCount = await Post.countDocuments({
+    postType: "missing",
+    status: "active",
+  });
+  const foundCount = await Post.countDocuments({ postType: "found" });
+  return res
+    .status(200)
+    .json({
+      success: true,
+      activeMissing: missingCount,
+      foundCases: foundCount,
+    });
 };

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["user", "admin"], default: "user" },
     idImagePath: { type: String },
     selfieImagePath: { type: String },
+    profilePicture: { type: String, default: null },
 
     verificationStatus: {
       type: String,
@@ -28,12 +29,19 @@ const userSchema = new mongoose.Schema(
     },
 
     isVerified: { type: Boolean, default: false },
+    isEmailVerified: { type: Boolean, default: false },
     isdeleted: { type: Boolean, default: false },
     isbanned: { type: Boolean, default: false },
     changeCredentialsTime: { type: Date, default: Date.now },
     lastLoginAt: { type: Date },
     otp: { type: String },
     otpExpiry: { type: Date },
+    blockedUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: { createdAt: "createdAt", updatedAt: false } },
 );

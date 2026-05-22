@@ -34,16 +34,24 @@ import {
   type BackendClaim,
   type BackendPost,
   type DashboardStats,
+  type BackendContactMessage,
 } from "../lib/api";
 
-type Section = "overview" | "claims" | "verifications" | "users" | "posts" | "contact_messages";
+type Section =
+  | "overview"
+  | "claims"
+  | "verifications"
+  | "users"
+  | "posts"
+  | "contact_messages"
+  | "user_reports";
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 type ClaimsTab = "pending" | "processed";
 
 const PAGE_LIMIT = 10;
 
 export default function Admin() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const { language } = useLanguage();
   const isRTL = language === "ar";
   const tCopy = useMemo(() => getCopy(isRTL), [isRTL]);
@@ -54,7 +62,6 @@ export default function Admin() {
   // Stats — used both by Overview and to drive the badge counts in the sidebar
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-
   // Users
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -425,15 +432,23 @@ export default function Admin() {
     },
     {
       id: "contact_messages",
-      label: isRTL ? "رسائل التواصل" : "Contact Messages",
+      label: tCopy.sectionTitles.contact_messages,
       icon: Mail,
-      tone: "slate",
+      badge: stats?.pendingContactMessages,
+      tone: "amber",
+    },
+    {
+      id: "user_reports",
+      label: tCopy.sectionTitles.user_reports,
+      icon: ShieldAlert,
+      badge: stats?.pendingUserReports,
+      tone: "red",
     },
   ];
 
   return (
     <div
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300"
+      className="min-h-screen bg-slate-50  transition-colors duration-300"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <main className="w-full max-w-7xl mx-auto px-4 lg:px-8 py-8">
@@ -459,7 +474,7 @@ export default function Admin() {
               </div>
 
               {/* Nav list */}
-              <nav className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-2 shadow-xs hidden xl:flex xl:flex-col gap-2">
+              <nav className="bg-white  rounded-2xl border border-slate-200 p-2 shadow-xs hidden xl:flex xl:flex-col gap-2">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeSection === item.id;
@@ -470,7 +485,7 @@ export default function Admin() {
                       className={`relative shrink-0 inline-flex items-center justify-center xl:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer w-auto xl:w-full ${
                         isActive
                           ? "bg-tertiary text-white shadow-sm"
-                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          : "text-slate-600  hover:bg-slate-100"
                       }`}
                     >
                       <Icon className="h-5 w-5 shrink-0" />
@@ -505,22 +520,18 @@ export default function Admin() {
               <button
                 type="button"
                 onClick={() => setAdminDrawerOpen(true)}
-                className="inline-flex items-center gap-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center gap-3 rounded-xl bg-white border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 shadow-xs cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <LayoutDashboard className="h-5 w-5" />
                 {tCopy.drawer.action}
               </button>
             </div>
             <header className="flex flex-col items-start gap-2 text-start">
-              <h1 className="text-2xl sm:text-3xl font-black text-tertiary dark:text-white">
-                {activeSection === "contact_messages" 
-                  ? (isRTL ? "رسائل التواصل" : "Contact Messages") 
-                  : tCopy.sectionTitles[activeSection]}
+              <h1 className="text-2xl sm:text-3xl font-black text-tertiary ">
+                {tCopy.sectionTitles[activeSection]}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {activeSection === "contact_messages"
-                  ? (isRTL ? "اقرأ رسائل الدعم ورد عليها." : "Read and reply to support messages.")
-                  : tCopy.sectionSubtitles[activeSection]}
+              <p className="text-sm text-slate-500 ">
+                {tCopy.sectionSubtitles[activeSection]}
               </p>
             </header>
 
@@ -529,7 +540,19 @@ export default function Admin() {
             )}
 
             {activeSection === "contact_messages" && (
-              <ContactMessagesPanel t={tCopy} isRTL={isRTL} />
+              <ContactMessagesPanel
+                t={tCopy}
+                isRTL={isRTL}
+                onReplied={fetchStats}
+              />
+            )}
+
+            {activeSection === "user_reports" && (
+              <UserReportsPanel
+                t={tCopy}
+                isRTL={isRTL}
+                onReplied={fetchStats}
+              />
             )}
 
             {activeSection === "claims" && (
@@ -1485,8 +1508,8 @@ function SearchHeader({
   isRTL: boolean;
 }) {
   return (
-    <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-      <h2 className="text-tertiary dark:text-slate-100 font-bold text-start">
+    <div className="p-4 sm:p-5 border-b border-slate-100  flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <h2 className="text-tertiary  font-bold text-start">
         {title}
       </h2>
       <form
@@ -1502,7 +1525,7 @@ function SearchHeader({
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
             placeholder={placeholder}
-            className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 ${isRTL ? "pr-9 pl-3" : "pl-9 pr-3"} py-2 text-sm focus:bg-white dark:focus:bg-slate-800 focus:border-secondary outline-none`}
+            className={`w-full rounded-xl border border-slate-200 bg-slate-50/50 ${isRTL ? "pr-9 pl-3" : "pl-9 pr-3"} py-2 text-sm focus:bg-white focus:border-secondary outline-none`}
           />
         </div>
         <button
@@ -1555,51 +1578,51 @@ function ReviewClaimModal({
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? "rtl" : "ltr"}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden"
+        className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden"
       >
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-start justify-between">
+        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-bold text-tertiary dark:text-white">
+            <h3 className="text-lg font-bold text-tertiary ">
               {t.claims.reviewTitle}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-500  mt-1">
               {post?.name || t.claims.unknownPost}
             </p>
           </div>
           <button
             onClick={onClose}
             title={isRTL ? "إغلاق" : "Close"}
-            className="h-8 w-8 rounded-full bg-slate-200/60 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center"
+            className="h-8 w-8 rounded-full bg-slate-200/60  text-slate-500  hover:bg-slate-200 flex items-center justify-center"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div className="bg-slate-50/80 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 p-3">
+            <div className="bg-slate-50/80 /80 rounded-xl border border-slate-100  p-3">
               <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
                 {t.claims.claimant}
               </p>
-              <p className="font-bold text-tertiary dark:text-slate-200">
+              <p className="font-bold text-tertiary ">
                 {claimant?.name || "—"}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 ">
                 {claimant?.email || ""}
               </p>
               {claimant?.phoneNumber && (
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 ">
                   {claimant.phoneNumber}
                 </p>
               )}
             </div>
-            <div className="bg-slate-50/80 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 p-3">
+            <div className="bg-slate-50/80 /80 rounded-xl border border-slate-100  p-3">
               <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
                 {t.claims.post}
               </p>
-              <p className="font-bold text-tertiary dark:text-slate-200">
+              <p className="font-bold text-tertiary ">
                 {post?.name || "—"}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
+              <p className="text-xs text-slate-500  capitalize">
                 {post?.postType || ""}
               </p>
             </div>
@@ -1637,7 +1660,7 @@ function ReviewClaimModal({
               onChange={(e) => onNotesChange(e.target.value)}
               placeholder={t.claims.notesPlaceholder}
               rows={3}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm focus:bg-white dark:focus:bg-slate-900 focus:border-secondary outline-none resize-none text-slate-700 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-secondary outline-none resize-none text-slate-700 "
             />
           </div>
         </div>
@@ -1718,21 +1741,21 @@ function ReviewVerificationModal({
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? "rtl" : "ltr"}
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
       >
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-start justify-between shrink-0">
+        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between shrink-0">
           <div>
-            <h3 className="text-lg font-bold text-tertiary dark:text-white text-start">
+            <h3 className="text-lg font-bold text-tertiary  text-start">
               {t.verifications.reviewTitle}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 text-start">
+            <p className="text-sm text-slate-500  mt-1 text-start">
               {user.name} · {user.email}
             </p>
           </div>
           <button
             onClick={onClose}
             title={isRTL ? "إغلاق" : "Close"}
-            className="h-8 w-8 rounded-full bg-slate-200/60 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center"
+            className="h-8 w-8 rounded-full bg-slate-200/60  text-slate-500  hover:bg-slate-200 flex items-center justify-center"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1740,7 +1763,7 @@ function ReviewVerificationModal({
         <div className="px-6 py-5 space-y-4 overflow-y-auto">
           {/* ID image preview */}
           {user.idImagePath ? (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800/50">
+            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50/50">
               <a
                 href={user.idImagePath}
                 target="_blank"
@@ -1749,12 +1772,12 @@ function ReviewVerificationModal({
                 <img
                   src={user.idImagePath}
                   alt="ID"
-                  className="w-full max-h-[55vh] object-contain bg-slate-50 dark:bg-slate-800/50"
+                  className="w-full max-h-[55vh] object-contain bg-slate-50/50"
                 />
               </a>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-8 text-center text-slate-500 dark:text-slate-400">
+            <div className="rounded-2xl border border-dashed border-slate-300  bg-slate-50 p-8 text-center text-slate-500 ">
               <ImageIcon className="h-8 w-8 mx-auto mb-2 text-slate-300" />
               {t.verifications.noId}
             </div>
@@ -1794,7 +1817,7 @@ function ReviewVerificationModal({
               onChange={(e) => setReason(e.target.value)}
               placeholder={t.verifications.rejectionReasonPlaceholder}
               rows={2}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm focus:bg-white dark:focus:bg-slate-900 focus:border-secondary outline-none resize-none text-slate-700 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-secondary outline-none resize-none text-slate-700 "
             />
           </div>
         </div>
@@ -1831,11 +1854,11 @@ function ReviewVerificationModal({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-50/80 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 p-3">
+    <div className="bg-slate-50/80 /80 rounded-xl border border-slate-100  p-3">
       <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
         {label}
       </p>
-      <p className="font-semibold text-tertiary dark:text-slate-200 text-sm break-all">
+      <p className="font-semibold text-tertiary  text-sm break-all">
         {value}
       </p>
     </div>
@@ -2021,6 +2044,7 @@ function getCopy(isRTL: boolean): Copy {
         users: "إدارة المستخدمين",
         posts: "إدارة المنشورات",
         contact_messages: "رسائل التواصل",
+        user_reports: "بلاغات المستخدمين",
       },
       sectionSubtitles: {
         overview: "لمحة سريعة عن النشاط على المنصة.",
@@ -2029,6 +2053,7 @@ function getCopy(isRTL: boolean): Copy {
         users: "إدارة المستخدمين، الحظر، والصلاحيات.",
         posts: "مراجعة جميع البلاغات وحذف المنشورات غير المناسبة.",
         contact_messages: "قراءة الرسائل والرد عليها عبر البريد الإلكتروني.",
+        user_reports: "مراجعة بلاغات المستخدمين واتخاذ الإجراءات اللازمة.",
       },
       stats: {
         totalUsers: "إجمالي المستخدمين",
@@ -2153,6 +2178,7 @@ function getCopy(isRTL: boolean): Copy {
       users: "User Management",
       posts: "Posts Management",
       contact_messages: "Contact Messages",
+      user_reports: "User Reports",
     },
     sectionSubtitles: {
       overview: "A quick snapshot of platform activity.",
@@ -2161,6 +2187,7 @@ function getCopy(isRTL: boolean): Copy {
       users: "Manage users, bans, and roles.",
       posts: "Review every report and remove inappropriate posts.",
       contact_messages: "Read and reply to support messages via email.",
+      user_reports: "Review user reports and take necessary actions.",
     },
     stats: {
       totalUsers: "Total users",
@@ -2268,4 +2295,275 @@ function getCopy(isRTL: boolean): Copy {
       deleteFailed: "Failed to delete post.",
     },
   };
+}
+
+function parseReportMessage(message: string) {
+  const lines = message.split("\n").map((l) => l.trim()).filter(Boolean);
+  const fields: Record<string, string> = {};
+  for (const line of lines) {
+    const idx = line.indexOf(":");
+    if (idx > 0) {
+      fields[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+  }
+  return fields;
+}
+
+// ─── User Reports Panel ───────────────────────────────────────────────────────
+function UserReportsPanel({
+  t,
+  isRTL,
+  onReplied,
+}: {
+  t: Copy;
+  isRTL: boolean;
+  onReplied?: () => void;
+}) {
+  const { token } = useAuth();
+  const [messages, setMessages] = useState<BackendContactMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [replyingTo, setReplyingTo] = useState<BackendContactMessage | null>(
+    null,
+  );
+  const [replyMessage, setReplyMessage] = useState("");
+  const [replyLoading, setReplyLoading] = useState(false);
+
+  const fetchReports = async (p: number) => {
+    if (!token) return;
+    try {
+      setLoading(true);
+      const res = await adminApi.getContactMessages(token, {
+        page: p,
+        limit: 10,
+        type: "report",
+      });
+      setMessages(res.messages);
+      setTotalPages(res.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch reports", err);
+      toast.error(isRTL ? "فشل جلب البلاغات" : "Failed to load reports");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchReports(page);
+  }, [token, page]);
+
+  const handleReply = async () => {
+    if (!token || !replyingTo || !replyMessage.trim()) return;
+    try {
+      setReplyLoading(true);
+      await adminApi.replyToContactMessage(replyingTo._id, replyMessage, token);
+      toast.success(isRTL ? "تم إرسال الرد بنجاح" : "Reply sent successfully");
+      setReplyingTo(null);
+      setReplyMessage("");
+      void fetchReports(page);
+      if (onReplied) onReplied();
+    } catch (err) {
+      console.error("Failed to send reply", err);
+      toast.error(isRTL ? "فشل إرسال الرد" : "Failed to send reply");
+    } finally {
+      setReplyLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+      <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <h2 className="text-tertiary font-bold text-start">
+          {t.sectionTitles.user_reports}
+        </h2>
+      </div>
+
+      {loading ? (
+        <div className="p-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 text-secondary animate-spin" />
+        </div>
+      ) : messages.length === 0 ? (
+        <div className="p-12 text-center text-slate-500">
+          <ShieldAlert className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+          {isRTL ? "لا توجد بلاغات حالياً." : "No reports found."}
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {messages.map((msg) => (
+            <li
+              key={msg._id}
+              className="p-4 sm:px-5 sm:py-4 hover:bg-slate-50/50 transition-colors"
+            >
+              <div className="flex flex-col gap-2 w-full text-start">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="font-bold text-tertiary truncate">
+                        {msg.subject}
+                      </p>
+                      {msg.isReplied && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold whitespace-nowrap">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {isRTL ? "تم الرد" : "Replied"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-500 truncate">
+                      {msg.name} ({msg.email})
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      {new Date(msg.createdAt).toLocaleDateString(
+                        isRTL ? "ar-EG" : "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setReplyingTo(msg);
+                      setReplyMessage("");
+                    }}
+                    disabled={msg.isReplied}
+                    className={`shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      msg.isReplied
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                        : "bg-secondary text-white hover:bg-secondary/90"
+                    }`}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    {isRTL ? "رد" : "Reply"}
+                  </button>
+                </div>
+                <div className="mt-2 bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm text-slate-700 space-y-2">
+                  {(() => {
+                    const parsed = parseReportMessage(msg.message);
+                    const rows = [
+                      ["Reported User", parsed["Reported User"]],
+                      ["Reported By", parsed["Reported By"]],
+                      ["Reason", parsed["Reason"]],
+                      ["Sub-reasons", parsed["Sub-reasons"]],
+                      ["Chat ID", parsed["Chat ID"]],
+                    ].filter(([, v]) => v);
+                    if (rows.length === 0) {
+                      return (
+                        <p className="whitespace-pre-wrap">{msg.message}</p>
+                      );
+                    }
+                    return rows.map(([label, value]) => (
+                      <div key={label} className="flex flex-col sm:flex-row sm:gap-2">
+                        <span className="font-bold text-slate-500 shrink-0 min-w-28">
+                          {label}:
+                        </span>
+                        <span className="text-slate-800 break-all">{value}</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onChange={setPage}
+        isRTL={isRTL}
+      />
+
+      <AnimatePresence>
+        {replyingTo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-70 bg-slate-950/40 flex items-center justify-center p-4"
+            onClick={() => setReplyingTo(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              dir={isRTL ? "rtl" : "ltr"}
+              className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden text-start"
+            >
+              <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-tertiary">
+                    {isRTL ? "الرد على البلاغ" : "Reply to Report"}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {isRTL ? "إلى:" : "To:"} {replyingTo.name} (
+                    {replyingTo.email})
+                  </p>
+                </div>
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  className="h-8 w-8 rounded-full bg-slate-200/60 text-slate-500 hover:bg-slate-200 flex items-center justify-center cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
+                  <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
+                    {isRTL ? "البلاغ الأصلي" : "Original Report"}
+                  </p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                    {replyingTo.message}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                    {isRTL ? "نص الرد" : "Reply Text"}
+                  </label>
+                  <textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    placeholder={
+                      isRTL
+                        ? "اكتب ردك هنا (سيتم إرساله كبريد إلكتروني)..."
+                        : "Write your reply here (will be sent as email)..."
+                    }
+                    rows={5}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-secondary outline-none resize-none text-slate-700"
+                  />
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-end">
+                <button
+                  onClick={() => setReplyingTo(null)}
+                  disabled={replyLoading}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isRTL ? "إلغاء" : "Cancel"}
+                </button>
+                <button
+                  onClick={handleReply}
+                  disabled={replyLoading || !replyMessage.trim()}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {replyLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  {isRTL ? "إرسال" : "Send Reply"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }

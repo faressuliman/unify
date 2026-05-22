@@ -1,6 +1,9 @@
 
 @import "tailwindcss";
 
+/* App uses light theme only — ignore OS dark mode preference */
+@custom-variant dark (&:is(.force-dark *));
+
 @theme {
   --color-background: #ffffff;
   --color-foreground: #1c190d;
