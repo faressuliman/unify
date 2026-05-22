@@ -74,13 +74,9 @@ const Login = () => {
             navigate('/');
         } catch (error) {
             const message = error instanceof ApiError ? error.message : 'Unable to log in right now.';
-            const normalizedMessage = message.toLowerCase();
-
-            if (message === 'Invalid credentials' || normalizedMessage.includes('account deleted')) {
-                toast.error(localizeError('Invalid credentials'));
-            } else if (normalizedMessage.includes('account banned')) {
-                toast.error(isRTL ? 'أنت محظور من هذه المنصة' : 'You are banned from this platform');
-            } else if (normalizedMessage.includes('pending verification')) {
+            if (message === 'Invalid credentials') {
+                toast.error(localizeError(message));
+            } else if (message.toLowerCase().includes('pending verification')) {
                 // Friendly RTL/LTR copy when the backend blocks unverified users.
                 toast.warning(
                     isRTL
@@ -88,7 +84,7 @@ const Login = () => {
                         : "Your account is pending verification. We'll email you as soon as our team reviews your ID.",
                     { duration: 7000 },
                 );
-            } else if (normalizedMessage.includes('network') || normalizedMessage.includes('timeout')) {
+            } else if (message.toLowerCase().includes('network') || message.toLowerCase().includes('timeout')) {
                 toast.error(isRTL ? 'تعذّر الاتصال بالخادم حالياً. حاول مرة أخرى.' : 'Unable to reach the server right now. Please try again.');
             } else {
                 setSubmitError(message);
@@ -172,8 +168,8 @@ const Login = () => {
                         </div>
 
                         <div className="pt-6">
-                            <SubmitButton type="submit" isLoading={isSubmitting}>
-                                {isSubmitting ? content.signingIn : content.signIn}
+                            <SubmitButton type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? 'Signing in...' : content.signIn}
                             </SubmitButton>
                         </div>
                     </form>

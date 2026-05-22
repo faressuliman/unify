@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useMap } from 'react-leaflet';
-import { X } from 'lucide-react';
-import MissingModal from '../ui/modals/MissingModal';
-import FoundModal from '../ui/modals/FoundModal';
-import { type BackendMapMarker } from '../../lib/api';
-import type { ProfileData } from '../home/PersonCard';
+import { useState } from "react";
+import { useMap } from "react-leaflet";
+import { X, Calendar, User, MapPin, ArrowRight, ArrowLeft } from "lucide-react";
+import MissingModal from "../ui/modals/MissingModal";
+import FoundModal from "../ui/modals/FoundModal";
+import { type BackendMapMarker } from "../../lib/api";
+import type { ProfileData } from "../home/PersonCard";
 
 const extractAge = (age: number | string, details?: string): string => {
-  if (age) return String(age);
-  if (!details) return '';
+  if (age != null && age !== "") return String(age);
+  if (!details) return "";
   const match = details.match(/(\d+)/);
-  return match ? match[1] : '';
+  return match ? match[1] : "";
 };
 
 type MapPopupProps = {
@@ -33,61 +33,122 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
     id: post.id,
     type: post.type,
     name: post.name,
-    status: post.status ?? 'active',
-    location: post.location ?? post.address ?? post.city ?? '',
-    timeAgo: post.timeAgo ?? (post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''),
-    details: post.details ?? '',
+    status: post.status ?? "active",
+    location: post.location ?? post.address ?? post.city ?? "",
+    timeAgo:
+      post.timeAgo ??
+      (post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""),
+    details: post.details ?? "",
     age: post.age ? String(post.age) : undefined,
     city: post.city,
-    reportDate: post.createdAt ? new Date(post.createdAt).toLocaleDateString() : undefined,
+    reportDate: post.createdAt
+      ? new Date(post.createdAt).toLocaleDateString()
+      : undefined,
   };
 
   return (
     <>
-      <div className="font-sans flex flex-col gap-3 p-1" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex justify-between items-start gap-4">
-          <h3 className="font-bold text-tertiary text-base m-0 text-start">{post.name}</h3>
+      <div
+        className="font-sans flex flex-col gap-0 w-full"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        {/* Header Area */}
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-col gap-1.5 text-start pr-4 rtl:pr-0 rtl:pl-4">
+            <span
+              className={`inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${post.type === "missing" ? "bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400"}`}
+            >
+              {post.type === "missing"
+                ? isRTL
+                  ? "مفقود"
+                  : "Missing"
+                : isRTL
+                  ? "معثور عليه"
+                  : "Found"}
+            </span>
+            <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-2">
+              {post.name}
+            </h3>
+          </div>
           <button
             type="button"
-            className="text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center shrink-0 cursor-pointer"
+            aria-label={isRTL ? "إغلاق" : "Close"}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               map.closePopup();
             }}
           >
-            <X className="w-3 h-3" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-2 text-sm text-end bg-slate-50 p-3 rounded-xl border border-slate-100">
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400 font-medium text-xs break-keep whitespace-nowrap">
-              {post.type === 'missing' ? t.dateLost : t.dateFound || 'Date'} :
-            </span>
-            <span className="font-semibold text-slate-800 leading-tight flex-1 text-end">
-              {post.lastSeenDate ? new Date(post.lastSeenDate).toLocaleDateString() : post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.timeAgo || t.notProvided}
-            </span>
+        {/* Details Area */}
+        <div className="flex flex-col gap-3 mb-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 text-blue-500 shrink-0 shadow-sm">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col min-w-0 text-start flex-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                {post.type === "missing" ? t.dateLost : t.dateFound || "Date"}
+              </span>
+              <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">
+                {post.lastSeenDate
+                  ? new Date(post.lastSeenDate).toLocaleDateString()
+                  : post.createdAt
+                    ? new Date(post.createdAt).toLocaleDateString()
+                    : post.timeAgo || t.notProvided}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400 font-medium text-xs break-keep whitespace-nowrap">{t.currentAge} :</span>
-            <span className="font-semibold text-slate-800 flex-1 text-end">{extractAge(post.age ?? '', post.details) || '?'}</span>
+
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 text-amber-500 shrink-0 shadow-sm">
+              <User className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col min-w-0 text-start flex-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                {t.currentAge}
+              </span>
+              <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 truncate">
+                {extractAge(post.age ?? "", post.details) || "?"}
+              </span>
+            </div>
           </div>
-          <div className="flex items-start gap-4">
-            <span className="text-slate-400 font-medium text-xs break-keep whitespace-nowrap">{t.homeAddress || 'Address'} :</span>
-            <span className="font-semibold text-slate-800 leading-tight flex-1 text-end">{post.address || post.city || post.location}</span>
+
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 text-emerald-500 shrink-0 shadow-sm">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col min-w-0 text-start flex-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                {t.homeAddress || "Address"}
+              </span>
+              <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 line-clamp-1">
+                {post.address || post.city || post.location || t.notProvided}
+              </span>
+            </div>
           </div>
         </div>
 
+        {/* Action Button */}
         <button
           type="button"
+          aria-label={t.viewDetails}
           onClick={() => setIsModalOpen(true)}
-          className="w-full mt-1 bg-gray-200 hover:bg-gray-300 text-tertiary font-bold py-2 rounded-xl text-sm transition-colors cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/90 text-white font-bold py-2.5 rounded-xl text-sm shadow-md shadow-secondary/20 transition-all active:scale-[0.98] cursor-pointer"
         >
           {t.viewDetails}
+          {isRTL ? (
+            <ArrowLeft className="w-4 h-4" />
+          ) : (
+            <ArrowRight className="w-4 h-4" />
+          )}
         </button>
       </div>
 
-      {post.type === 'missing' ? (
+      {post.type === "missing" ? (
         <MissingModal
           isOpen={isModalOpen}
           onOpenChange={setIsModalOpen}

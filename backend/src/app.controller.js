@@ -9,6 +9,7 @@ import claimRouter from "./module/claim/claim.controller.js";
 import notificationRouter from "./module/notification/notification.controller.js";
 import chatRouter from "./module/chat/chat.controller.js";
 import adminRouter from "./module/admin/admin.controller.js";
+import contactRouter from "./module/contact/contact.controller.js";
 
 const bootstrap = async (app, express) => {
   app.use(express.json());
@@ -16,7 +17,9 @@ const bootstrap = async (app, express) => {
 
   await connectionDB();
 
-  app.get("/", (req, res) => res.status(200).json({ message: "UNIFY API is running" }));
+  app.get("/", (req, res) =>
+    res.status(200).json({ message: "UNIFY API is running" }),
+  );
 
   app.use("/api/auth", authRouter);
   app.use("/api/users", userRouter);
@@ -26,6 +29,7 @@ const bootstrap = async (app, express) => {
   app.use("/api/notifications", notificationRouter);
   app.use("/api/chats", chatRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/contact", contactRouter);
 
   app.use(globalerrorhandling);
 };

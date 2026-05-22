@@ -23,4 +23,8 @@ router.post("/users/:id/reject-verification", asynchandler(adminService.rejectVe
 // Post moderation
 router.get("/posts", asynchandler(adminService.getAllPostsAdmin));
 
+// Contact messages
+router.get("/contact-messages", asynchandler(adminService.getContactMessages));
+router.post("/contact-messages/:id/reply", asynchandler(adminService.replyToContactMessage));
+
 export default router;
