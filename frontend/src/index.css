@@ -182,6 +182,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+
   /* Keep native date text and picker icon on the right in RTL forms. */
   .rtl-date-input {
     direction: rtl;

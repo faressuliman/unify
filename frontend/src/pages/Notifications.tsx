@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Check, CheckCircle2, AlertCircle, Eye, EyeOff, CheckCheck } from 'lucide-react';
+import { Bell, CheckCircle2, AlertCircle, Eye, EyeOff, CheckCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { notificationApi, type BackendNotification, type BackendNotificationPost } from '@/lib/api';
@@ -96,15 +96,35 @@ export default function Notifications() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'new_sighting':
-        return <Eye className="h-6 w-6 text-blue-500" />;
+        return (
+          <div className="bg-blue-50 p-2.5 rounded-full">
+            <Eye className="h-5 w-5 text-blue-600" />
+          </div>
+        );
       case 'new_claim':
-        return <AlertCircle className="h-6 w-6 text-yellow-500" />;
+        return (
+          <div className="bg-amber-50 p-2.5 rounded-full">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+          </div>
+        );
       case 'claim_approved':
-        return <CheckCircle2 className="h-6 w-6 text-green-500" />;
+        return (
+          <div className="bg-emerald-50 p-2.5 rounded-full">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          </div>
+        );
       case 'claim_rejected':
-        return <EyeOff className="h-6 w-6 text-red-500" />;
+        return (
+          <div className="bg-rose-50 p-2.5 rounded-full">
+            <EyeOff className="h-5 w-5 text-rose-600" />
+          </div>
+        );
       default:
-        return <Bell className="h-6 w-6 text-gray-500" />;
+        return (
+          <div className="bg-gray-50 p-2.5 rounded-full">
+            <Bell className="h-5 w-5 text-gray-600" />
+          </div>
+        );
     }
   };
 
@@ -137,22 +157,28 @@ export default function Notifications() {
   }
 
   return (
-    <div className="min-h-screen pt-28 pb-12 px-4 sm:px-6 lg:px-8 bg-gray-50" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen pt-16 pb-6 px-4 sm:px-6 lg:px-8 bg-gray-50/50" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Bell className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-gray-900">{t('notifications.title')}</h1>
-            {unreadCount > 0 && (
-              <span className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">
-                {unreadCount}
-              </span>
-            )}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200/60">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center">
+              <Bell className="h-6 w-6 text-gray-700" />
+            </div>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">{t('notifications.title')}</h1>
+                {unreadCount > 0 && (
+                  <span className="bg-primary/20 text-primary-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                    {unreadCount} {t('notifications.unread')}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm cursor-pointer"
             >
               <CheckCheck className="h-4 w-4" />
               {t('notifications.markAllRead')}
@@ -166,40 +192,53 @@ export default function Notifications() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl p-12 text-center shadow-xs border border-gray-100"
+                className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[240px]"
               >
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                    <Check className="h-8 w-8 text-gray-400" />
-                  </div>
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                  <Bell className="h-10 w-10 text-gray-300" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   {t('notifications.empty')}
                 </h3>
+                <p className="text-gray-500 max-w-sm mt-1">
+                  {language === 'ar' 
+                    ? 'عندما تتلقى إشعارات جديدة حول التقارير والمطالبات، ستظهر هنا.'
+                    : 'When you receive new notifications about reports and claims, they will appear here.'}
+                </p>
+                <button
+                  onClick={() => navigate('/')}
+                  className="mt-8 px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold cursor-pointer transition-all duration-300 hover:bg-[#e6dcaf] hover:text-slate-900 hover:shadow-md hover:-translate-y-0.5"
+                >
+                  {language === 'ar' ? 'العودة للرئيسية' : 'Return Home'}
+                </button>
               </motion.div>
             ) : (
               notifications.map((notification, index) => (
                 <motion.div
                   key={notification._id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.03 }}
                   onClick={() => handleMarkOneRead(notification._id)}
-                  className={`p-6 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                  className={`relative overflow-hidden p-5 rounded-2xl border transition-all duration-300 cursor-pointer group ${
                     notification.isRead
-                      ? 'bg-white border-gray-100 hover:bg-gray-50'
-                      : 'bg-primary-50/50 border-primary-200 hover:bg-primary-50'
+                      ? 'bg-white border-gray-200 hover:border-gray-300 shadow-xs hover:shadow-sm'
+                      : 'bg-white border-primary/30 shadow-sm hover:border-primary/50 hover:shadow-md'
                   }`}
                 >
+                  {!notification.isRead && (
+                    <div className="absolute top-0 start-0 w-1.5 h-full bg-primary" />
+                  )}
                   <div className="flex items-start gap-4">
-                    <div className="mt-1 flex-shrink-0">
+                    <div className="mt-0.5 flex-shrink-0">
                       {getNotificationIcon(notification.type)}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-lg font-medium text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-base leading-snug mb-1.5 ${notification.isRead ? 'text-gray-700 font-medium' : 'text-gray-900 font-semibold'}`}>
                         {getNotificationText(notification)}
                       </p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className={`text-sm flex items-center gap-1.5 ${notification.isRead ? 'text-gray-500' : 'text-primary-600 font-medium'}`}>
+                        {!notification.isRead && <span className="block w-1.5 h-1.5 rounded-full bg-primary ml-1 mr-1"></span>}
                         {new Date(notification.createdAt).toLocaleDateString(
                           language === 'ar' ? 'ar-EG' : 'en-US',
                           {
@@ -212,12 +251,6 @@ export default function Notifications() {
                         )}
                       </p>
                     </div>
-                    {!notification.isRead && (
-                      <span
-                        className="mt-2 h-2.5 w-2.5 rounded-full bg-primary shrink-0"
-                        aria-label="unread"
-                      ></span>
-                    )}
                   </div>
                 </motion.div>
               ))

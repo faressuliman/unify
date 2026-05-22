@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck } from 'lucide-react';
+import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck, CheckCheck, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,7 +13,7 @@ import {
 } from '../ui/dropdown-menu';
 import { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import unifyLogo from '../../assets/unify.png';
-import { notificationApi } from '@/lib/api';
+import { notificationApi, type BackendNotification, type BackendNotificationPost } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
 
 const LazyDrawer = lazy(() => import('../ui/Drawer').then((module) => ({ default: module.Drawer })));
@@ -39,6 +39,8 @@ export function Navbar() {
   const { user, token, logout, isAuthenticated } = useAuth();
   const { language, toggleLanguage, t, isLocked: isLanguageLocked } = useLanguage();
   const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState<BackendNotification[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasActiveChats] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isDrawerLoaded, setIsDrawerLoaded] = useState(false);
@@ -61,14 +63,6 @@ export function Navbar() {
     logout();
     navigate('/');
     setSheetOpen(false);
-  };
-
-  const handleNotificationClick = () => {
-    if (currentPage === 'notifications') {
-      navigate('/search');
-    } else {
-      navigate('/notifications');
-    }
   };
 
   // Handle navigation
@@ -196,16 +190,19 @@ export function Navbar() {
     }
 
     let cancelled = false;
-    const fetchCount = async () => {
+    const fetchNotificationsData = async () => {
       try {
-        const res = await notificationApi.getMyNotifications(token, 1, 1);
-        if (!cancelled) setNotificationCount(res.unreadCount);
+        const res = await notificationApi.getMyNotifications(token, 1, 10);
+        if (!cancelled) {
+          setNotificationCount(res.unreadCount);
+          setNotifications(res.notifications);
+        }
       } catch (e) {
-        console.error('Failed to fetch notifications count', e);
+        console.error('Failed to fetch notifications data', e);
       }
     };
 
-    void fetchCount();
+    void fetchNotificationsData();
 
     // Subscribe to realtime updates so the badge reflects new notifications
     // and read events immediately. Polling stays as a safety net in case the
@@ -214,15 +211,19 @@ export function Navbar() {
     const handleUnreadCount = ({ unreadCount }: { unreadCount: number }) => {
       setNotificationCount(unreadCount);
     };
-    const handleNew = () => {
+    const handleNew = (n: BackendNotification) => {
       setNotificationCount((c) => c + 1);
+      setNotifications((prev) => {
+        if (prev.find((x) => x._id === n._id)) return prev;
+        return [n, ...prev].slice(0, 10); // Keep only the latest 10
+      });
     };
     if (socket) {
       socket.on('notification:unread-count', handleUnreadCount);
       socket.on('notification:new', handleNew);
     }
 
-    const interval = setInterval(fetchCount, 60000);
+    const interval = setInterval(fetchNotificationsData, 60000);
     return () => {
       cancelled = true;
       clearInterval(interval);
@@ -237,6 +238,81 @@ export function Navbar() {
     isScrolled &&
     !isAuthLikePage &&
     currentPage !== 'map';
+  const dropdownAlign = 'end';
+  const dropdownDir = isRTL ? 'rtl' : 'ltr';
+
+  const handleMarkOneRead = async (id: string) => {
+    if (!token) return;
+    const target = notifications.find((n) => n._id === id);
+    if (!target || target.isRead) return;
+
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+    );
+    setNotificationCount((c) => Math.max(0, c - 1));
+
+    try {
+      await notificationApi.markOneRead(id, token);
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+      // rollback
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: false } : n))
+      );
+      setNotificationCount((c) => c + 1);
+    }
+  };
+
+  const handleMarkAllRead = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!token || notificationCount === 0) return;
+    const previous = notifications;
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotificationCount(0);
+    try {
+      await notificationApi.markAllRead(token);
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+      setNotifications(previous);
+      setNotificationCount(previous.filter((n) => !n.isRead).length);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'new_sighting':
+        return <Eye className="h-5 w-5 text-blue-500" />;
+      case 'new_claim':
+        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+      case 'claim_approved':
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      case 'claim_rejected':
+        return <EyeOff className="h-5 w-5 text-red-500" />;
+      default:
+        return <Bell className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getNotificationText = (notification: BackendNotification) => {
+    let postName = '';
+    if (notification.postId && typeof notification.postId !== 'string') {
+      postName = (notification.postId as BackendNotificationPost).name || '';
+    }
+
+    switch (notification.type) {
+      case 'new_sighting':
+        return `${t('notifications.new_sighting')}${postName}`;
+      case 'new_claim':
+        return `${t('notifications.new_claim')}${postName}`;
+      case 'claim_approved':
+        return `${t('notifications.claim_approved')}${postName}`;
+      case 'claim_rejected':
+        return `${t('notifications.claim_rejected')}${postName}`;
+      default:
+        return postName;
+    }
+  };
+
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
@@ -248,7 +324,7 @@ export function Navbar() {
       }}
       className={`${isAuthLikePage || currentPage === 'map' ? 'relative' : 'sticky'} top-0 z-50 w-full transition-all duration-300 
         ${isScrolledActive 
-          ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 2xl:bg-transparent 2xl:backdrop-blur-none 2xl:border-transparent 2xl:shadow-none 2xl:pointer-events-none' 
+          ? 'bg-white/95 border-b shadow-md backdrop-blur-md border-gray-200/50 xl:bg-transparent xl:backdrop-blur-none xl:border-transparent xl:shadow-none xl:pointer-events-none' 
           : 'bg-white/95 border-b shadow-sm backdrop-blur-md border-gray-200/50 pointer-events-auto'
         }`
       }
@@ -257,8 +333,8 @@ export function Navbar() {
       <div className="w-full max-w-400 mx-auto px-6 lg:px-12 pointer-events-auto">
         <div className={`w-full flex h-20 items-center justify-between transition-all duration-300
           ${isScrolledActive 
-            ? '2xl:bg-white/95 2xl:backdrop-blur-md 2xl:border-x 2xl:border-b 2xl:border-gray-200/50 2xl:shadow-md 2xl:rounded-b-4xl 2xl:px-6' 
-            : '2xl:bg-transparent 2xl:border-transparent 2xl:shadow-none'
+            ? 'xl:bg-white/95 xl:backdrop-blur-md xl:border-x xl:border-b xl:border-gray-200/50 xl:shadow-md xl:rounded-b-4xl xl:px-6' 
+            : 'xl:bg-transparent xl:border-transparent xl:shadow-none'
           }`}>
           {/* Left: Logo */}
           <div className="flex items-center shrink-0">
@@ -274,8 +350,8 @@ export function Navbar() {
         </div>
 
         {/* Center: Navigation */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden 2xl:flex">
-          <nav className="hidden 2xl:flex items-center gap-2  px-3 py-2  ">
+        <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden xl:flex">
+          <nav className="hidden xl:flex items-center gap-2  px-3 py-2  ">
             <button
               onClick={() => handleNavClick('search')}
               className={`group relative px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2.5 cursor-pointer border-none ${
@@ -339,7 +415,7 @@ export function Navbar() {
               <button
                 onClick={toggleLanguage}
                 disabled={isLanguageLocked}
-                className={`hidden 2xl:flex relative w-10 h-10 rounded-full items-center justify-center transition-all duration-200 border-none ${
+                className={`hidden xl:flex relative w-10 h-10 rounded-full items-center justify-center transition-all duration-200 border-none ${
                   isLanguageLocked
                     ? 'bg-gray-100 cursor-not-allowed opacity-60'
                     : 'bg-gray-100 hover:bg-gray-200 cursor-pointer'
@@ -359,7 +435,7 @@ export function Navbar() {
               {/* Messages */}
               <button
                 onClick={() => handleNavClick('chat')}
-                className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                className="hidden xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                 aria-label="Messages"
               >
                 <Mail className="h-5 w-5 text-gray-700" strokeWidth={2} />
@@ -369,30 +445,104 @@ export function Navbar() {
               </button>
 
               {/* Notifications */}
-              <button
-                onClick={handleNotificationClick}
-                className="hidden 2xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
-                {notificationCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Desktop: User dropdown */}
-              <DropdownMenu>
+              <DropdownMenu dir={dropdownDir} modal={false} open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="hidden 2xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                    className="hidden xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
+                    {notificationCount > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={dropdownAlign} className="w-90 p-0 overflow-hidden rounded-xl shadow-lg border border-gray-100 mb-2">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
+                    <h3 className="font-bold text-lg text-gray-900">{t('notifications.title')}</h3>
+                    {notificationCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs font-medium text-primary hover:text-primary-600 transition-colors flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" />
+                        {t('notifications.markAllRead')}
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-100 overflow-y-auto bg-white">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-gray-500 flex flex-col items-center justify-center">
+                        <Bell className="h-8 w-8 mb-2 text-gray-300" />
+                        <p>{t('notifications.empty')}</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col">
+                        {notifications.map((notification) => (
+                          <div
+                            key={notification._id}
+                            onClick={() => handleMarkOneRead(notification._id)}
+                            className={`flex gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0 hover:bg-gray-50/80 ${
+                              !notification.isRead ? 'bg-primary-50/30' : 'bg-white'
+                            }`}
+                          >
+                            <div className="mt-0.5 shrink-0 bg-gray-100 p-2 rounded-full h-10 w-10 flex items-center justify-center">
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="flex-1 min-w-0 ps-2">
+                              <p className="text-sm text-gray-900 font-medium leading-tight mb-1">
+                                {getNotificationText(notification)}
+                              </p>
+                              <p className="text-xs text-blue-500 font-medium">
+                                {new Date(notification.createdAt).toLocaleDateString(
+                                  language === 'ar' ? 'ar-EG' : 'en-US',
+                                  {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }
+                                )}
+                              </p>
+                            </div>
+                            {!notification.isRead && (
+                              <div className="shrink-0 flex items-center justify-center self-center h-2 w-2">
+                                <span className="h-full w-full rounded-full bg-primary block"></span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2 border-t border-gray-100 bg-white">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsNotificationsOpen(false);
+                        navigate('/notifications');
+                      }}
+                      className="w-full py-2 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer bg-transparent border-none"
+                    >
+                      {t('notifications.seePrevious')}
+                    </button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Desktop: User dropdown */}
+              <DropdownMenu dir={dropdownDir} modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="hidden xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
                     aria-label="User menu"
                   >
                     <User className="h-5 w-5 text-gray-700" strokeWidth={2} />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 mt-2">
+                <DropdownMenuContent align={dropdownAlign} className="w-56 mt-2">
                   <div className="px-3 py-2 bg-linear-to-br from-primary-50 to-primary-100/50">
                     <p className="font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-600">{user?.email}</p>
@@ -416,7 +566,7 @@ export function Navbar() {
               </DropdownMenu>
             </>
           ) : (
-            <div className="hidden 2xl:flex items-center gap-3">
+            <div className="hidden xl:flex items-center gap-3">
               <button
                 onClick={toggleLanguage}
                 disabled={isLanguageLocked}
@@ -456,7 +606,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             aria-label="Open menu"
-            className="cursor-pointer 2xl:hidden"
+            className="cursor-pointer xl:hidden"
             onClick={handleOpenDrawer}
             onMouseEnter={() => {
               preloadMobileDrawer();

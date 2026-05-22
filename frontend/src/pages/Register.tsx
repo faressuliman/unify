@@ -369,7 +369,7 @@ const Register = () => {
                         
                         <div className="pt-6">
                             <SubmitButton type="submit" isLoading={isSubmitting}>
-                                {isSubmitting ? 'Creating account...' : content.createAccount}
+                                {isSubmitting ? content.creatingAccount : content.createAccount}
                             </SubmitButton>
                         </div>
                     </form>

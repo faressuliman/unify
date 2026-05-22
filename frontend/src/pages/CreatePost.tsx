@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UserCircle, Camera, FileText, MapPin, Send, Info } from 'lucide-react';
+import { UserCircle, Camera, FileText, MapPin, Send } from 'lucide-react';
 import FormInput from '@/components/ui/FormInput';
 import FormTextArea from '@/components/ui/FormTextArea';
 import SubmitButton from '@/components/ui/SubmitButton';
@@ -13,7 +13,6 @@ import PageHeader from '@/components/ui/PageHeader';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
-import InfoBanner from '@/components/ui/InfoBanner';
 import { en } from '../data/english';
 import { ar } from '../data/arabic';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
@@ -24,17 +23,10 @@ import { toast } from 'sonner';
 
 const CreatePost = () => {
     const { token } = useAuth();
-    const { language, lockLanguage } = useLanguage();
+    const { language } = useLanguage();
     const isRTL = language === 'ar';
     const navigate = useNavigate();
 
-    // Once a user starts filling the post form we freeze the language so
-    // they cannot accidentally toggle mid-way through and end up with a
-    // mixed-language record. The lock is released on unmount.
-    useEffect(() => {
-        lockLanguage(true);
-        return () => lockLanguage(false);
-    }, [lockLanguage]);
 
     const t = language === 'ar' ? ar.createPost : en.createPost;
 
@@ -287,15 +279,6 @@ const CreatePost = () => {
                 </motion.div>
 
                 <div className="max-w-400 mx-auto px-6 lg:px-12 w-full">
-                    <InfoBanner
-                        icon={<Info className="h-5 w-5" aria-hidden="true" />}
-                        message={
-                            language === 'ar'
-                                ? 'تم تثبيت اللغة على العربية أثناء إنشاء المنشور لتجنب خلط المحتوى. أكمل النموذج بنفس اللغة، ثم يمكنك تبديل اللغة لاحقًا.'
-                                : 'The interface language is locked while you create a post so the content stays consistent. Finish in the same language, you can switch again afterwards.'
-                        }
-                        className="mt-4 mb-2"
-                    />
                     <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-2 lg:items-start mt-6">
                         
                         {/* LEFT COLUMN: Input Forms */}

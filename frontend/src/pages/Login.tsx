@@ -78,6 +78,8 @@ const Login = () => {
 
             if (message === 'Invalid credentials' || normalizedMessage.includes('account deleted')) {
                 toast.error(localizeError('Invalid credentials'));
+            } else if (normalizedMessage.includes('account banned')) {
+                toast.error(isRTL ? 'أنت محظور من هذه المنصة' : 'You are banned from this platform');
             } else if (normalizedMessage.includes('pending verification')) {
                 // Friendly RTL/LTR copy when the backend blocks unverified users.
                 toast.warning(
@@ -171,7 +173,7 @@ const Login = () => {
 
                         <div className="pt-6">
                             <SubmitButton type="submit" isLoading={isSubmitting}>
-                                {isSubmitting ? 'Signing in...' : content.signIn}
+                                {isSubmitting ? content.signingIn : content.signIn}
                             </SubmitButton>
                         </div>
                     </form>
