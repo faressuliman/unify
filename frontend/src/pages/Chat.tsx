@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Send,
   Paperclip,
@@ -6,6 +7,7 @@ import {
   Loader2,
   ArrowLeft,
   ArrowRight,
+  ArrowDown,
   X,
   MoreVertical,
   Bell,
@@ -60,6 +62,7 @@ export default function Chat() {
   const { token, user } = useAuth();
   const { language } = useLanguage();
   const isRTL = language === "ar";
+  const [searchParams, setSearchParams] = useSearchParams();
   const [chats, setChats] = useState<BackendChat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<BackendMessage[]>([]);
@@ -70,7 +73,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [unreadChatIds, setUnreadChatIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
@@ -81,6 +84,34 @@ export default function Chat() {
   );
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
+  const handledChatUserRef = useRef<string | null>(null);
+  const scrollMessagesToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const updateJumpVisibility = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom =
+      container.scrollHeight - container.clientHeight - container.scrollTop;
+    setShowJumpToLatest(distanceFromBottom > 64);
+  };
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return undefined;
+
+    updateJumpVisibility();
+    const handleScroll = () => updateJumpVisibility();
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [activeChatId, messages.length]);
 
   const [pinnedChats, setPinnedChats] = useState<Set<string>>(() => {
     try {
@@ -168,6 +199,38 @@ export default function Chat() {
   }, [token]);
 
   useEffect(() => {
+    const chatWith = searchParams.get("chatWith");
+    if (!chatWith || !token) return;
+    if (handledChatUserRef.current === chatWith) return;
+
+    handledChatUserRef.current = chatWith;
+    const openChat = async () => {
+      try {
+        const res = await chatApi.startChat(chatWith, token);
+        setChats((prev) => {
+          const existingIndex = prev.findIndex((chat) => chat._id === res.chat._id);
+          if (existingIndex !== -1) {
+            const next = [...prev];
+            next[existingIndex] = res.chat;
+            return next;
+          }
+          return [res.chat, ...prev];
+        });
+        setActiveChatId(res.chat._id);
+        setSearchParams((current) => {
+          const next = new URLSearchParams(current);
+          next.delete("chatWith");
+          return next;
+        }, { replace: true });
+      } catch (err) {
+        console.error("Failed to open chat from notification", err);
+      }
+    };
+
+    void openChat();
+  }, [searchParams, token, setSearchParams]);
+
+  useEffect(() => {
     if (!activeChatId || !token) return;
     const load = async () => {
       try {
@@ -193,6 +256,7 @@ export default function Chat() {
         if (prev.some((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
+      requestAnimationFrame(scrollMessagesToBottom);
     };
     socket.on("chat:message", handleMessage);
 
@@ -226,10 +290,6 @@ export default function Chat() {
       socket.off("chat:message", handleSidebarPing);
     };
   }, [user, activeChatId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -277,6 +337,7 @@ export default function Chat() {
           if (prev.some((m) => m._id === res.message._id)) return prev;
           return [...prev, res.message];
         });
+        setTimeout(scrollMessagesToBottom, 50);
       }
       setNewMsg("");
       setAttachment(null);
@@ -334,10 +395,10 @@ export default function Chat() {
 
   return (
     <div
-      className={`bg-slate-50 flex flex-col ${activeChatId ? "fixed inset-0 z-50 md:static md:z-auto md:min-h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:pt-8 md:pb-12" : "min-h-[100dvh] pt-4 md:pt-8 pb-4 md:pb-12"}`}
+      className={`bg-slate-50 flex flex-col h-dvh overflow-hidden ${activeChatId ? "fixed inset-0 z-50 md:static md:z-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:pt-8 md:pb-12" : "pt-4 md:pt-8 pb-4 md:pb-12"}`}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className={activeChatId ? "hidden md:block" : "block"}>
+      <div className={activeChatId ? "hidden md:block shrink-0" : "block shrink-0"}>
         <PageHeader
           navigatedTo={isRTL ? "الرسائل" : "Messages"}
           title={isRTL ? "الرسائل" : "Messages"}
@@ -354,11 +415,11 @@ export default function Chat() {
         className={`w-full max-w-400 mx-auto flex-1 flex flex-col min-h-0 ${activeChatId ? "px-0 md:px-6 lg:px-12" : "px-2 sm:px-6 lg:px-12"}`}
       >
         <div
-          className={`bg-white overflow-hidden grid grid-cols-1 md:grid-cols-4 flex-1 min-h-0 ${activeChatId ? "border-0 md:border border-slate-200 md:rounded-2xl md:shadow-xs md:h-[calc(100vh-12rem)] md:min-h-[500px] md:max-h-[850px]" : "rounded-2xl border border-slate-200 shadow-xs h-[calc(100dvh-2rem)] md:h-[calc(100vh-12rem)] min-h-[350px] md:min-h-[500px] max-h-[850px]"}`}
+          className={`bg-white overflow-hidden flex flex-col md:flex-row flex-1 min-h-0 ${activeChatId ? "border-0 md:border border-slate-200 md:rounded-2xl md:shadow-xs" : "rounded-2xl border border-slate-200 shadow-xs"}`}
         >
           {/* Sidebar */}
           <aside
-            className={`border-${isRTL ? "l" : "r"} border-slate-100 flex flex-col md:col-span-1 min-w-0 ${activeChatId ? "hidden md:flex" : "flex"}`}
+            className={`border-${isRTL ? "l" : "r"} border-slate-100 flex flex-col w-full md:w-80 lg:w-96 shrink-0 min-w-0 ${activeChatId ? "hidden md:flex" : "flex"}`}
           >
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-secondary" />
@@ -541,7 +602,7 @@ export default function Chat() {
 
           {/* Conversation */}
           <section
-            className={`flex flex-col md:col-span-3 min-w-0 min-h-0 ${activeChatId ? "flex h-full" : "hidden md:flex"}`}
+            className={`flex flex-col flex-1 min-w-0 min-h-0 ${activeChatId ? "flex h-full" : "hidden md:flex"}`}
           >
             {!activeChat ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-500 px-6 min-h-0">
@@ -766,63 +827,83 @@ export default function Chat() {
                   </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/40 min-h-0">
-                  {messagesLoading ? (
-                    <div className="flex justify-center py-10">
-                      <Loader2 className="h-5 w-5 text-secondary animate-spin" />
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <p className="text-center text-sm text-slate-500 py-10">
-                      {isRTL
-                        ? "لا توجد رسائل بعد. ابدأ المحادثة!"
-                        : "No messages yet. Say hi!"}
-                    </p>
-                  ) : (
-                    messages.map((m) => {
-                      const isMine = user ? getSenderId(m) === user.id : false;
-                      return (
-                        <div
-                          key={m._id}
-                          className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                        >
+                <div className="relative flex-1 min-h-0">
+                  <div ref={messagesContainerRef} className="h-full overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/40 min-h-0">
+                    {messagesLoading ? (
+                      <div className="flex justify-center py-10">
+                        <Loader2 className="h-5 w-5 text-secondary animate-spin" />
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <p className="text-center text-sm text-slate-500 py-10">
+                        {isRTL
+                          ? "لا توجد رسائل بعد. ابدأ المحادثة!"
+                          : "No messages yet. Say hi!"}
+                      </p>
+                    ) : (
+                      messages.map((m) => {
+                        const isMine = user ? getSenderId(m) === user.id : false;
+                        return (
                           <div
-                            className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 shadow-xs ${
-                              isMine
-                                ? "bg-secondary text-white rounded-br-md"
-                                : "bg-white text-slate-800 border border-slate-100 rounded-bl-md"
-                            }`}
+                            key={m._id}
+                            className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                           >
-                            {m.content && (
-                              <p className="text-sm whitespace-pre-wrap break-words">
-                                {m.content}
-                              </p>
-                            )}
-                            {m.attachmentPath && (
-                              <a
-                                href={m.attachmentPath}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`inline-flex items-center gap-1 mt-1 text-xs font-semibold underline ${
-                                  isMine ? "text-white/90" : "text-secondary"
-                                }`}
-                              >
-                                <Paperclip className="h-3.5 w-3.5" />
-                                {isRTL ? "مرفق" : "Attachment"}
-                              </a>
-                            )}
-                            <span
-                              className={`block text-[10px] mt-1 ${
-                                isMine ? "text-white/70" : "text-slate-400"
+                            <div
+                              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 shadow-xs ${
+                                isMine
+                                  ? "bg-secondary text-white rounded-br-md"
+                                  : "bg-white text-slate-800 border border-slate-100 rounded-bl-md"
                               }`}
                             >
-                              {formatTime(m.createdAt)}
-                            </span>
+                              {m.content && (
+                                <p className="text-sm whitespace-pre-wrap wrap-break-word">
+                                  {m.content}
+                                </p>
+                              )}
+                              {m.attachmentPath && (
+                                <a
+                                  href={m.attachmentPath}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`inline-flex items-center gap-1 mt-1 text-xs font-semibold underline ${
+                                    isMine ? "text-white/90" : "text-secondary"
+                                  }`}
+                                >
+                                  <Paperclip className="h-3.5 w-3.5" />
+                                  {isRTL ? "مرفق" : "Attachment"}
+                                </a>
+                              )}
+                              <span
+                                className={`block text-[10px] mt-1 ${
+                                  isMine ? "text-white/70" : "text-slate-400"
+                                }`}
+                              >
+                                {formatTime(m.createdAt)}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {showJumpToLatest && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        scrollMessagesToBottom();
+                        setShowJumpToLatest(false);
+                      }}
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-semibold text-black shadow-md hover:bg-primary/90 transition-colors cursor-pointer"
+                      aria-label={
+                        isRTL
+                          ? "الانتقال إلى أحدث الرسائل"
+                          : "Jump to latest"
+                      }
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                      {isRTL ? "الأحدث" : "Latest"}
+                    </button>
                   )}
-                  <div ref={messagesEndRef} />
                 </div>
 
                 <form
@@ -878,14 +959,16 @@ export default function Chat() {
                     <button
                       type="submit"
                       disabled={sending || (!newMsg.trim() && !attachment)}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                     >
                       {sending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Send className="h-4 w-4" />
                       )}
-                      {isRTL ? "إرسال" : "Send"}
+                      <span className="hidden lg:inline">
+                        {isRTL ? "إرسال" : "Send"}
+                      </span>
                     </button>
                   </div>
                 </form>

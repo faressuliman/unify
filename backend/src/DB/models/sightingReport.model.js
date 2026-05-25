@@ -12,7 +12,9 @@ const sightingReportSchema = new mongoose.Schema(
       enum: ["not_sure", "possibly", "pretty_sure", "very_sure"],
       required: true,
     },
-    seenAt: { type: Date, required: true },
+    // Store reporter-provided seenAt as a freeform string to allow values
+    // like "Today 5 PM" or "Yesterday evening" without forcing a Date parse.
+    seenAt: { type: String, required: true },
     location: {
       address: { type: String },
       latitude: { type: Number },
@@ -22,6 +24,11 @@ const sightingReportSchema = new mongoose.Schema(
     additionalDetails: { type: String },
     reporterName: { type: String, required: true },
     reporterPhone: { type: String, required: true },
+    reporterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
   },
   { timestamps: { createdAt: "createdAt", updatedAt: false } }
 );

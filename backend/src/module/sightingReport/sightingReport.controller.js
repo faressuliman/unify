@@ -7,6 +7,8 @@ import * as sightingService from "./sightingReport.service.js";
 
 const router = Router();
 
+router.get("/user/my-sightings", authenticate, asynchandler(sightingService.getMySightings));
+
 // Anyone can submit a sighting (no auth needed)
 router.post(
   "/",

@@ -1,8 +1,8 @@
 import SightingReport from "../../DB/models/sightingReport.model.js";
 import Post from "../../DB/models/post.model.js";
 import { createNotification } from "../notification/notification.helper.js";
+import { verifytoken } from "../../utils/token/verifyToken.js";
 
-// ─── Create Sighting Report ───────────────────────────────────────────────────
 export const createSighting = async (req, res, next) => {
   const {
     missingPersonId, confidence, seenAt,
@@ -10,6 +10,21 @@ export const createSighting = async (req, res, next) => {
     description, additionalDetails,
     reporterName, reporterPhone,
   } = req.body;
+
+  let reporterId = null;
+  if (req.headers.authorization) {
+    try {
+      const decoded = await verifytoken({
+        token: req.headers.authorization,
+        SIGNATURE: process.env.ACCESS_SIGNATURE,
+      });
+      if (decoded?.id) {
+        reporterId = decoded.id;
+      }
+    } catch (error) {
+      // Ignore token errors, submit anonymously
+    }
+  }
 
   const post = await Post.findById(missingPersonId);
   if (!post) return next(new Error("Missing person post not found", { cause: 404 }));
@@ -26,35 +41,50 @@ export const createSighting = async (req, res, next) => {
     additionalDetails,
     reporterName,
     reporterPhone,
+    reporterId,
   });
 
-  // Notify the post owner
   await createNotification({
     userId: post.userId,
     postId: post._id,
     type: "new_sighting",
+    referenceId: report._id.toString(),
   });
 
   return res.status(201).json({ message: "Sighting report submitted", report });
 };
 
-// ─── Get Sightings For a Post ─────────────────────────────────────────────────
 export const getSightingsByPost = async (req, res, next) => {
   const { postId } = req.params;
 
   const post = await Post.findById(postId);
   if (!post) return next(new Error("Post not found", { cause: 404 }));
 
-  // Only the post owner or an admin can view sighting reports for a post.
   const isOwner = post.userId?.toString() === req.user._id.toString();
   const isAdmin = req.user.role === "admin";
-  if (!isOwner && !isAdmin) {
+  const isReporter = await SightingReport.exists({
+    missingPersonId: postId,
+    reporterId: req.user._id,
+  });
+  if (!isOwner && !isAdmin && !isReporter) {
     return next(new Error("Unauthorized", { cause: 403 }));
   }
 
-  const reports = await SightingReport.find({ missingPersonId: postId }).sort({
+  const reportsQuery = isOwner || isAdmin
+    ? { missingPersonId: postId }
+    : { missingPersonId: postId, reporterId: req.user._id };
+
+  const reports = await SightingReport.find(reportsQuery).sort({
     createdAt: -1,
   });
+
+  return res.status(200).json({ reports });
+};
+
+export const getMySightings = async (req, res, next) => {
+  const reports = await SightingReport.find({ reporterId: req.user._id })
+    .populate("missingPersonId", "name _id")
+    .sort({ createdAt: -1 });
 
   return res.status(200).json({ reports });
 };

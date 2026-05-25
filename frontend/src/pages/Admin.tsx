@@ -964,24 +964,34 @@ function ClaimRow({
   return (
     <li className="p-4 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-slate-50/50 transition-colors">
       <div className="flex-1 flex flex-col items-start text-start gap-1.5 min-w-0">
-        <div className="flex flex-wrap items-center gap-2 w-full">
-          <span className="font-bold text-base sm:text-sm text-tertiary truncate">
-            {t.claims.claimFor.replace(
-              "{name}",
-              post?.name || t.claims.unknownPost,
+        <div className="flex items-center justify-between gap-3 w-full">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <span className="font-bold text-base sm:text-sm text-tertiary truncate">
+              {t.claims.claimFor.replace(
+                "{name}",
+                post?.name || t.claims.unknownPost,
+              )}
+            </span>
+            {showStatus && (
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusTone}`}
+              >
+                {statusLabel}
+              </span>
             )}
-          </span>
-          {showStatus && (
-            <span
-              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusTone}`}
+            {!showStatus && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                {t.claims.filters.pending}
+              </span>
+            )}
+          </div>
+          {claim.status === "pending" && (
+            <button
+              onClick={() => onReview(claim)}
+              className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-secondary text-white hover:bg-secondary/90 transition-colors cursor-pointer"
             >
-              {statusLabel}
-            </span>
-          )}
-          {!showStatus && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-              {t.claims.filters.pending}
-            </span>
+              {t.claims.review}
+            </button>
           )}
         </div>
         <p className="text-xs sm:text-[11px] text-slate-400 mt-0.5">
@@ -1015,27 +1025,6 @@ function ClaimRow({
               {claim.additionalInfo}
             </p>
           </div>
-        )}
-      </div>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 mt-3 sm:mt-0 w-full sm:w-auto">
-        {claim.documentPath && (
-          <a
-            href={claim.documentPath}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-lg text-sm sm:text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-          >
-            <FileText className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-            {t.claims.viewDocument}
-          </a>
-        )}
-        {claim.status === "pending" && (
-          <button
-            onClick={() => onReview(claim)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-lg text-sm sm:text-xs font-bold bg-secondary text-white hover:bg-secondary/90 transition-colors cursor-pointer"
-          >
-            {t.claims.review}
-          </button>
         )}
       </div>
     </li>
@@ -1204,7 +1193,7 @@ function UsersPanel({
             content, which is what was making the role/status pills appear
             "centred" relative to their headers.
           */}
-          <table className="w-full text-sm table-fixed min-w-[860px]">
+          <table className="w-full text-sm table-fixed min-w-215">
             <colgroup>
               <col style={{ width: "22%" }} />
               <col style={{ width: "28%" }} />
@@ -1442,22 +1431,24 @@ function PostsPanel({
                       {post.status}
                     </span>
                   </div>
-                  {owner && (
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">
-                      {t.posts.by} {owner.name} · {owner.email || ""}
+                  <div className="mt-1 w-full text-start">
+                    {owner && (
+                      <p className="text-xs text-slate-500 truncate">
+                        {t.posts.by} {owner.name} · {owner.email || ""}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-slate-400">
+                      {post.createdAt &&
+                        new Date(post.createdAt).toLocaleDateString(
+                          isRTL ? "ar-EG" : "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
                     </p>
-                  )}
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {post.createdAt &&
-                      new Date(post.createdAt).toLocaleDateString(
-                        isRTL ? "ar-EG" : "en-US",
-                        {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        },
-                      )}
-                  </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
@@ -1563,13 +1554,14 @@ function ReviewClaimModal({
     typeof claim.postId === "object" ? (claim.postId as BackendPost) : null;
   const claimant =
     typeof claim.claimUserId === "object" ? claim.claimUserId : null;
+  const documentUrl = claim.documentPath || "";
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-70 bg-slate-950/40 flex items-center justify-center p-4"
+      className="fixed inset-0 z-70 bg-slate-950/40 flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
       onClick={onClose}
     >
       <motion.div
@@ -1578,16 +1570,21 @@ function ReviewClaimModal({
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? "rtl" : "ltr"}
-        className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden"
+        className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-6"
       >
-        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-tertiary ">
-              {t.claims.reviewTitle}
-            </h3>
-            <p className="text-sm text-slate-500  mt-1">
-              {post?.name || t.claims.unknownPost}
-            </p>
+        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/70 flex items-start justify-between">
+          <div className="flex items-start gap-3 text-start">
+            <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+              <ClipboardList className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-lg font-bold text-tertiary">
+                {t.claims.reviewTitle}
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">
+                {post?.name || t.claims.unknownPost}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -1597,9 +1594,9 @@ function ReviewClaimModal({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="px-6 py-5 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div className="bg-slate-50/80 /80 rounded-xl border border-slate-100  p-3">
+        <div className="px-6 py-6 space-y-6 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+            <div className="bg-white rounded-2xl border border-slate-200/70 p-4 shadow-sm text-start">
               <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
                 {t.claims.claimant}
               </p>
@@ -1615,7 +1612,7 @@ function ReviewClaimModal({
                 </p>
               )}
             </div>
-            <div className="bg-slate-50/80 /80 rounded-xl border border-slate-100  p-3">
+            <div className="bg-white rounded-2xl border border-slate-200/70 p-4 shadow-sm text-start">
               <p className="text-[11px] uppercase font-semibold text-slate-400 mb-1">
                 {t.claims.post}
               </p>
@@ -1629,7 +1626,7 @@ function ReviewClaimModal({
           </div>
 
           {claim.additionalInfo && (
-            <div className="bg-amber-50/50 rounded-xl border border-amber-100 p-3 text-sm">
+            <div className="bg-amber-50/60 rounded-2xl border border-amber-200/60 p-4 text-sm text-start">
               <p className="text-[11px] uppercase font-semibold text-amber-700 mb-1">
                 {t.claims.relationship}
               </p>
@@ -1639,19 +1636,24 @@ function ReviewClaimModal({
             </div>
           )}
 
-          {claim.documentPath && (
-            <a
-              href={claim.documentPath}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              {t.claims.viewDocument}
-            </a>
+          {documentUrl && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-start">
+              <p className="text-[11px] uppercase font-semibold text-slate-400 mb-2">
+                {t.claims.viewDocument}
+              </p>
+              <a
+                href={documentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-white transition-colors"
+              >
+                <FileText className="h-4 w-4 text-secondary" />
+                {t.claims.viewDocument}
+              </a>
+            </div>
           )}
 
-          <div>
+          <div className="text-start">
             <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
               {t.claims.notes}
             </label>
@@ -1665,13 +1667,6 @@ function ReviewClaimModal({
           </div>
         </div>
         <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-end">
-          <button
-            onClick={onClose}
-            disabled={submitting !== null}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {t.claims.cancel}
-          </button>
           <button
             onClick={() => onSubmit("rejected", notes.trim() || undefined)}
             disabled={submitting !== null}
@@ -2254,8 +2249,8 @@ function getCopy(isRTL: boolean): Copy {
       reviewTitle: "Review verification request",
       approve: "Approve account",
       reject: "Reject",
-      approved: "Account verified — confirmation email sent.",
-      rejected: "Verification rejected — explanation email sent.",
+      approved: "Account verified, confirmation email sent.",
+      rejected: "Verification rejected, explanation email sent.",
       fullName: "Full name",
       email: "Email",
       phone: "Phone",
@@ -2265,7 +2260,7 @@ function getCopy(isRTL: boolean): Copy {
       noId: "This user didn't upload an ID document.",
       rejectionReason: "Reason for rejection (optional)",
       rejectionReasonPlaceholder:
-        "e.g. The ID photo is too blurry — please re-register with a clearer image.",
+        "e.g. The ID photo is too blurry, please re-register with a clearer image.",
     },
     posts: {
       title: "All posts",

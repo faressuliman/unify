@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     birthDate: { type: Date },
     email: { type: String, required: true, unique: true, lowercase: true },
+    city: { type: String },
     password: { type: String, required: true },
     phoneNumber: { type: String },
     role: { type: String, enum: ["user", "admin"], default: "user" },
@@ -18,18 +19,7 @@ const userSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    riskScore: {
-      type: Number,
-      default: 0,
-    },
-
-    isFaceVerified: {
-      type: Boolean,
-      default: false,
-    },
-
     isVerified: { type: Boolean, default: false },
-    isEmailVerified: { type: Boolean, default: false },
     isdeleted: { type: Boolean, default: false },
     isbanned: { type: Boolean, default: false },
     changeCredentialsTime: { type: Date, default: Date.now },

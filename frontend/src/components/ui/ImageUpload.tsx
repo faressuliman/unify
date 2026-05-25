@@ -13,6 +13,7 @@ interface ImageUploadProps {
     changeText?: string;
     removeText?: string;
   initialImage?: string | null;
+    compact?: boolean;
 }
 
 export default function ImageUpload({ 
@@ -24,7 +25,8 @@ export default function ImageUpload({
     buttonText = 'Browse Files',
         changeText = 'Change Photo',
         removeText = 'Remove',
-    initialImage = null
+    initialImage = null,
+    compact = false
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(initialImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,7 +84,7 @@ export default function ImageUpload({
             onClick={!preview ? triggerUpload : undefined}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className={`rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center transition-colors font-sans ${!preview ? 'cursor-pointer hover:bg-slate-50 relative' : ''}`}
+            className={`rounded-2xl border-2 border-dashed border-slate-200 bg-white ${compact ? 'p-6' : 'p-8'} text-center transition-colors font-sans ${!preview ? 'cursor-pointer hover:bg-slate-50 relative' : ''}`}
         >
         <AnimatePresence mode="wait">
             {preview ? (
@@ -93,14 +95,14 @@ export default function ImageUpload({
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="space-y-4 relative w-full"
             >
-                <div className="mx-auto h-40 w-40 overflow-hidden rounded-2xl border-4 border-white shadow-xl bg-slate-100">
+                <div className={`mx-auto ${compact ? 'h-32 w-32' : 'h-40 w-40'} overflow-hidden rounded-2xl border-4 border-white shadow-xl bg-slate-100`}>
                     <img src={preview} alt="Preview" className="h-full w-full object-cover" />
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-3">
                     <button 
                         type="button" 
                         onClick={(e) => { e.stopPropagation(); triggerUpload(); }}
-                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm border border-slate-200 transition-all hover:bg-slate-50 active:scale-95"
+                        className={`inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white ${compact ? 'px-4 py-2 text-xs' : 'px-5 py-2.5 text-sm'} font-bold text-slate-700 shadow-sm border border-slate-200 transition-all hover:bg-slate-50 active:scale-95`}
                     >
                         <FontAwesomeIcon icon={faImage} className="text-slate-400" />
                         <span>{changeText}</span>
@@ -108,7 +110,7 @@ export default function ImageUpload({
                     <button 
                         type="button" 
                         onClick={handleRemove}
-                        className="inline-flex items-center gap-2 hover:cursor-pointer rounded-xl bg-red-50 px-5 py-2.5 text-sm font-bold text-red-600 transition-all hover:bg-red-100 active:scale-95"
+                        className={`inline-flex items-center gap-2 hover:cursor-pointer rounded-xl bg-red-50 ${compact ? 'px-4 py-2 text-xs' : 'px-5 py-2.5 text-sm'} font-bold text-red-600 transition-all hover:bg-red-100 active:scale-95`}
                     >
                         <FontAwesomeIcon icon={faTrash} />
                         <span>{removeText}</span>
@@ -125,19 +127,19 @@ export default function ImageUpload({
                 className="flex flex-col items-center justify-center pointer-events-none"
             >
                 <div className="mb-4 flex items-center justify-center">
-                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#faeed1] shadow-sm">
-                        <FontAwesomeIcon icon={faCloudArrowUp} className="text-2xl text-black" />
+                    <span className={`inline-flex ${compact ? 'h-12 w-12' : 'h-14 w-14'} items-center justify-center rounded-full bg-[#faeed1] shadow-sm`}>
+                        <FontAwesomeIcon icon={faCloudArrowUp} className={compact ? 'text-xl text-black' : 'text-2xl text-black'} />
                     </span>
                 </div>
                 <p className="mb-2 text-[#2d3748] font-sans">
                                     <span className="font-bold">{title}</span>{' '}
                                     {dragDropText && <span className="font-medium">{dragDropText}</span>}
                 </p>
-                <p className="mb-6 text-sm text-[#94a3b8] font-sans font-medium">{subtitle}</p>
+                <p className={`mb-6 ${compact ? 'text-xs' : 'text-sm'} text-[#94a3b8] font-sans font-medium`}>{subtitle}</p>
 
                 <button 
                   type="button"
-                  className="pointer-events-auto inline-flex cursor-pointer items-center justify-center rounded-xl bg-[#faeed1] px-8 py-3 text-sm font-bold text-black shadow-sm transition-all hover:bg-[#f3e5c3] active:scale-95"
+                  className={`pointer-events-auto inline-flex cursor-pointer items-center justify-center rounded-xl bg-[#faeed1] ${compact ? 'px-6 py-2 text-xs' : 'px-8 py-3 text-sm'} font-bold text-black shadow-sm transition-all hover:bg-[#f3e5c3] active:scale-95`}
                 >
                   {buttonText}
                 </button>

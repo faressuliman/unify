@@ -18,12 +18,6 @@ router.put(
   asynchandler(userService.updateProfile),
 );
 
-router.post(
-  "/verify-email",
-  authenticate,
-  asynchandler(userService.verifyEmail),
-);
-
 router.get("/blocked", authenticate, asynchandler(userService.getBlockedUsers));
 
 router.post(

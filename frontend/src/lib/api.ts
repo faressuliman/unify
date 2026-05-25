@@ -65,6 +65,7 @@ export interface AuthUser {
   email: string;
   role: "user" | "admin";
   isVerified: boolean;
+  profilePicture?: string | null;
 }
 
 interface AuthResponse {
@@ -76,6 +77,7 @@ interface AuthResponse {
 type RegisterInput = {
   name: string;
   email: string;
+  city: string;
   password: string;
   confirmPassword: string;
   phoneNumber: string;
@@ -183,6 +185,7 @@ export const authApi = {
     const formData = new FormData();
     formData.append("name", payload.name);
     formData.append("email", payload.email);
+    formData.append("city", payload.city);
     formData.append("password", payload.password);
     formData.append("confirmPassword", payload.confirmPassword);
     formData.append("phoneNumber", payload.phoneNumber);
@@ -284,11 +287,11 @@ export interface UserProfileInfo {
   id: string;
   name: string;
   email: string;
+  city?: string;
   phoneNumber?: string;
   birthDate?: string;
   role: "user" | "admin";
   isVerified: boolean;
-  isEmailVerified?: boolean;
   idImagePath?: string;
   profilePicture?: string;
   createdAt?: string;
@@ -304,7 +307,7 @@ export interface BlockedUser {
   _id: string;
   name: string;
   email?: string;
-  idImagePath?: string;
+  profilePicture?: string | null;
 }
 
 export const userApi = {
@@ -325,15 +328,6 @@ export const userApi = {
       },
     );
   },
-  verifyEmail: (otp: string, token: string) =>
-    apiRequest<{ message: string; user: UserProfileInfo }>(
-      "users/verify-email",
-      {
-        method: "POST",
-        body: JSON.stringify({ otp }),
-        token,
-      },
-    ),
   blockUser: (userId: string, token: string) =>
     apiRequest<{ message: string }>(`users/${userId}/block`, {
       method: "POST",
@@ -378,14 +372,22 @@ export interface BackendSighting {
   additionalDetails?: string;
   reporterName: string;
   reporterPhone: string;
+  reporterId?: string | { _id: string };
   createdAt?: string;
 }
 
 export const sightingApi = {
-  createSighting: (payload: SightingPayload) =>
+  createSighting: (payload: SightingPayload, token?: string) =>
     apiRequest<{ message: string; report: BackendSighting }>("sightings", {
       method: "POST",
       body: JSON.stringify(payload),
+      token,
+    }),
+
+  getMySightings: (token: string) =>
+    apiRequest<{ message: string; reports: any[] }>("sightings/user/my-sightings", {
+      method: "GET",
+      token,
     }),
 
   getSightings: (postId: string, token: string) =>
@@ -451,13 +453,15 @@ export interface BackendNotificationPost {
   _id: string;
   name: string;
   postType: "missing" | "found";
+  userId?: string | { _id: string; name?: string };
 }
 
 export interface BackendNotification {
   _id: string;
   userId: string;
   postId?: BackendNotificationPost | string;
-  type: "new_sighting" | "new_claim" | "claim_approved" | "claim_rejected";
+  referenceId?: string;
+  type: "new_sighting" | "new_claim" | "claim_approved" | "claim_approved_owner" | "claim_rejected";
   message?: string;
   isRead: boolean;
   deliveredVia: "email" | "push" | "in-app";
@@ -856,3 +860,5 @@ export const adminApi = {
     );
   },
 };
+
+

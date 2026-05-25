@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck, CheckCheck, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck, CheckCheck, Eye, EyeOff, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -240,6 +240,7 @@ export function Navbar() {
     currentPage !== 'map';
   const dropdownAlign = 'end';
   const dropdownDir = isRTL ? 'rtl' : 'ltr';
+  const userAvatarSrc = user?.profilePicture || '';
 
   const handleMarkOneRead = async (id: string) => {
     if (!token) return;
@@ -284,6 +285,8 @@ export function Navbar() {
         return <Eye className="h-5 w-5 text-blue-500" />;
       case 'new_claim':
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+      case 'claim_approved_owner':
+        return <FileText className="h-5 w-5 text-secondary" />;
       case 'claim_approved':
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
       case 'claim_rejected':
@@ -304,6 +307,8 @@ export function Navbar() {
         return `${t('notifications.new_sighting')}${postName}`;
       case 'new_claim':
         return `${t('notifications.new_claim')}${postName}`;
+      case 'claim_approved_owner':
+        return `${t('notifications.claim_approved_owner')}${postName}${t('notifications.claim_approved_owner_suffix')}`;
       case 'claim_approved':
         return `${t('notifications.claim_approved')}${postName}`;
       case 'claim_rejected':
@@ -483,7 +488,47 @@ export function Navbar() {
                         {notifications.map((notification) => (
                           <div
                             key={notification._id}
-                            onClick={() => handleMarkOneRead(notification._id)}
+                            onClick={async () => {
+                              await handleMarkOneRead(notification._id);
+
+                              if (notification.type === 'new_sighting' && notification.postId) {
+                                const postId = typeof notification.postId === 'string'
+                                  ? notification.postId
+                                  : notification.postId._id;
+                                const sightingId = notification.referenceId ? `&sightingId=${encodeURIComponent(notification.referenceId)}` : '';
+                                setIsNotificationsOpen(false);
+                                navigate(`/profile?sightingPostId=${encodeURIComponent(postId)}${sightingId}`);
+                                return;
+                              }
+
+                              const postOwnerId =
+                                notification.postId && typeof notification.postId !== 'string'
+                                  ? typeof notification.postId.userId === 'string'
+                                    ? notification.postId.userId
+                                    : notification.postId.userId?._id
+                                  : undefined;
+
+                              if (notification.type === 'claim_approved') {
+                                const targetUserId = notification.referenceId || postOwnerId;
+                                if (targetUserId) {
+                                  setIsNotificationsOpen(false);
+                                  navigate(`/chat?chatWith=${encodeURIComponent(targetUserId)}`);
+                                  return;
+                                }
+                              }
+
+                              if (notification.type === 'claim_approved_owner' && notification.referenceId) {
+                                setIsNotificationsOpen(false);
+                                navigate(`/chat?chatWith=${encodeURIComponent(notification.referenceId)}`);
+                                return;
+                              }
+
+                              if (notification.postId && typeof notification.postId !== 'string') {
+                                const postId = notification.postId._id;
+                                setIsNotificationsOpen(false);
+                                navigate(`/profile?sightingPostId=${encodeURIComponent(postId)}`);
+                              }
+                            }}
                             className={`flex gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0 hover:bg-gray-50/80 ${
                               !notification.isRead ? 'bg-primary-50/30' : 'bg-white'
                             }`}
@@ -536,10 +581,18 @@ export function Navbar() {
               <DropdownMenu dir={dropdownDir} modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="hidden xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                    className="hidden xl:flex w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center overflow-hidden transition-all duration-200 cursor-pointer border-none"
                     aria-label="User menu"
                   >
-                    <User className="h-5 w-5 text-gray-700" strokeWidth={2} />
+                    {userAvatarSrc ? (
+                      <img
+                        src={userAvatarSrc}
+                        alt={user?.name || 'User'}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-5 w-5 text-gray-700" strokeWidth={2} />
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={dropdownAlign} className="w-56 mt-2">

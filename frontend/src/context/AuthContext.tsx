@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { authApi, type AuthUser } from '@/lib/api';
+import { authApi, userApi, type AuthUser } from '@/lib/api';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
 import { deleteCookie, getCookie, setCookie } from '@/lib/cookieService';
 
@@ -19,6 +19,7 @@ interface AuthContextType {
   register: (payload: {
     name: string;
     email: string;
+    city: string;
     password: string;
     confirmPassword: string;
     phoneNumber: string;
@@ -27,6 +28,7 @@ interface AuthContextType {
     selfiePicture?: File | null;
     verificationStatus?: string;
   }) => Promise<void>;
+  updateUser: (user: AuthUser | null) => void;
   logout: () => void;
 }
 
@@ -55,6 +57,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    const syncUser = async () => {
+      try {
+        const profile = await userApi.getProfile(token);
+        if (cancelled) return;
+
+        const nextUser = profile.user;
+        setUser(nextUser);
+        setCookie(AUTH_USER_COOKIE, JSON.stringify(nextUser), {
+          days: DEFAULT_DAYS,
+        });
+      } catch {
+        // Ignore profile sync failures and keep the cached auth user.
+      }
+    };
+
+    void syncUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
   const login = async (email: string, password: string, rememberMe: boolean) => {
     const response = await authApi.login({ email, password });
     const nextUser = response.user ?? null;
@@ -72,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (payload: {
     name: string;
     email: string;
+    city: string;
     password: string;
     confirmPassword: string;
     phoneNumber: string;
@@ -90,8 +119,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     deleteCookie(AUTH_TOKEN_COOKIE);
   };
 
+  const updateUser = (nextUser: AuthUser | null) => {
+    setUser(nextUser);
+    if (!nextUser) {
+      deleteCookie(AUTH_USER_COOKIE);
+      return;
+    }
+    const days = getCookie(AUTH_TOKEN_COOKIE) ? REMEMBER_DAYS : DEFAULT_DAYS;
+    setCookie(AUTH_USER_COOKIE, JSON.stringify(nextUser), { days });
+  };
+
   const contextValue = useMemo(
-    () => ({ user, token, isAuthenticated: !!user && !!token, login, register, logout }),
+    () => ({ user, token, isAuthenticated: !!user && !!token, login, register, updateUser, logout }),
     [user, token]
   );
 

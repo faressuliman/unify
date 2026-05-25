@@ -25,13 +25,6 @@ export const createClaim = async (req, res, next) => {
     status: "pending",
   });
 
-  // Notify post owner
-  await createNotification({
-    userId: post.userId,
-    postId: post._id,
-    type: "new_claim",
-  });
-
   return res.status(201).json({ message: "Claim submitted", claim });
 };
 
@@ -111,10 +104,22 @@ export const adminReviewClaim = async (req, res, next) => {
   // If approved, resolve the post
   if (result === "approved") {
     await Post.findByIdAndUpdate(claim.postId, { status: "resolved" });
+
+    const post = await Post.findById(claim.postId).select("userId");
+    if (post?.userId) {
+      await createNotification({
+        userId: post.userId,
+        postId: claim.postId,
+        type: "claim_approved_owner",
+        referenceId: claim.claimUserId.toString(),
+      });
+    }
+
     await createNotification({
       userId: claim.claimUserId,
       postId: claim.postId,
       type: "claim_approved",
+      referenceId: post?.userId?.toString(),
     });
   } else {
     await createNotification({

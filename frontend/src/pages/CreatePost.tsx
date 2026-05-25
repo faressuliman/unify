@@ -230,15 +230,9 @@ const CreatePost = () => {
             const targetUrl = `/search?tab=${searchTab}&scrollTo=results&newPost=${response.post._id}`;
 
             toast.success(
-                isRTL ? 'تم إنشاء البلاغ بنجاح' : 'Post created successfully',
+                isRTL ? 'تم إنشاء البلاغ بنجاح' : 'Post successfully created',
                 {
-                    description: isRTL ? 'يمكنك عرضه الآن في صفحة البحث.' : 'You can view it now on the search page.',
-                    action: {
-                        label: isRTL ? 'عرض المنشور' : 'View Post',
-                        onClick: () => navigate(targetUrl),
-                    },
                     duration: 6000,
-                    className: 'sm:flex-row flex-col items-start',
                 },
             );
 

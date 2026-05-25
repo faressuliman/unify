@@ -325,7 +325,7 @@ export default function ReportModal({
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           dir={isRTL ? "rtl" : "ltr"}
-          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-slate-100 bg-white p-6 shadow-xl sm:rounded-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] max-h-[85vh] overflow-hidden flex flex-col"
+          className="fixed left-[50%] top-[50%] z-50 flex w-full max-w-md translate-x-[-50%] translate-y-[-50%] flex-col gap-4 border border-slate-100 bg-white p-6 shadow-xl sm:rounded-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] max-h-[85vh] overflow-hidden"
         >
           {isSubmitted ? (
             <div className="flex flex-col items-center text-center py-4 px-2 relative">
@@ -414,7 +414,7 @@ export default function ReportModal({
                 </DialogPrimitive.Close>
               </div>
 
-              <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+              <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2">
                 {!selectedMainReason ? (
                   <div className="space-y-1 pb-4">
                     <p className="text-sm text-slate-500 mb-4 px-1">

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Lock, MapPin, Clock, User } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import type { ProfileData } from '../home/PersonCard';
@@ -14,11 +14,43 @@ interface MissingPersonCardProps {
   isRTL: boolean;
   showImage?: boolean;
   className?: string;
+  showDetailsButton?: boolean;
+  cardOpensModal?: boolean;
+  actionLabel?: string;
+  onActionClick?: () => void;
+  actionIcon?: ReactNode;
 }
 
-export default function MissingPersonCard({ profile, idx, isRTL, showImage = false, className = '' }: MissingPersonCardProps) {
+export default function MissingPersonCard({
+  profile,
+  idx,
+  isRTL,
+  showImage = false,
+  className = '',
+  showDetailsButton = true,
+  cardOpensModal = false,
+  actionLabel,
+  onActionClick,
+  actionIcon,
+}: MissingPersonCardProps) {
   const t = isRTL ? ar.recentUpdates : en.recentUpdates;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const ignoreNextClickRef = useRef(false);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open) {
+      ignoreNextClickRef.current = true;
+      window.setTimeout(() => {
+        ignoreNextClickRef.current = false;
+      }, 200);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (!cardOpensModal || isModalOpen || ignoreNextClickRef.current) return;
+    setIsModalOpen(true);
+  };
 
   return (
     <>
@@ -28,7 +60,8 @@ export default function MissingPersonCard({ profile, idx, isRTL, showImage = fal
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: idx * 0.1 }}
-      className={`flex-none w-[calc(85%-0.5rem)] md:w-[calc(45%-1rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm ${className}`}
+      className={`flex-none w-[calc(85%-0.5rem)] md:w-[calc(45%-1rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm ${cardOpensModal ? 'cursor-pointer' : ''} ${className}`}
+      onClick={handleCardClick}
     >
       <div className="relative h-48 sm:h-52 overflow-hidden rounded-t-lg">
         {showImage ? (
@@ -87,22 +120,34 @@ export default function MissingPersonCard({ profile, idx, isRTL, showImage = fal
           </div>
         </div>
 
-        <div className="flex flex-col mt-auto">
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="w-full bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap"
-          >
-            {t.buttons.details}
-          </button>
-        </div>
+        {(showDetailsButton || actionLabel) && (
+          <div className="flex flex-col mt-auto">
+            <button 
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                if (actionLabel && onActionClick) {
+                  onActionClick();
+                  return;
+                }
+                setIsModalOpen(true);
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold hover:bg-slate-200 transition-colors duration-300 cursor-pointer whitespace-nowrap"
+            >
+              {actionIcon && <span className="text-secondary">{actionIcon}</span>}
+              {actionLabel || t.buttons.details}
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
 
       <MissingModal
         isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={handleOpenChange}
         profile={profile}
         isRTL={isRTL}
+        showImage={showImage}
       />
     </>
   );

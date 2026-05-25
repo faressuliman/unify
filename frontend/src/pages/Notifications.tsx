@@ -79,6 +79,50 @@ export default function Notifications() {
     }
   };
 
+  const handleNotificationClick = async (notification: BackendNotification) => {
+    // mark as read and then open sightings modal for sighting notifications
+    try {
+      await handleMarkOneRead(notification._id);
+    } catch (err) {
+      // ignore; markOneRead already rolls back on error
+      console.error(err);
+    }
+
+    if (notification.type === 'new_sighting' && notification.postId) {
+      const postId = typeof notification.postId === 'string'
+        ? notification.postId
+        : notification.postId._id;
+      const sightingId = notification.referenceId ? `&sightingId=${encodeURIComponent(notification.referenceId)}` : '';
+      navigate(`/profile?sightingPostId=${encodeURIComponent(postId)}${sightingId}`);
+      return;
+    }
+
+    const postOwnerId =
+      notification.postId && typeof notification.postId !== 'string'
+        ? typeof notification.postId.userId === 'string'
+          ? notification.postId.userId
+          : notification.postId.userId?._id
+        : undefined;
+
+    if (notification.type === 'claim_approved') {
+      const targetUserId = notification.referenceId || postOwnerId;
+      if (targetUserId) {
+        navigate(`/chat?chatWith=${encodeURIComponent(targetUserId)}`);
+        return;
+      }
+    }
+
+    if (notification.type === 'claim_approved_owner' && notification.referenceId) {
+      navigate(`/chat?chatWith=${encodeURIComponent(notification.referenceId)}`);
+      return;
+    }
+
+    if (notification.postId && typeof notification.postId !== 'string') {
+      const post = notification.postId as BackendNotificationPost;
+      navigate(`/profile?sightingPostId=${encodeURIComponent(post._id || String(post._id))}`);
+    }
+  };
+
   const handleMarkAllRead = async () => {
     if (!token || unreadCount === 0) return;
     const previous = notifications;
@@ -139,6 +183,8 @@ export default function Notifications() {
         return `${t('notifications.new_sighting')}${postName}`;
       case 'new_claim':
         return `${t('notifications.new_claim')}${postName}`;
+      case 'claim_approved_owner':
+        return `${t('notifications.claim_approved_owner')}${postName}${t('notifications.claim_approved_owner_suffix')}`;
       case 'claim_approved':
         return `${t('notifications.claim_approved')}${postName}`;
       case 'claim_rejected':
@@ -192,7 +238,7 @@ export default function Notifications() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[240px]"
+                className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-60"
               >
                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
                   <Bell className="h-10 w-10 text-gray-300" />
@@ -219,7 +265,7 @@ export default function Notifications() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  onClick={() => handleMarkOneRead(notification._id)}
+                  onClick={() => handleNotificationClick(notification)}
                   className={`relative overflow-hidden p-5 rounded-2xl border transition-all duration-300 cursor-pointer group ${
                     notification.isRead
                       ? 'bg-white border-gray-200 hover:border-gray-300 shadow-xs hover:shadow-sm'
@@ -227,10 +273,10 @@ export default function Notifications() {
                   }`}
                 >
                   {!notification.isRead && (
-                    <div className="absolute top-0 start-0 w-1.5 h-full bg-primary" />
+                    <div className="absolute top-0 inset-s-0 w-1.5 h-full bg-primary" />
                   )}
                   <div className="flex items-start gap-4">
-                    <div className="mt-0.5 flex-shrink-0">
+                    <div className="mt-0.5 shrink-0">
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1 min-w-0">

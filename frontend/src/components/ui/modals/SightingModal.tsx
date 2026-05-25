@@ -9,6 +9,8 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 import { sightingApi } from '@/lib/api';
 import { en } from '../../../data/english';
 import { ar } from '../../../data/arabic';
+import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 interface SightingModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface SightingModalProps {
 }
 
 export default function SightingModal({ isOpen, onOpenChange, personName, isRTL, postId }: SightingModalProps) {
+  const { token } = useAuth();
   const t = isRTL ? ar.recentUpdates.missingModal : en.recentUpdates.missingModal;
   
   const [formData, setFormData] = useState({
@@ -70,13 +73,17 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitAttempted(true);
-
     const isValid = Object.values(validationRules).every(Boolean);
-    if (!isValid) return;
+    if (!isValid) {
+      toast.error(isRTL ? 'يرجى ملء الحقول المطلوبة' : 'Please fill the required fields');
+      return;
+    }
+
+    if (isLoading) return;
 
     try {
       setIsLoading(true);
-      await sightingApi.createSighting({
+      const res = await sightingApi.createSighting({
         missingPersonId: postId,
         confidence: formData.confidence,
         seenAt: formData.date || new Date().toISOString(), // In real app, standardise date
@@ -84,9 +91,10 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
         description: formData.wearing,
         additionalDetails: formData.additional,
         reporterName: formData.contactName,
-        reporterPhone: formData.contactPhone
-      });
-      
+        reporterPhone: formData.contactPhone,
+      }, token || undefined);
+
+      toast.success(isRTL ? 'تم إرسال البلاغ' : 'Sighting submitted');
       onOpenChange(false);
       setFormData({
         confidence: '',
@@ -95,12 +103,16 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
         wearing: '',
         additional: '',
         contactName: '',
-        contactPhone: ''
+        contactPhone: '',
       });
       setSubmitAttempted(false);
-    } catch (error) {
-      console.error(error);
-      // optionally show an error message here
+      return res;
+    } catch (err) {
+      console.error('Sighting submit failed:', err);
+      const e = err as any;
+      const msg = e?.response?.data?.message || e?.message || (isRTL ? 'فشل إرسال البلاغ' : 'Failed to submit sighting');
+      toast.error(msg);
+      // do not rethrow; keep modal open so user can correct
     } finally {
       setIsLoading(false);
     }
@@ -249,6 +261,8 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
                 <ShieldCheck className="w-6 h-6 text-blue-600 shrink-0" />
                 <span className="text-[14px] font-medium text-blue-800/90 leading-relaxed">{t.sightingNotice}</span>
               </div>
+
+              
 
               {/* Actions */}
               <div className="flex flex-col lg:flex-row gap-3 pt-2">

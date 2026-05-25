@@ -1,8 +1,7 @@
 import { type FormEvent, useState, useEffect } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X, UserCircle, Mail } from "lucide-react";
+import { X, UserCircle } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
-import SubmitButton from "@/components/ui/SubmitButton";
 import FormInput from "@/components/ui/FormInput";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -14,8 +13,6 @@ interface EditProfileModalProps {
   profile: UserProfileInfo | null;
   onSuccess: (updatedProfile: UserProfileInfo) => void;
   isRTL: boolean;
-  /** When set, open directly on the email OTP verification step */
-  startOnOtpStep?: boolean;
 }
 
 export default function EditProfileModal({
@@ -24,32 +21,33 @@ export default function EditProfileModal({
   profile,
   onSuccess,
   isRTL,
-  startOnOtpStep = false,
 }: EditProfileModalProps) {
-  const { token } = useAuth();
+  const { token, updateUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
 
-  const [showOtpStep, setShowOtpStep] = useState(false);
-  const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const normalizeModalError = (message: string) => {
+    const lower = message.toLowerCase();
+    if (lower.includes("email") && lower.includes("valid")) {
+      return "Invalid email address";
+    }
+    if (lower.includes("phonenumber")) {
+      return message.replace(/"?phoneNumber"?/g, "Phone Number");
+    }
+    return message;
+  };
 
   useEffect(() => {
     if (isOpen && profile) {
       setEmail(profile.email || "");
       setPhoneNumber(profile.phoneNumber || "");
       setProfilePicture(null);
-      setShowOtpStep(startOnOtpStep);
-      if (!startOnOtpStep) setOtp("");
     }
-
-    if (!isOpen) {
-      setShowOtpStep(false);
-      setOtp("");
-    }
-  }, [isOpen, profile, startOnOtpStep]);
+  }, [isOpen, profile]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -77,49 +75,21 @@ export default function EditProfileModal({
 
       const res = await userApi.updateProfile(formData, token);
       onSuccess(res.user);
-
-      if (email && email !== profile?.email) {
-        toast.success(
-          isRTL
-            ? "تم تحديث البيانات. يرجى التحقق من بريدك الإلكتروني الجديد."
-            : "Profile updated. Please verify your new email.",
-        );
-        setShowOtpStep(true);
-      } else {
-        toast.success(
-          isRTL
-            ? "تم تحديث الملف الشخصي بنجاح"
-            : "Profile updated successfully",
-        );
-        onOpenChange(false);
-      }
-    } catch (error) {
-      const err = error as Error;
-      toast.error(err.message || "Failed to update profile");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleVerifyOtp = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!token) return;
-
-    try {
-      setIsSubmitting(true);
-      const res = await userApi.verifyEmail(otp, token);
+      updateUser({
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        role: res.user.role,
+        isVerified: res.user.isVerified,
+        profilePicture: res.user.profilePicture || null,
+      });
       toast.success(
-        isRTL
-          ? "تم توثيق البريد الإلكتروني بنجاح"
-          : "Email verified successfully",
+        isRTL ? "تم تحديث الملف الشخصي بنجاح" : "Profile updated successfully",
       );
-      onSuccess(res.user);
       onOpenChange(false);
-      setShowOtpStep(false);
-      setOtp("");
     } catch (error) {
       const err = error as Error;
-      toast.error(err.message || (isRTL ? "رمز غير صحيح" : "Invalid OTP"));
+      toast.error(normalizeModalError(err.message || "Failed to update profile"));
     } finally {
       setIsSubmitting(false);
     }
@@ -130,134 +100,102 @@ export default function EditProfileModal({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-slate-950/40 modal-overlay" />
         <DialogPrimitive.Content
-          className="fixed left-1/2 top-1/2 z-71 w-[calc(100%-1.25rem)] max-h-[90vh] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col focus:outline-none modal-pop"
+          className="fixed left-1/2 top-1/2 z-71 w-[calc(100%-2rem)] max-h-[85vh] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col overflow-hidden focus:outline-none modal-pop"
           dir={isRTL ? "rtl" : "ltr"}
         >
-          <div className="relative border-b border-slate-100 bg-slate-50/50 px-6 py-5">
-            <div className={`absolute top-5 ${isRTL ? "left-5" : "right-5"}`}>
-              <DialogPrimitive.Close className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200/50 text-slate-500 transition-colors hover:bg-slate-200">
+          <div className="relative border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <div className={`absolute top-4 ${isRTL ? "left-4" : "right-4"}`}>
+              <DialogPrimitive.Close className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200/50 text-slate-500 transition-colors hover:bg-slate-200">
                 <X className="h-4 w-4" />
               </DialogPrimitive.Close>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-secondary">
-                {showOtpStep ? (
-                  <Mail className="h-5 w-5" />
-                ) : (
-                  <UserCircle className="h-5 w-5" />
-                )}
+                <UserCircle className="h-5 w-5" />
               </div>
               <DialogPrimitive.Title className="text-xl font-bold text-slate-900">
-                {showOtpStep
-                  ? isRTL
-                    ? "تأكيد البريد الإلكتروني"
-                    : "Verify Email"
-                  : isRTL
-                    ? "تعديل الملف الشخصي"
-                    : "Edit Profile"}
+                {isRTL ? "تعديل الملف الشخصي" : "Edit Profile"}
               </DialogPrimitive.Title>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-5">
-            {showOtpStep ? (
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
-                <p className="text-sm text-slate-600 mb-4">
-                  {isRTL
-                    ? `لقد أرسلنا رمز تحقق إلى ${email}. يرجى إدخاله أدناه لإكمال تحديث بريدك الإلكتروني.`
-                    : `We sent a verification code to ${email}. Please enter it below to complete your email update.`}
+          <div className="flex-1 px-6 py-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <FormInput
+                id="edit-email"
+                type="email"
+                label={isRTL ? "البريد الإلكتروني" : "Email Address"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={
+                  isRTL ? "أدخل بريدك الإلكتروني" : "Enter your email"
+                }
+                dir="ltr"
+                className={isRTL ? "text-right" : ""}
+                required
+              />
+
+              <FormInput
+                id="edit-phone"
+                type="tel"
+                label={isRTL ? "رقم الهاتف" : "Phone Number"}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="01xxxxxxxxx"
+                dir="ltr"
+                className={isRTL ? "text-right" : ""}
+              />
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-slate-700">
+                  {isRTL ? "صورة الملف الشخصي" : "Profile Picture"}
                 </p>
-                <FormInput
-                  id="verify-otp"
-                  type="text"
-                  label={isRTL ? "رمز التحقق (OTP)" : "OTP Code"}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder={
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <ImageUpload
+                  onImageChange={setProfilePicture}
+                  compact
+                  title={
                     isRTL
-                      ? "أدخل الرمز المكون من 6 أرقام"
-                      : "Enter 6-digit code"
+                      ? "صورة الملف الشخصي (اختياري)"
+                      : "Profile Picture (Optional)"
                   }
-                  required
-                  className={isRTL ? "text-right" : ""}
-                  dir="ltr"
-                />
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <SubmitButton
-                    type="submit"
-                    isLoading={isSubmitting}
-                    className="flex-1 bg-secondary text-white hover:bg-secondary/90"
-                  >
-                    {isRTL ? "تأكيد" : "Verify"}
-                  </SubmitButton>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <FormInput
-                  id="edit-email"
-                  type="email"
-                  label={isRTL ? "البريد الإلكتروني" : "Email Address"}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={
-                    isRTL ? "أدخل بريدك الإلكتروني" : "Enter your email"
+                  dragDropText=""
+                  subtitle={
+                    isRTL
+                      ? "قم بتحديث صورة ملفك الشخصي إذا أردت"
+                      : "Update your profile picture if you want"
                   }
-                  dir="ltr"
-                  className={isRTL ? "text-right" : ""}
-                  required
+                  buttonText={isRTL ? "اختر صورة" : "Choose image"}
+                  changeText={isRTL ? "تغيير الصورة" : "Change image"}
+                  removeText={isRTL ? "حذف الصورة" : "Remove image"}
                 />
+              </div>
+              </div>
 
-                <FormInput
-                  id="edit-phone"
-                  type="tel"
-                  label={isRTL ? "رقم الهاتف" : "Phone Number"}
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="01xxxxxxxxx"
-                  dir="ltr"
-                  className={isRTL ? "text-right" : ""}
-                />
-
-                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm pt-2">
-                  <ImageUpload
-                    onImageChange={setProfilePicture}
-                    title={
-                      isRTL
-                        ? "صورة الملف الشخصي (اختياري)"
-                        : "Profile Picture (Optional)"
-                    }
-                    dragDropText=""
-                    subtitle={
-                      isRTL
-                        ? "قم بتحديث صورة ملفك الشخصي إذا أردت"
-                        : "Update your profile picture if you want"
-                    }
-                    buttonText={isRTL ? "اختر صورة" : "Choose image"}
-                    changeText={isRTL ? "تغيير الصورة" : "Change image"}
-                    removeText={isRTL ? "حذف الصورة" : "Remove image"}
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <SubmitButton
-                    type="submit"
-                    isLoading={isSubmitting}
-                    className="flex-1 bg-secondary text-white hover:bg-secondary/90"
-                  >
-                    {isRTL ? "حفظ التغييرات" : "Save Changes"}
-                  </SubmitButton>
-                  <button
-                    type="button"
-                    onClick={() => onOpenChange(false)}
-                    disabled={isSubmitting}
-                    className="px-6 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors font-medium outline-none cursor-pointer"
-                  >
-                    {isRTL ? "إلغاء" : "Cancel"}
-                  </button>
-                </div>
-              </form>
-            )}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-xl text-sm text-white bg-secondary hover:bg-secondary/90 transition-colors font-medium outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting
+                    ? isRTL
+                      ? "جاري الحفظ..."
+                      : "Saving..."
+                    : isRTL
+                      ? "حفظ التغييرات"
+                      : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-xl text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors font-medium outline-none cursor-pointer"
+                >
+                  {isRTL ? "إلغاء" : "Cancel"}
+                </button>
+              </div>
+            </form>
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

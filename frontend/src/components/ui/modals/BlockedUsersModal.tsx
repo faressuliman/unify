@@ -131,9 +131,9 @@ export default function BlockedUsersModal({
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-                              {u.idImagePath ? (
+                              {u.profilePicture ? (
                                 <img
-                                  src={u.idImagePath}
+                                  src={u.profilePicture}
                                   alt={u.name}
                                   className="w-full h-full object-cover"
                                 />

@@ -8,6 +8,7 @@ export const loginSchema = z.object({
 export const signUpSchema = z.object({
     fullName: z.string().trim().min(1, { message: "Full Name is required" }).min(2, { message: "Full Name must be at least 2 characters" }),
     email: z.string().trim().min(1, { message: "Email is required" }).email({ message: "Invalid email address" }),
+    city: z.string().trim().min(1, { message: "City is required" }),
     birthDate: z
         .string()
         .trim()

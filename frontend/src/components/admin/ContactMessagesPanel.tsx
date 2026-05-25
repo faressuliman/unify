@@ -231,14 +231,14 @@ function ReplyModal({
           <button
             onClick={onClose}
             disabled={sending}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             {isRTL ? "إلغاء" : "Cancel"}
           </button>
           <button
             onClick={handleSubmit}
             disabled={sending || !replyText.trim()}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             {isRTL ? "إرسال" : "Send Reply"}

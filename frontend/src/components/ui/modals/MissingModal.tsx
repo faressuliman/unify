@@ -24,6 +24,7 @@ interface MissingModalProps {
   onOpenChange: (open: boolean) => void;
   profile: ProfileData;
   isRTL: boolean;
+  showImage?: boolean;
 }
 
 interface InfoCardProps {
@@ -50,7 +51,13 @@ const getFallbackAge = (details: string, fallback: string) => {
   return match ? match[1] : fallback;
 };
 
-export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: MissingModalProps) {
+export default function MissingModal({
+  isOpen,
+  onOpenChange,
+  profile,
+  isRTL,
+  showImage = false,
+}: MissingModalProps) {
   const t = isRTL ? ar.recentUpdates.missingModal : en.recentUpdates.missingModal;
   const [isSightingOpen, setIsSightingOpen] = useState(false);
   const { user } = useAuth();
@@ -95,29 +102,45 @@ export default function MissingModal({ isOpen, onOpenChange, profile, isRTL }: M
             </div>
 
             <div className="space-y-6 sm:space-y-8 p-5 sm:p-8">
-              {/* Image Protection Area */}
-              <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-4 py-12 sm:py-16 flex flex-col items-center justify-center border border-slate-800 shadow-inner">
-                <div className="absolute inset-0 bg-linear-to-br from-slate-900 to-slate-800"></div>
-
-                <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.45)] border border-slate-700/50 mb-5">
-                  <Lock className="h-8 w-8 text-slate-300" />
+              {/* Image area */}
+              {showImage && profile.image ? (
+                <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-inner bg-slate-100">
+                  <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/15 to-transparent" />
+                  <img
+                    src={profile.image}
+                    alt={profile.name}
+                    className="h-[22rem] w-full object-cover sm:h-[26rem]"
+                  />
+                  <div className={`absolute bottom-4 ${isRTL ? 'right-4' : 'left-4'}`}>
+                    <span className="rounded-lg bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/95 border border-white/15 backdrop-blur-sm">
+                      {profile.status}
+                    </span>
+                  </div>
                 </div>
+              ) : (
+                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-4 py-12 sm:py-16 flex flex-col items-center justify-center border border-slate-800 shadow-inner">
+                  <div className="absolute inset-0 bg-linear-to-br from-slate-900 to-slate-800"></div>
 
-                <div className="relative z-10 flex max-w-sm flex-col items-center text-center gap-2">
-                  <span className="text-[22px] font-black tracking-wide text-white">
-                    {t.photoProtected}
-                  </span>
-                  <span className="text-[14px] font-medium leading-relaxed text-slate-400">
-                    {t.photoVisibleAfterVerification}
-                  </span>
-                </div>
+                  <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.45)] border border-slate-700/50 mb-5">
+                    <Lock className="h-8 w-8 text-slate-300" />
+                  </div>
 
-                <div className={`absolute bottom-4 ${isRTL ? 'right-4' : 'left-4'}`}>
-                  <span className="rounded-lg bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/90 border border-white/10">
-                    {profile.status}
-                  </span>
+                  <div className="relative z-10 flex max-w-sm flex-col items-center text-center gap-2">
+                    <span className="text-[22px] font-black tracking-wide text-white">
+                      {t.photoProtected}
+                    </span>
+                    <span className="text-[14px] font-medium leading-relaxed text-slate-400">
+                      {t.photoVisibleAfterVerification}
+                    </span>
+                  </div>
+
+                  <div className={`absolute bottom-4 ${isRTL ? 'right-4' : 'left-4'}`}>
+                    <span className="rounded-lg bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/90 border border-white/10">
+                      {profile.status}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Information Grid Container */}
               <div className="flex flex-col gap-6">

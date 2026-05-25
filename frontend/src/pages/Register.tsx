@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
@@ -12,12 +12,14 @@ import SubmitButton from '@/components/ui/SubmitButton';
 import FormInput from '@/components/ui/FormInput';
 import ImageUpload from '@/components/ui/ImageUpload';
 import LocalizedDateInput from '@/components/ui/LocalizedDateInput';
+import SelectMenu from '@/components/ui/SelectMenu';
 import compassImg from '../assets/compass.jpg';
 import FeatureCard from '@/components/ui/FeatureCard';
 import PrivacyBadge from '@/components/ui/PrivacyBadge';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '@/lib/api';
 import { toast } from 'sonner';
+import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../data/cities';
 
 type PasswordStrengthContent = {
     pwd8Chars: string;
@@ -85,6 +87,7 @@ const Register = () => {
     const [formData, setFormData] = useState<{
         fullName: string;
         email: string;
+        city: string;
         birthDate: string;
         phoneNumber: string;
         password: string;
@@ -93,6 +96,7 @@ const Register = () => {
     }>({
         fullName: '',
         email: '',
+        city: '',
         birthDate: '',
         phoneNumber: '',
         password: '',
@@ -103,6 +107,17 @@ const Register = () => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [showPasswords, setShowPasswords] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const cityOptions = useMemo(() => {
+        const labels = isRTL ? EGYPTIAN_CITIES_AR : EGYPTIAN_CITIES;
+        return [
+            { value: '', label: content.cityPlaceholder || content.city },
+            ...EGYPTIAN_CITIES.map((city, idx) => ({
+                value: city,
+                label: labels[idx] ?? city,
+            })),
+        ];
+    }, [content.city, content.cityPlaceholder, isRTL]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -129,6 +144,13 @@ const Register = () => {
         setFormData(prev => ({ ...prev, birthDate: value }));
         if (errors.birthDate) {
             setErrors(prev => ({ ...prev, birthDate: '' }));
+        }
+    };
+
+    const handleCityChange = (value: string) => {
+        setFormData(prev => ({ ...prev, city: value }));
+        if (errors.city) {
+            setErrors(prev => ({ ...prev, city: '' }));
         }
     };
 
@@ -160,6 +182,7 @@ const Register = () => {
             await register({
                 name: formData.fullName,
                 email: formData.email,
+                city: formData.city,
                 password: formData.password,
                 confirmPassword: formData.confirmPassword,
                 phoneNumber: formData.phoneNumber,
@@ -246,6 +269,18 @@ const Register = () => {
                                 className={errors.email ? 'border-red-400 focus:ring-red-500/50' : 'border-gray-200/80 focus:border-secondary'}
                             />
                             <ErrorMessage msg={errors.email} className="text-[11px] sm:text-xs" />
+                        </div>
+
+                        <div>
+                            <SelectMenu
+                                id="city"
+                                label={content.city}
+                                value={formData.city}
+                                options={cityOptions}
+                                onChange={handleCityChange}
+                                isRTL={isRTL}
+                            />
+                            <ErrorMessage msg={errors.city} className="text-[11px] sm:text-xs" />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

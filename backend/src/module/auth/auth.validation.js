@@ -5,6 +5,7 @@ export const registerSchema = joi
   .object({
     name: joi.string().min(2).max(50).required(),
     email: genralrules.email.required(),
+    city: joi.string().min(2).max(80).required(),
     password: genralrules.password
       .min(8)
       .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/)

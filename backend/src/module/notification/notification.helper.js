@@ -3,11 +3,12 @@ import { emitToUser } from "../../realtime/io.js";
 
 // Single entry point for creating an in-app notification so that we can
 // guarantee a real-time broadcast happens alongside persistence.
-export const createNotification = async ({ userId, postId, type, deliveredVia }) => {
+export const createNotification = async ({ userId, postId, type, deliveredVia, referenceId }) => {
   const notification = await Notification.create({
     userId,
     postId,
     type,
+    ...(referenceId ? { referenceId } : {}),
     ...(deliveredVia ? { deliveredVia } : {}),
   });
 
@@ -15,7 +16,7 @@ export const createNotification = async ({ userId, postId, type, deliveredVia })
   // the toast / notifications list without an extra round-trip.
   const populated = await Notification.findById(notification._id).populate(
     "postId",
-    "name postType"
+    "name postType userId"
   );
 
   emitToUser(userId, "notification:new", populated);

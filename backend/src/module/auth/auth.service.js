@@ -9,7 +9,7 @@ import cloudinary from "../../utils/cloudinary/index.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const register = async (req, res, next) => {
-  const { name, email, password, phoneNumber, birthDate } = req.body;
+  const { name, email, password, phoneNumber, birthDate, city } = req.body;
 
   const existing = await User.findOne({ email });
   if (existing && existing.isbanned) {
@@ -61,6 +61,7 @@ export const register = async (req, res, next) => {
     existing.password = hashedPassword;
     existing.phoneNumber = phoneNumber;
     existing.birthDate = birthDate;
+    existing.city = city;
     existing.idImagePath = idImagePath;
     existing.isdeleted = false;
     existing.isVerified = false;
@@ -77,6 +78,7 @@ export const register = async (req, res, next) => {
     password: hashedPassword,
     phoneNumber,
     birthDate,
+    city,
     idImagePath,
   });
 

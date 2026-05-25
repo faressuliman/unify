@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, User, MessageSquare, Send, HeartHandshake, Home, ChevronRight, ChevronLeft, ArrowDownRight, ArrowDownLeft } from 'lucide-react';
 import FormInput from '@/components/ui/FormInput';
 import FormTextArea from '@/components/ui/FormTextArea';
 import SubmitButton from '@/components/ui/SubmitButton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { ApiError, contactApi } from '@/lib/api';
+import { toast } from 'sonner';
 import { useLanguage } from '../context/LanguageContext';
 import compassImg from '../assets/compass.jpg';
 
@@ -93,8 +95,8 @@ const Contact = () => {
     });
     
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const submitLockRef = useRef(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -103,12 +105,15 @@ const Contact = () => {
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
-        setIsSubmitted(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
+        if (submitLockRef.current || isSubmitting) {
+            return;
+        }
+
         const newErrors: Record<string, string> = {};
         
         if (!formData.name.trim()) newErrors.name = isRTL ? 'الاسم مطلوب' : 'Name is required';
@@ -122,15 +127,25 @@ const Contact = () => {
             return;
         }
 
+        submitLockRef.current = true;
         setIsSubmitting(true);
-        
-        // Simulate network request
-        await new Promise(resolve => setTimeout(resolve, 1200));
 
-        setErrors({});
-        setIsSubmitting(false);
-        setIsSubmitted(true);
-        setFormData({ name: '', email: '', subject: '', message: '' });
+        try {
+            await contactApi.sendMessage(formData);
+
+            setErrors({});
+            setFormData({ name: '', email: '', subject: '', message: '' });
+            toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
+        } catch (error) {
+            const message = error instanceof ApiError
+                ? error.message
+                : (isRTL ? 'فشل إرسال الرسالة' : 'Failed to send message');
+
+            toast.error(message);
+        } finally {
+            setIsSubmitting(false);
+            submitLockRef.current = false;
+        }
     };
 
     return (
@@ -305,18 +320,6 @@ const Contact = () => {
                                     </SubmitButton>
                                 </div>
                                 
-                                {isSubmitted && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="p-4 mt-6 rounded-xl bg-green-50 border border-green-200 text-green-800 font-bold text-sm text-center flex items-center justify-center gap-3"
-                                    >
-                                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                                            <HeartHandshake className="w-4 h-4 text-green-600" />
-                                        </div>
-                                        {t.success}
-                                    </motion.div>
-                                )}
                             </form>
                         </motion.div>
                     </div>

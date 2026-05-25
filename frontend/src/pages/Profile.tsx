@@ -3,11 +3,12 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   userApi,
   claimApi,
   chatApi,
+  sightingApi,
   type UserProfileInfo,
   type BackendPost,
   type BackendClaim,
@@ -16,8 +17,8 @@ import type { ProfileData } from "../components/home/PersonCard";
 import { mapPostFields } from "../lib/postFormatters";
 import {
   FileText,
-  CheckCircle,
   ShieldCheck,
+  MapPin,
   Mail,
   Phone,
   Calendar,
@@ -41,6 +42,7 @@ import FoundPersonCard from "../components/search/FoundPersonCard";
 import UnderlineTabSelector from "../components/ui/UnderlineTabSelector";
 import EditProfileModal from "../components/ui/modals/EditProfileModal";
 import SightingsListModal from "../components/ui/modals/SightingsListModal";
+import ClaimsListModal from "../components/ui/modals/ClaimsListModal";
 import BlockedUsersModal from "../components/ui/modals/BlockedUsersModal";
 
 export default function Profile() {
@@ -48,6 +50,7 @@ export default function Profile() {
   const { token } = useAuth();
   const isRTL = language === "ar";
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"missing" | "found">("missing");
   const cardsRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -56,9 +59,9 @@ export default function Profile() {
   const [profileData, setProfileData] = useState<UserProfileInfo | null>(null);
   const [posts, setPosts] = useState<BackendPost[]>([]);
   const [claims, setClaims] = useState<BackendClaim[]>([]);
+  const [hasBlockedUsers, setHasBlockedUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editModalOtpStep, setEditModalOtpStep] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [draftEmail, setDraftEmail] = useState("");
@@ -69,6 +72,17 @@ export default function Profile() {
     open: boolean;
     postId: string;
     postName: string;
+    highlightSightingId: string | null;
+  }>({
+    open: false,
+    postId: "",
+    postName: "",
+    highlightSightingId: null,
+  });
+  const [claimsModal, setClaimsModal] = useState<{
+    open: boolean;
+    postId: string;
+    postName: string;
   }>({
     open: false,
     postId: "",
@@ -76,12 +90,25 @@ export default function Profile() {
   });
   const [imageError, setImageError] = useState(false);
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
+  const [mySightings, setMySightings] = useState<any[]>([]);
+  const [sightingsLoading, setSightingsLoading] = useState(false);
 
   useEffect(() => {
     setImageError(false);
   }, [profileData?.profilePicture, profileData?.idImagePath]);
 
   const avatarSrc = profileData?.profilePicture || null;
+
+  const normalizeInlineError = (message: string) => {
+    const lower = message.toLowerCase();
+    if (lower.includes("email") && lower.includes("valid")) {
+      return "Invalid email address";
+    }
+    if (lower.includes("phonenumber")) {
+      return message.replace(/"?phoneNumber"?/g, "Phone Number");
+    }
+    return message;
+  };
 
   const handleSaveInlineEmail = async () => {
     if (!token || !draftEmail.trim() || draftEmail === profileData?.email) {
@@ -95,16 +122,13 @@ export default function Profile() {
       const res = await userApi.updateProfile(fd, token);
       setProfileData(res.user);
       toast.success(
-        isRTL
-          ? "تم تحديث البريد. يرجى التحقق من بريدك الجديد."
-          : "Email updated. Please verify your new email.",
+        isRTL ? "تم تحديث البريد" : "Email updated",
       );
       setEditingEmail(false);
-      setEditModalOtpStep(true);
-      setIsEditModalOpen(true);
     } catch (error) {
       const err = error as Error;
-      toast.error(err.message || (isRTL ? "فشل التحديث" : "Update failed"));
+      const fallback = isRTL ? "فشل التحديث" : "Update failed";
+      toast.error(normalizeInlineError(err.message || fallback));
     } finally {
       setSavingEmail(false);
     }
@@ -127,7 +151,8 @@ export default function Profile() {
       setEditingPhone(false);
     } catch (error) {
       const err = error as Error;
-      toast.error(err.message || (isRTL ? "فشل التحديث" : "Update failed"));
+      const fallback = isRTL ? "فشل التحديث" : "Update failed";
+      toast.error(normalizeInlineError(err.message || fallback));
     } finally {
       setSavingPhone(false);
     }
@@ -140,6 +165,16 @@ export default function Profile() {
     return parsed.toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
       year: "numeric",
       month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatMonthDay = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
+      month: "long",
       day: "numeric",
     });
   };
@@ -164,24 +199,57 @@ export default function Profile() {
     const fetchProfileData = async () => {
       if (!token) {
         setLoading(false);
+        setHasBlockedUsers(false);
         return;
       }
       try {
-        const [profileRes, claimsRes] = await Promise.all([
+        const [profileRes, claimsRes, blockedRes] = await Promise.all([
           userApi.getProfile(token),
           claimApi.getMyClaims(token).catch(() => ({ claims: [] })),
+          userApi.getBlockedUsers(token).catch(() => ({ blockedUsers: [] })),
         ]);
         setProfileData(profileRes.user);
         setPosts(profileRes.posts || []);
         setClaims(claimsRes.claims || []);
+        setHasBlockedUsers((blockedRes.blockedUsers || []).length > 0);
       } catch (error) {
         console.error("Failed to fetch profile info:", error);
+        setHasBlockedUsers(false);
       } finally {
         setLoading(false);
       }
     };
     fetchProfileData();
   }, [token]);
+
+  // Fetch sightings submitted by the user
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    const load = async () => {
+      setSightingsLoading(true);
+      try {
+        const res = await sightingApi.getMySightings(token);
+        if (cancelled) return;
+        
+        let reports = res.reports || [];
+        // Map missingPersonId object to postId and postName for compatibility
+        reports = reports.map((r: any) => ({
+          ...r,
+          postId: r.missingPersonId?._id || r.missingPersonId,
+          postName: r.missingPersonId?.name || (isRTL ? "بدون اسم" : "Unknown"),
+        }));
+        
+        setMySightings(reports);
+      } catch (err) {
+        console.error('Failed to load my sightings:', err);
+      } finally {
+        if (!cancelled) setSightingsLoading(false);
+      }
+    };
+    void load();
+    return () => { cancelled = true; };
+  }, [token, isRTL]);
 
   const filteredPosts = useMemo(() => {
     return posts
@@ -225,6 +293,28 @@ export default function Profile() {
     return () => window.removeEventListener("resize", updateScrollControls);
   }, [activeTab, filteredPosts.length]);
 
+  useEffect(() => {
+    const postId = searchParams.get("sightingPostId");
+    const sightingId = searchParams.get("sightingId");
+
+    if (!token || !postId) return;
+
+    const matchedPost = posts.find((post) => post._id === postId);
+    setSightingsModal({
+      open: true,
+      postId,
+      postName: matchedPost?.name || "",
+      highlightSightingId: sightingId,
+    });
+
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("sightingPostId");
+      next.delete("sightingId");
+      return next;
+    }, { replace: true });
+  }, [posts, searchParams, setSearchParams, token]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -253,14 +343,11 @@ export default function Profile() {
   const handleStartChat = async (claim: BackendClaim) => {
     try {
       let responderId = "";
-      if (typeof claim.postId === "object" && claim.postId?.userId) {
+      if (typeof claim.claimUserId === "object" && claim.claimUserId?._id) {
+        responderId = claim.claimUserId._id;
+      } else if (typeof claim.postId === "object" && claim.postId?.userId) {
         const uid = claim.postId.userId;
         responderId = typeof uid === "object" ? uid._id : uid;
-      } else if (
-        typeof claim.claimUserId === "object" &&
-        claim.claimUserId?._id
-      ) {
-        responderId = claim.claimUserId._id;
       }
       if (!responderId) {
         console.warn("Could not find user to chat with.");
@@ -295,75 +382,85 @@ export default function Profile() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-5 md:p-6 rounded-2xl border border-primary-200 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 shadow-sm relative overflow-hidden"
+          className="bg-white rounded-2xl border border-primary-200 flex flex-col gap-6 shadow-sm relative overflow-hidden"
         >
-          {/* subtle decorative background */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-primary-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-5 md:gap-6 z-10 w-full md:w-auto">
-            <div className="relative shrink-0">
-              <div className="w-24 h-24 bg-[#faebd7] rounded-full flex items-center justify-center p-2 overflow-hidden">
-                {avatarSrc && !imageError ? (
-                  <img
-                    src={avatarSrc}
-                    alt=""
-                    onError={() => setImageError(true)}
-                    className="w-full h-full object-cover rounded-full border-2 border-white shadow-sm"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full border-2 border-white shadow-sm flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase">
-                    {profileData?.name?.charAt(0) || "?"}
-                  </div>
-                )}
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 px-6 md:px-8 pt-8 pb-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 md:gap-6 w-full md:w-auto">
+              <div className="relative shrink-0">
+                <div className="w-28 h-28 bg-[#faebd7] rounded-full flex items-center justify-center p-2.5 overflow-hidden ring-4 ring-white shadow-sm">
+                  {avatarSrc && !imageError ? (
+                    <img
+                      src={avatarSrc}
+                      alt=""
+                      onError={() => setImageError(true)}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase">
+                      {profileData?.name?.charAt(0) || "?"}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="absolute bottom-0 right-0 bg-white rounded-full p-0.5 shadow-sm translate-x-1/4 translate-y-1/4">
-                <CheckCircle
-                  className={`w-5 h-5 ${profileData?.isVerified ? "text-secondary" : "text-slate-300"}`}
-                />
+
+              <div className="flex-1 text-center sm:text-start w-full">
+                <div className="flex items-baseline justify-center md:justify-start gap-2">
+                  <h1 className="text-tertiary text-2xl md:text-3xl font-bold leading-tight">
+                    {profileData?.name || (isRTL ? "مستخدم مجهول" : "Unknown User")}
+                  </h1>
+                  <span
+                    className={`relative top-[2px] inline-flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-full border ${profileData?.isVerified ? "border-secondary/20 bg-secondary/10 text-secondary" : "border-slate-200 bg-slate-100 text-slate-400"}`}
+                    title={
+                      profileData?.isVerified
+                        ? isRTL
+                          ? "هوية موثقة"
+                          : "Verified"
+                        : isRTL
+                          ? "غير موثق"
+                          : "Unverified"
+                    }
+                  >
+                    <ShieldCheck className="w-4 h-4 md:w-5 md:h-5" />
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-2">
+                  <span className="text-slate-500 text-sm flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    <MapPin className="w-4 h-4 text-secondary" />
+                    {profileData?.city ||
+                      (isRTL ? "المدينة غير محددة" : "City not set")}
+                  </span>
+                  <span className="text-slate-500 text-sm flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    <Calendar className="w-4 h-4 text-secondary" />
+                    {formatMonthDay(profileData?.createdAt) ||
+                      (isRTL ? "تاريخ الانضمام غير محدد" : "Join date not set")}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 text-center md:text-start w-full">
-              <h1 className="text-tertiary text-2xl font-bold mb-2 md:mb-3">
-                {profileData?.name || (isRTL ? "مستخدم مجهول" : "Unknown User")}
-              </h1>
-              <div className="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2">
-                {profileData?.createdAt && (
-                  <p className="text-slate-500 text-sm flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                    <Calendar className="w-4 h-4 text-secondary" />{" "}
-                    {new Date(profileData.createdAt).toLocaleDateString(
-                      isRTL ? "ar-EG" : "en-US",
-                      { month: "short", year: "numeric" },
-                    )}
-                  </p>
-                )}
-              </div>
+            <div className="flex flex-row flex-wrap gap-3 w-full md:w-auto justify-center md:justify-end md:self-start md:mt-1">
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(true);
+                }}
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-100 text-[#212a4a] rounded-[10px] font-semibold text-xs sm:text-sm whitespace-nowrap border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                {isRTL ? "تعديل الملف" : "Edit Profile"}
+              </button>
+              <button
+                onClick={() => navigate("/create-post")}
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-[#fef5da] text-[#1c190d] rounded-[10px] font-semibold text-xs sm:text-sm whitespace-nowrap border border-[#faebd7] hover:bg-[#ffe5a0] transition-colors cursor-pointer"
+              >
+                {isRTL ? "إضافة حالة" : "Report New Case"}
+              </button>
             </div>
-          </div>
-
-          <div className="flex flex-row md:flex-row gap-3 w-full md:w-auto z-10 justify-center md:self-start">
-            <button
-              onClick={() => {
-                setEditModalOtpStep(false);
-                setIsEditModalOpen(true);
-              }}
-              className="flex-1 md:flex-none px-6 py-2.5 bg-slate-100/80 text-[#212a4a] rounded-[10px] font-semibold text-sm hover:bg-slate-200 transition-colors cursor-pointer"
-            >
-              {isRTL ? "تعديل الملف" : "Edit Profile"}
-            </button>
-            <button
-              onClick={() => navigate("/create-post")}
-              className="flex-1 md:flex-none px-6 py-2.5 bg-[#fef5da] text-[#1c190d] font-semibold text-sm rounded-[10px] border border-[#faebd7] hover:bg-[#ffe5a0] transition-all cursor-pointer shadow-xs"
-            >
-              {isRTL ? "إضافة حالة" : "Report New Case"}
-            </button>
           </div>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Stats & Information */}
           <div className="lg:col-span-1 flex flex-col gap-6">
-            {/* Account Information (Replaces Map/Activity) */}
+            {/* Personal Details */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -372,7 +469,7 @@ export default function Profile() {
             >
               <div className="p-4 border-b border-primary-100">
                 <h3 className="text-tertiary font-bold text-start">
-                  {isRTL ? "معلومات الحساب" : "Account Information"}
+                  {isRTL ? "التفاصيل الشخصية" : "Personal details"}
                 </h3>
               </div>
               <div className="p-5 flex flex-col gap-4">
@@ -414,7 +511,7 @@ export default function Profile() {
                         type="email"
                         value={draftEmail}
                         onChange={(e) => setDraftEmail(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-tertiary focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
+                        className="w-full rounded-lg px-4 py-2.5 text-sm text-tertiary focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
                         dir="ltr"
                         autoFocus
                       />
@@ -444,69 +541,72 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-start justify-between gap-3 p-3 bg-slate-50/80 rounded-lg border border-slate-100">
-                  <div className="flex items-start gap-4 min-w-0">
-                    <div className="mt-0.5 bg-white p-2 rounded-md shadow-xs border border-primary-200">
-                      <Phone className="w-4 h-4 text-secondary" />
-                    </div>
-                    <div className="text-start min-w-0">
-                      <p className="text-xs text-slate-500 font-medium mb-0.5">
-                        {isRTL ? "رقم الهاتف" : "Phone Number"}
-                      </p>
-                      {editingPhone ? (
-                        <div className="flex flex-col gap-2 mt-1">
-                          <input
-                            type="tel"
-                            value={draftPhone}
-                            onChange={(e) => setDraftPhone(e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-tertiary focus:border-secondary outline-none"
-                            dir="ltr"
-                            autoFocus
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={handleSaveInlinePhone}
-                              disabled={savingPhone}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-secondary text-white text-xs font-bold hover:bg-secondary/90 disabled:opacity-50 cursor-pointer"
-                            >
-                              {savingPhone ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Save className="h-3 w-3" />
-                              )}
-                              {isRTL ? "حفظ" : "Save"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingPhone(false)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
-                            >
-                              <X className="h-3 w-3" />
-                              {isRTL ? "إلغاء" : "Cancel"}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm font-bold text-tertiary">
-                          {profileData?.phoneNumber ||
-                            (isRTL ? "لم يتم التحديد" : "Not specified")}
+                <div className="p-4 bg-slate-50/80 rounded-lg border border-slate-100">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="bg-white p-2 rounded-md shadow-xs border border-primary-200">
+                        <Phone className="w-4 h-4 text-secondary" />
+                      </div>
+                      <div className="text-start min-w-0">
+                        <p className="text-xs text-slate-500 font-medium mb-0.5">
+                          {isRTL ? "رقم الهاتف" : "Phone Number"}
                         </p>
-                      )}
+                        {!editingPhone && (
+                          <p className="text-sm font-bold text-tertiary" dir="ltr">
+                            {profileData?.phoneNumber ||
+                              (isRTL ? "لم يتم التحديد" : "Not specified")}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    {!editingPhone && (
+                      <button
+                        onClick={() => {
+                          setDraftPhone(profileData?.phoneNumber || "");
+                          setEditingPhone(true);
+                          setEditingEmail(false);
+                        }}
+                        className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
+                        aria-label={isRTL ? "تعديل الهاتف" : "Edit phone"}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                  {!editingPhone && (
-                    <button
-                      onClick={() => {
-                        setDraftPhone(profileData?.phoneNumber || "");
-                        setEditingPhone(true);
-                        setEditingEmail(false);
-                      }}
-                      className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-colors cursor-pointer"
-                      aria-label={isRTL ? "تعديل الهاتف" : "Edit phone"}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
+                  {editingPhone && (
+                    <div className="flex flex-col gap-3 mt-3">
+                      <input
+                        type="tel"
+                        value={draftPhone}
+                        onChange={(e) => setDraftPhone(e.target.value)}
+                        className="w-full rounded-lg px-4 py-2.5 text-sm text-tertiary focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
+                        dir="ltr"
+                        autoFocus
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setEditingPhone(false)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
+                        >
+                          <X className="h-3 w-3" />
+                          {isRTL ? "إلغاء" : "Cancel"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveInlinePhone}
+                          disabled={savingPhone}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary text-white text-xs font-bold hover:bg-secondary/90 disabled:opacity-50 cursor-pointer"
+                        >
+                          {savingPhone ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Save className="h-3 w-3" />
+                          )}
+                          {isRTL ? "حفظ" : "Save"}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
                 <div className="flex items-start justify-between gap-3 p-3 bg-slate-50/80 rounded-lg border border-slate-100">
@@ -539,69 +639,183 @@ export default function Profile() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-3 bg-green-50/50 rounded-lg border border-green-100">
+              </div>
+            </motion.div>
+
+            {/* Verification Status */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.13 }}
+              className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs"
+            >
+              <div className="p-4 border-b border-primary-100">
+                <h3 className="text-tertiary font-bold text-start">
+                  {isRTL ? "حالة التوثيق" : "Verification status"}
+                </h3>
+              </div>
+              <div className="p-5">
+                <div className="flex items-start gap-4 p-4 bg-green-50/50 rounded-lg border border-green-100">
                   <div className="mt-0.5 bg-white p-2 rounded-md shadow-xs border border-primary-200">
                     <ShieldCheck className="w-4 h-4 text-secondary" />
                   </div>
                   <div className="text-start">
                     <p className="text-xs text-slate-500 font-medium mb-0.5">
-                      {isRTL ? "حالة التوثيق" : "Verification Status"}
+                      {isRTL ? "الهوية الوطنية" : "National ID"}
                     </p>
                     <p className="text-sm font-bold text-tertiary">
                       {profileData?.isVerified
                         ? isRTL
-                          ? "الهوية الوطنية موثقة"
-                          : "National ID Verified"
+                          ? "موثقة"
+                          : "Verified"
                         : isRTL
-                          ? "غير موثق"
-                          : "Unverified"}
+                          ? "غير موثقة"
+                          : "Not verified"}
                     </p>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setIsBlockedModalOpen(true)}
-                  className="flex items-center justify-between p-3 bg-red-50/50 hover:bg-red-50 rounded-lg border border-red-100 transition-colors cursor-pointer w-full text-start"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-white p-2 rounded-md shadow-xs border border-red-200">
-                      <UserX className="w-4 h-4 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">
-                        {isRTL ? "المستخدمون المحظورون" : "Blocked Users"}
-                      </p>
-                      <p className="text-xs text-slate-500 font-medium">
-                        {isRTL
-                          ? "إدارة الأشخاص الذين قمت بحظرهم"
-                          : "Manage people you have blocked"}
-                      </p>
-                    </div>
-                  </div>
-                  {isRTL ? (
-                    <ChevronLeft className="w-5 h-5 text-slate-400" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-slate-400" />
-                  )}
-                </button>
               </div>
             </motion.div>
 
-            {/* Claims History */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs flex flex-col max-h-100"
-            >
-              <div className="p-4 border-b border-primary-100 flex items-center justify-between shrink-0">
-                <h3 className="text-tertiary font-bold text-start">
-                  {isRTL ? "المطالبات الأخيرة" : "Recent Claims"}
-                </h3>
-              </div>
-              <div className="divide-y divide-primary-100 overflow-y-auto min-h-0 custom-scrollbar">
-                {claims.length > 0 ? (
-                  claims.map((claim) => {
+            {/* Blocked Users */}
+            {hasBlockedUsers && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs"
+              >
+                <div className="p-4 border-b border-primary-100">
+                  <h3 className="text-tertiary font-bold text-start">
+                    {isRTL ? "المستخدمون المحظورون" : "Blocked users"}
+                  </h3>
+                </div>
+                <div className="p-4">
+                  <button
+                    onClick={() => setIsBlockedModalOpen(true)}
+                    className="flex items-center justify-between p-3 bg-red-50/50 hover:bg-red-50 rounded-lg border border-red-100 transition-colors cursor-pointer w-full text-start"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="bg-white p-2 rounded-md shadow-xs border border-red-200">
+                        <UserX className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">
+                          {isRTL ? "إدارة المحظورين" : "Manage blocked users"}
+                        </p>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {isRTL
+                            ? "عرض الأشخاص الذين قمت بحظرهم"
+                            : "See and manage people you blocked"}
+                        </p>
+                      </div>
+                    </div>
+                    {isRTL ? (
+                      <ChevronLeft className="w-5 h-5 text-slate-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-slate-400" />
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+            {(sightingsLoading || mySightings.length > 0) && (
+              <>
+                {/* Sighting Reports */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.17 }}
+                  className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs flex flex-col max-h-100 mt-4"
+                >
+                  <div className="p-4 border-b border-primary-100 flex items-center justify-between shrink-0">
+                    <h3 className="text-tertiary font-bold text-start">
+                      {isRTL ? "بلاغاتي للمشاهدات" : "My Sighting Reports"}
+                    </h3>
+                  </div>
+                  <div className="divide-y divide-primary-100 overflow-y-auto min-h-0 custom-scrollbar">
+                    {sightingsLoading ? (
+                      <div className="p-8 text-center">
+                        <Loader2 className="animate-spin w-6 h-6 mx-auto text-secondary" />
+                      </div>
+                    ) : (
+                      mySightings.slice(0, 8).map((s) => (
+                        <div
+                          key={s._id}
+                          className="p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                          onClick={() =>
+                            setSightingsModal({
+                              open: true,
+                              postId: s.postId,
+                              postName: s.postName,
+                              highlightSightingId: s._id,
+                            })
+                          }
+                        >
+                          <div className="size-10 rounded-lg bg-white flex items-center justify-center shrink-0 border border-primary-200 text-secondary">
+                            <Eye className="w-5 h-5" />
+                          </div>
+                          <div className="flex flex-col items-start text-start min-w-0 flex-1">
+                            <p className="text-sm font-bold text-tertiary truncate w-full">
+                              {s.postName || (isRTL ? "بدون اسم" : "Unknown")}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {s.description}
+                            </p>
+                            <span className="text-[10px] mt-1 text-slate-400">
+                              {new Date(s.createdAt).toLocaleDateString(
+                                isRTL ? "ar-EG" : "en-US",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </span>
+                          </div>
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSightingsModal({
+                                open: true,
+                                postId: s.postId,
+                                postName: s.postName,
+                                highlightSightingId: s._id,
+                              });
+                            }}
+                            className="ml-auto w-8 h-8 rounded-full bg-secondary/10 hover:bg-secondary/20 flex items-center justify-center text-secondary transition-colors"
+                            aria-label={isRTL ? "عرض التفاصيل" : "View details"}
+                          >
+                            {isRTL ? (
+                              <ChevronLeft className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              </>
+            )}
+
+            {claims.length > 0 && (
+              <>
+                {/* Claims History */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="bg-white rounded-xl border border-primary-200 overflow-hidden shadow-xs flex flex-col max-h-100"
+                >
+                  <div className="p-4 border-b border-primary-100 flex items-center justify-between shrink-0">
+                    <h3 className="text-tertiary font-bold text-start">
+                      {isRTL ? "المطالبات الأخيرة" : "Recent Claims"}
+                    </h3>
+                  </div>
+                  <div className="divide-y divide-primary-100 overflow-y-auto min-h-0 custom-scrollbar">
+                    {claims.map((claim) => {
                     const postName =
                       typeof claim.postId === "object" && claim.postId !== null
                         ? (claim.postId as BackendPost).name || "Unknown"
@@ -628,7 +842,12 @@ export default function Profile() {
                     return (
                       <div
                         key={claim._id}
-                        className="p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          if (claim.status === "approved") {
+                            handleStartChat(claim);
+                          }
+                        }}
+                        className={`p-4 flex gap-4 transition-colors ${claim.status === "approved" ? "cursor-pointer hover:bg-slate-50" : "cursor-default"}`}
                       >
                         <div
                           className={`size-10 rounded-lg bg-white flex items-center justify-center shrink-0 border border-primary-200 ${claim.status === "approved" ? "text-green-500" : claim.status === "rejected" ? "text-red-500" : "text-amber-500"}`}
@@ -667,17 +886,11 @@ export default function Profile() {
                         )}
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="p-8 text-center text-slate-500">
-                    <FileText className="w-8 h-8 mx-auto mb-3 text-slate-300" />
-                    <p className="text-sm">
-                      {isRTL ? "لا توجد مطالبات حتى الآن" : "No claims found"}
-                    </p>
+                    })}
                   </div>
-                )}
-              </div>
-            </motion.div>
+                </motion.div>
+              </>
+            )}
           </div>
 
           {/* Right Column: Case Management */}
@@ -741,6 +954,18 @@ export default function Profile() {
                             idx={idx}
                             isRTL={isRTL}
                             showImage={true}
+                            showDetailsButton={false}
+                            cardOpensModal={true}
+                            actionLabel={isRTL ? "عرض المشاهدات" : "View Sightings"}
+                            actionIcon={<Eye className="h-3.5 w-3.5" />}
+                            onActionClick={() =>
+                              setSightingsModal({
+                                open: true,
+                                postId: profile.id,
+                                postName: profile.name,
+                                highlightSightingId: null,
+                              })
+                            }
                             className="w-full!"
                           />
                         ) : (
@@ -749,23 +974,19 @@ export default function Profile() {
                             idx={idx}
                             isRTL={isRTL}
                             showImage={true}
-                            className="w-full!"
-                          />
-                        )}
-                        {activeTab === "missing" && (
-                          <button
-                            onClick={() =>
-                              setSightingsModal({
+                            showDetailsButton={false}
+                            cardOpensModal={true}
+                            actionLabel={isRTL ? "عرض المطالبات" : "View Claims"}
+                            actionIcon={<FileText className="h-3.5 w-3.5" />}
+                            onActionClick={() =>
+                              setClaimsModal({
                                 open: true,
                                 postId: profile.id,
                                 postName: profile.name,
                               })
                             }
-                            className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-2 rounded-xl bg-white border border-primary-200 text-tertiary text-xs font-bold hover:bg-primary-50 transition-colors cursor-pointer"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-secondary" />
-                            {isRTL ? "عرض المشاهدات" : "View sightings"}
-                          </button>
+                            className="w-full!"
+                          />
                         )}
                       </div>
                     ))
@@ -829,14 +1050,10 @@ export default function Profile() {
 
       <EditProfileModal
         isOpen={isEditModalOpen}
-        onOpenChange={(open) => {
-          setIsEditModalOpen(open);
-          if (!open) setEditModalOtpStep(false);
-        }}
+        onOpenChange={setIsEditModalOpen}
         profile={profileData}
         onSuccess={(updatedProfile) => setProfileData(updatedProfile)}
         isRTL={isRTL}
-        startOnOtpStep={editModalOtpStep}
       />
 
       {token && (
@@ -858,8 +1075,25 @@ export default function Profile() {
           postName={sightingsModal.postName}
           isRTL={isRTL}
           token={token}
+          highlightSightingId={sightingsModal.highlightSightingId}
+        />
+      )}
+
+      {token && claimsModal.postId && (
+        <ClaimsListModal
+          isOpen={claimsModal.open}
+          onOpenChange={(open) =>
+            setClaimsModal((prev) => ({ ...prev, open }))
+          }
+          postId={claimsModal.postId}
+          postName={claimsModal.postName}
+          isRTL={isRTL}
+          token={token}
+          onStartChat={handleStartChat}
         />
       )}
     </div>
   );
 }
+
+

@@ -259,15 +259,15 @@ export default function Map() {
       className="flex flex-col bg-white font-sans w-full"
     >
       <div className="p-6 border-b border-slate-100 flex items-start justify-between bg-white">
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3 text-start">
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
             <ListFilter className="w-5 h-5" />
           </div>
-          <div>
-            <h3 className="font-bold text-xl text-slate-800 ">
+          <div className="text-start">
+            <h3 className="font-bold text-xl text-slate-800 text-start">
               {t.filterCases}
             </h3>
-            <p className="text-xs font-semibold text-slate-500 uppercase">
+            <p className="text-xs font-semibold text-slate-500 uppercase text-start">
               {t.refineMarkers}
             </p>
           </div>
@@ -419,12 +419,12 @@ export default function Map() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row gap-6">
-          <aside className="hidden lg:block w-90 xl:w-100 shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 sticky top-24 self-start">
+        <div className="flex-1 flex flex-col lg:flex-row gap-6 items-stretch">
+          <aside className="hidden lg:flex w-90 xl:w-100 shrink-0 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-visible lg:min-h-[calc(100vh-120px)] flex-col">
             {renderFiltersContent(false)}
           </aside>
 
-          <main className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative h-[78vh] min-h-[520px] lg:h-[calc(100vh-160px)] flex flex-col z-0">
+          <main className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative min-h-[calc(100vh-120px)] flex flex-col z-0">
             <div className="absolute inset-0 z-0">
               <MapContainer
                 center={DEFAULT_CENTER}

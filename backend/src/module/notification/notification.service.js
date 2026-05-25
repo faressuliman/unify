@@ -6,7 +6,7 @@ export const getMyNotifications = async (req, res, next) => {
   const { page, limit } = req.query;
 
   const notifications = await Notification.find({ userId: req.user._id })
-    .populate("postId", "name postType")
+    .populate("postId", "name postType userId")
     .sort({ createdAt: -1 })
     .limit(parseInt(limit) || 20)
     .skip(((parseInt(page) || 1) - 1) * (parseInt(limit) || 20));

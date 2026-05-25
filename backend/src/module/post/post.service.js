@@ -157,7 +157,7 @@ export const createPost = async (req, res, next) => {
     status: "active",
   });
 
-  return res.status(201).json({ message: "Post created successfully", post });
+  return res.status(201).json({ message: "Post successfully created", post });
 };
 
 // ─── باقي الدوال (Get, Update, Delete, Stats) ──────────────────────────────────
