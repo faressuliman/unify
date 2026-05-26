@@ -398,7 +398,7 @@ export default function ReportModal({
                   )}
                   <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                     {!selectedMainReason && (
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                      <AlertTriangle className="h-5 w-5 text-secondary" />
                     )}
                     {selectedMainReason
                       ? isRTL

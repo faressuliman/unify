@@ -22,14 +22,18 @@ import {
   LayoutDashboard,
   ClipboardList,
   Mail,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
-import AdminDrawer from "../components/admin/AdminDrawer";
+import AdminDrawer, {
+  type AdminDrawerItem,
+} from "../components/admin/AdminDrawer";
 import ContactMessagesPanel from "../components/admin/ContactMessagesPanel";
 import {
   adminApi,
+  ApiError,
   type AdminUser,
   type BackendClaim,
   type BackendPost,
@@ -44,7 +48,8 @@ type Section =
   | "users"
   | "posts"
   | "contact_messages"
-  | "user_reports";
+  | "user_reports"
+  | "chats";
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 type ClaimsTab = "pending" | "processed";
 
@@ -56,7 +61,7 @@ export default function Admin() {
   const isRTL = language === "ar";
   const tCopy = useMemo(() => getCopy(isRTL), [isRTL]);
 
-  const [activeSection, setActiveSection] = useState<Section>("claims");
+  const [activeSection, setActiveSection] = useState<Section>("overview");
   const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
 
   // Stats — used both by Overview and to drive the badge counts in the sidebar
@@ -117,6 +122,9 @@ export default function Admin() {
     "all" | "missing" | "found"
   >("all");
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  
+  // Chats
+  const [adminChatsTargetId, setAdminChatsTargetId] = useState<string>("");
 
   useEffect(() => {
     if (!token) return;
@@ -271,16 +279,40 @@ export default function Admin() {
     setUserSearch(userSearchInput.trim());
   };
 
+  const handleUserSearchInputChange = (value: string) => {
+    setUserSearchInput(value);
+    if (!value.trim()) {
+      setUserPage(1);
+      setUserSearch("");
+    }
+  };
+
   const handlePendingUsersSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPendingUsersPage(1);
     setPendingUserSearch(pendingUserSearchInput.trim());
   };
 
+  const handlePendingUsersSearchInputChange = (value: string) => {
+    setPendingUserSearchInput(value);
+    if (!value.trim()) {
+      setPendingUsersPage(1);
+      setPendingUserSearch("");
+    }
+  };
+
   const handlePostsSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPostPage(1);
     setPostSearch(postSearchInput.trim());
+  };
+
+  const handlePostsSearchInputChange = (value: string) => {
+    setPostSearchInput(value);
+    if (!value.trim()) {
+      setPostPage(1);
+      setPostSearch("");
+    }
   };
 
   const handleToggleBan = async (user: AdminUser) => {
@@ -389,13 +421,7 @@ export default function Admin() {
   };
 
   // ── Sidebar config ─────────────────────────────────────────────────────────
-  const sidebarItems: {
-    id: Section;
-    label: string;
-    icon: typeof Users;
-    badge?: number;
-    tone: "red" | "amber" | "slate";
-  }[] = [
+  const sidebarItems: AdminDrawerItem[] = [
     {
       id: "overview",
       label: tCopy.tabs.overview,
@@ -442,7 +468,13 @@ export default function Admin() {
       label: tCopy.sectionTitles.user_reports,
       icon: ShieldAlert,
       badge: stats?.pendingUserReports,
-      tone: "red",
+      tone: "amber",
+    },
+    {
+      id: "chats",
+      label: tCopy.sectionTitles.chats,
+      icon: MessageSquare,
+      tone: "slate",
     },
   ];
 
@@ -454,12 +486,12 @@ export default function Admin() {
       <main className="w-full max-w-7xl mx-auto px-4 lg:px-8 py-8">
         <div className="flex flex-col xl:flex-row gap-8">
           {/* ── Sidebar ─────────────────────────────────────────────── */}
-          <aside className="xl:w-72 xl:shrink-0">
-            <div className="sticky top-8 flex flex-col gap-6">
+          <aside className="xl:w-72 xl:shrink-0 xl:sticky xl:top-8 xl:h-[calc(100vh-4rem)] xl:overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col gap-6">
               {/* Brand header */}
               <div className="px-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+                  <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-tertiary">
                     <ShieldAlert className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col text-start">
@@ -474,18 +506,23 @@ export default function Admin() {
               </div>
 
               {/* Nav list */}
-              <nav className="bg-white  rounded-2xl border border-slate-200 p-2 shadow-xs hidden xl:flex xl:flex-col gap-2">
+              <nav className="bg-white rounded-2xl border border-slate-200 p-2 shadow-xs hidden xl:flex xl:flex-col gap-2">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeSection === item.id;
                   return (
                     <button
                       key={item.id}
-                      onClick={() => setActiveSection(item.id)}
+                      onClick={() => {
+                        if (item.id === "chats") {
+                          setAdminChatsTargetId("");
+                        }
+                        setActiveSection(item.id as Section);
+                      }}
                       className={`relative shrink-0 inline-flex items-center justify-center xl:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer w-auto xl:w-full ${
                         isActive
-                          ? "bg-tertiary text-white shadow-sm"
-                          : "text-slate-600  hover:bg-slate-100"
+                          ? "bg-primary text-secondary shadow-sm"
+                          : "text-slate-600 hover:bg-slate-100"
                       }`}
                     >
                       <Icon className="h-5 w-5 shrink-0" />
@@ -500,7 +537,7 @@ export default function Admin() {
                               : item.tone === "amber"
                                 ? "bg-amber-500 text-white"
                                 : isActive
-                                  ? "bg-white/20 text-white"
+                                  ? "bg-secondary text-white"
                                   : "bg-slate-200 text-slate-600"
                           }`}
                         >
@@ -536,7 +573,23 @@ export default function Admin() {
             </header>
 
             {activeSection === "overview" && (
-              <OverviewPanel stats={stats} loading={statsLoading} t={tCopy} />
+              <OverviewPanel
+                stats={stats}
+                loading={statsLoading}
+                t={tCopy}
+                isRTL={isRTL}
+                onAction={(section) => {
+                  if (section === "claims") {
+                    setActiveSection("claims");
+                    setClaimsTab("pending");
+                  } else if (section === "verifications") {
+                    setActiveSection("verifications");
+                  } else if (section === "activeMissing") {
+                    setActiveSection("posts");
+                    setPostTypeFilter("missing");
+                  }
+                }}
+              />
             )}
 
             {activeSection === "contact_messages" && (
@@ -552,6 +605,17 @@ export default function Admin() {
                 t={tCopy}
                 isRTL={isRTL}
                 onReplied={fetchStats}
+                onViewChat={(chatId) => {
+                  setAdminChatsTargetId(chatId);
+                  setActiveSection("chats");
+                }}
+              />
+            )}
+
+            {activeSection === "chats" && (
+              <AdminChatsPanel
+                isRTL={isRTL}
+                initialChatId={adminChatsTargetId}
               />
             )}
 
@@ -589,7 +653,7 @@ export default function Admin() {
                 users={pendingUsers}
                 loading={pendingUsersLoading}
                 searchInput={pendingUserSearchInput}
-                onSearchInputChange={setPendingUserSearchInput}
+                onSearchInputChange={handlePendingUsersSearchInputChange}
                 onSearchSubmit={handlePendingUsersSearchSubmit}
                 page={pendingUsersPage}
                 totalPages={pendingUsersTotalPages}
@@ -605,7 +669,7 @@ export default function Admin() {
                 users={users}
                 loading={usersLoading}
                 searchInput={userSearchInput}
-                onSearchInputChange={setUserSearchInput}
+                onSearchInputChange={handleUserSearchInputChange}
                 onSearchSubmit={handleSearchSubmit}
                 page={userPage}
                 totalPages={userTotalPages}
@@ -622,7 +686,7 @@ export default function Admin() {
                 posts={posts}
                 loading={postsLoading}
                 searchInput={postSearchInput}
-                onSearchInputChange={setPostSearchInput}
+                onSearchInputChange={handlePostsSearchInputChange}
                 onSearchSubmit={handlePostsSearchSubmit}
                 postTypeFilter={postTypeFilter}
                 onPostTypeFilterChange={(f) => {
@@ -675,7 +739,12 @@ export default function Admin() {
         subtitle={tCopy.drawer.subtitle}
         items={sidebarItems}
         activeId={activeSection}
-        onSelect={(id) => setActiveSection(id as Section)}
+        onSelect={(id) => {
+          if (id === "chats") {
+            setAdminChatsTargetId("");
+          }
+          setActiveSection(id as Section);
+        }}
       />
     </div>
   );
@@ -686,15 +755,19 @@ function OverviewPanel({
   stats,
   loading,
   t,
+  isRTL,
+  onAction,
 }: {
   stats: DashboardStats | null;
   loading: boolean;
   t: Copy;
+  isRTL: boolean;
+  onAction: (target: string) => void;
 }) {
   if (loading) {
     return (
       <div className="bg-white p-12 rounded-2xl border border-slate-200 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 text-secondary animate-spin" />
+        <Loader2 className="h-6 w-6 text-tertiary animate-spin" />
       </div>
     );
   }
@@ -706,79 +779,249 @@ function OverviewPanel({
     );
   }
 
-  const items = [
+  const summaryItems = [
     {
       label: t.stats.totalUsers,
       value: stats.totalUsers,
       icon: Users,
-      color: "bg-blue-50 text-blue-600 border-blue-100",
+      trend: "+12%",
+      color: "blue",
     },
     {
       label: t.stats.totalPosts,
       value: stats.totalPosts,
       icon: FileText,
-      color: "bg-purple-50 text-purple-600 border-purple-100",
-    },
-    {
-      label: t.stats.activeMissing,
-      value: stats.activeMissing,
-      icon: AlertCircle,
-      color: "bg-amber-50 text-amber-600 border-amber-100",
+      trend: "+5%",
+      color: "emerald",
     },
     {
       label: t.stats.foundPosts,
       value: stats.foundPosts,
       icon: CheckCircle2,
-      color: "bg-green-50 text-green-600 border-green-100",
+      trend: "+2%",
+      color: "amber",
     },
     {
       label: t.stats.resolvedPosts,
       value: stats.resolvedPosts,
-      icon: ShieldAlert,
-      color: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      icon: ShieldCheck,
+      trend: "+8%",
+      color: "purple",
     },
+  ];
+
+  const priorityItems = [
     {
       label: t.stats.pendingClaims,
       value: stats.pendingClaims,
       icon: Inbox,
-      color: "bg-orange-50 text-orange-600 border-orange-100",
+      target: "claims",
+      description: isRTL ? "مراجعة المطالبات المعلقة" : "Review pending claims",
     },
     {
       label: t.stats.pendingVerifications,
       value: stats.pendingVerifications ?? 0,
-      icon: ShieldCheck,
-      color: "bg-rose-50 text-rose-600 border-rose-100",
+      icon: ShieldAlert,
+      target: "verifications",
+      description: isRTL ? "التحقق من هوايات المستخدمين" : "Verify user identities",
     },
-  ];
+    {
+      label: t.stats.activeMissing,
+      value: stats.activeMissing,
+      icon: AlertCircle,
+      target: "activeMissing",
+      description: isRTL ? "الحالات النشطة حالياً" : "Currently active cases",
+    },
+  ].sort((a, b) => b.value - a.value);
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % summaryItems.length);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [currentSlide]);
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + summaryItems.length) % summaryItems.length);
+  };
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % summaryItems.length);
+  };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-      {items.map((item, idx) => {
-        const Icon = item.icon;
-        return (
-          <motion.div
-            key={item.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-4 shadow-xs"
+    <div className="space-y-6">
+      {/* KPI Cards - Mobile Carousel */}
+      <motion.div 
+        className="md:hidden w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="bg-white rounded-xl border border-gray-100 flex items-center justify-between px-3 py-5 shadow-sm">
+          {/* Left Arrow */}
+          <button
+            onClick={handlePrevSlide}
+            className="p-2 rounded-full text-secondary hover:bg-slate-100 transition-colors shrink-0"
+            aria-label="Previous slide"
           >
-            <div
-              className={`h-12 w-12 rounded-xl border flex items-center justify-center ${item.color}`}
+             {isRTL ? <ChevronRight className="w-5 h-5" strokeWidth={2.5} /> : <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />}
+          </button>
+
+          {/* Carousel Content */}
+          <div className="flex-1 overflow-hidden px-3 flex justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={`slide-${currentSlide}`}
+                className="flex items-center justify-center gap-3"
+                initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {(() => {
+                  const item = summaryItems[currentSlide];
+                  const Icon = item.icon;
+                  return (
+                    <>
+                      <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
+                        <Icon className="w-6 h-6" strokeWidth={2} />
+                      </div>
+                      <div className="whitespace-nowrap flex flex-col justify-center">
+                        <p className="text-[10px] md:text-sm font-medium text-gray-500">
+                          {item.label}
+                        </p>
+                        <p className="text-lg md:text-2xl font-bold text-slate-800">
+                          {item.value.toLocaleString()}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Right Arrow */}
+          <button
+            onClick={handleNextSlide}
+            className="p-2 rounded-full text-secondary hover:bg-slate-100 transition-colors shrink-0"
+            aria-label="Next slide"
+          >
+            {isRTL ? <ChevronLeft className="w-5 h-5" strokeWidth={2.5} /> : <ChevronRight className="w-5 h-5" strokeWidth={2.5} />}
+          </button>
+        </div>
+      </motion.div>
+
+      {/* KPI Cards - Desktop Grid */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        {summaryItems.map((item, idx) => {
+          const Icon = item.icon;
+          return (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="bg-white p-4 lg:p-5 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 shadow-sm hover:shadow-md transition-shadow"
             >
-              <Icon className="h-6 w-6" />
+              <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
+                <Icon className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
+              </div>
+              <div className="text-start flex flex-col justify-center whitespace-nowrap overflow-hidden text-ellipsis">
+                <p className="text-[11px] lg:text-sm font-medium text-gray-500 overflow-hidden text-ellipsis w-full">
+                  {item.label}
+                </p>
+                <p className="text-lg lg:text-2xl font-bold text-slate-800 overflow-hidden text-ellipsis w-full">
+                  {item.value.toLocaleString()}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Priority Queue */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+      >
+        <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-tertiary flex items-center gap-2">
+                <Layers className="h-5 w-5 text-tertiary-light" />
+                {isRTL ? "قائمة المهام ذات الأولوية" : "Priority Action Queue"}
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                {isRTL ? "العناصر التي تتطلب انتباهك الفوري" : "Items requiring your immediate attention"}
+              </p>
             </div>
-            <div className="flex flex-col text-start">
-              <span className="text-xs text-slate-500 font-medium">
-                {item.label}
-              </span>
-              <span className="text-2xl font-bold text-tertiary">
-                {item.value.toLocaleString()}
-              </span>
-            </div>
-          </motion.div>
-        );
-      })}
+            <span className="hidden sm:inline-flex items-center justify-center px-3 py-1 text-xs font-semibold text-tertiary bg-tertiary/10 rounded-full">
+              {isRTL ? "تحديث مباشر" : "Live Updates"}
+            </span>
+          </div>
+        </div>
+        
+        <div className="divide-y divide-slate-100">
+          {priorityItems.map((item, idx) => {
+            const Icon = item.icon;
+            
+            return (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + idx * 0.1 }}
+                className="group flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex flex-1 items-start sm:items-center gap-4">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-secondary group-hover:scale-110 transition-transform duration-300"
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div className="text-start">
+                    <h4 className="text-base font-bold text-tertiary group-hover:text-tertiary-light transition-colors">
+                      {item.label}
+                    </h4>
+                    <p className="mt-0.5 text-sm text-slate-500">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-4 sm:mt-0 flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end sm:gap-6 sm:ms-auto">
+                  <div className="text-start sm:text-end">
+                    <div className="text-2xl font-black text-tertiary leading-none">
+                      {item.value.toLocaleString()}
+                    </div>
+                    <div className="mt-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                      {isRTL ? "عنصر" : "Items"}
+                    </div>
+                  </div>
+                  
+                  {item.value > 0 ? (
+                    <button 
+                      onClick={() => onAction(item.target)}
+                      className="flex h-10 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-semibold text-white shadow-sm cursor-pointer hover:opacity-90 hover:shadow transition-all group-hover:-translate-y-0.5"
+                    >
+                      {isRTL ? "مراجعة الآن" : "Review Now"}
+                    </button>
+                  ) : (
+                    <div className="flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400 cursor-not-allowed">
+                       {isRTL ? "مكتمل" : "All Clear"}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -881,9 +1124,8 @@ function ClaimsManagementPanel({
       ) : (
         <>
           <div className="px-4 sm:px-5 py-3 border-b border-slate-100 flex flex-wrap gap-1.5">
-            {(
-              ["all", "approved", "rejected", "pending"] as ClaimStatusFilter[]
-            ).map((status) => {
+            {(["all", "approved", "rejected"] as ClaimStatusFilter[]).map(
+              (status) => {
               const isActive = processedStatus === status;
               return (
                 <button
@@ -1675,9 +1917,11 @@ function ReviewClaimModal({
             {submitting === "rejected" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <XCircle className="h-4 w-4" />
+              <>
+                <XCircle className="h-4 w-4" />
+                {t.claims.reject}
+              </>
             )}
-            {t.claims.reject}
           </button>
           <button
             onClick={() => onSubmit("approved", notes.trim() || undefined)}
@@ -1687,9 +1931,11 @@ function ReviewClaimModal({
             {submitting === "approved" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <CheckCircle2 className="h-4 w-4" />
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                {t.claims.approve}
+              </>
             )}
-            {t.claims.approve}
           </button>
         </div>
       </motion.div>
@@ -1825,9 +2071,11 @@ function ReviewVerificationModal({
             {submitting === "rejected" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <XCircle className="h-4 w-4" />
+              <>
+                <XCircle className="h-4 w-4" />
+                {t.verifications.reject}
+              </>
             )}
-            {t.verifications.reject}
           </button>
           <button
             onClick={() => onSubmit("approved")}
@@ -1837,9 +2085,11 @@ function ReviewVerificationModal({
             {submitting === "approved" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <CheckCircle2 className="h-4 w-4" />
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                {t.verifications.approve}
+              </>
             )}
-            {t.verifications.approve}
           </button>
         </div>
       </motion.div>
@@ -2040,6 +2290,7 @@ function getCopy(isRTL: boolean): Copy {
         posts: "إدارة المنشورات",
         contact_messages: "رسائل التواصل",
         user_reports: "بلاغات المستخدمين",
+        chats: "المحادثات",
       },
       sectionSubtitles: {
         overview: "لمحة سريعة عن النشاط على المنصة.",
@@ -2049,6 +2300,7 @@ function getCopy(isRTL: boolean): Copy {
         posts: "مراجعة جميع البلاغات وحذف المنشورات غير المناسبة.",
         contact_messages: "قراءة الرسائل والرد عليها عبر البريد الإلكتروني.",
         user_reports: "مراجعة بلاغات المستخدمين واتخاذ الإجراءات اللازمة.",
+        chats: "مراجعة وتوثيق المحادثات بين المستخدمين.",
       },
       stats: {
         totalUsers: "إجمالي المستخدمين",
@@ -2174,6 +2426,7 @@ function getCopy(isRTL: boolean): Copy {
       posts: "Posts Management",
       contact_messages: "Contact Messages",
       user_reports: "User Reports",
+      chats: "Chats",
     },
     sectionSubtitles: {
       overview: "A quick snapshot of platform activity.",
@@ -2183,6 +2436,7 @@ function getCopy(isRTL: boolean): Copy {
       posts: "Review every report and remove inappropriate posts.",
       contact_messages: "Read and reply to support messages via email.",
       user_reports: "Review user reports and take necessary actions.",
+      chats: "Review and moderate chat conversations.",
     },
     stats: {
       totalUsers: "Total users",
@@ -2304,15 +2558,187 @@ function parseReportMessage(message: string) {
   return fields;
 }
 
+// ─── Admin Chats Panel ────────────────────────────────────────────────────────
+function AdminChatsPanel({
+  isRTL,
+  initialChatId,
+}: {
+  isRTL: boolean;
+  initialChatId?: string;
+}) {
+  const { token } = useAuth();
+  const [chatIdInput, setChatIdInput] = useState(initialChatId || "");
+  const [chatDetails, setChatDetails] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const normalizeChatId = (value: string) => {
+    const cleaned = value.trim().replace(/^chat:/i, "");
+    const match = cleaned.match(/[a-f0-9]{24}/i);
+    return match ? match[0] : cleaned;
+  };
+
+  const getChatErrorMessage = (err: unknown) => {
+    if (err instanceof ApiError) {
+      if (err.status === 404) {
+        return isRTL
+          ? "لم يتم العثور على المحادثة. تأكد من معرف المحادثة الصحيح."
+          : "Chat not found. Make sure the Chat ID is correct.";
+      }
+      if (err.status === 400) {
+        return isRTL
+          ? "معرف المحادثة غير صالح."
+          : "Invalid Chat ID.";
+      }
+      if (err.status === 403) {
+        return isRTL
+          ? "لا تملك صلاحية عرض هذه المحادثة."
+          : "You don't have access to this chat.";
+      }
+      return err.message;
+    }
+    if (err instanceof Error) return err.message;
+    return isRTL ? "تعذر تحميل المحادثة." : "Failed to load chat.";
+  };
+
+  const fetchChat = async (id: string) => {
+    const normalizedId = normalizeChatId(id);
+    if (!normalizedId || !token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setChatIdInput(normalizedId);
+      const chatRes = await adminApi.getChatDetails(normalizedId, token);
+      setChatDetails(chatRes.chat);
+      const messagesRes = await adminApi.getChatMessages(normalizedId, token, {
+        limit: 50,
+      });
+      setMessages(messagesRes.messages);
+    } catch (err: any) {
+      setError(getChatErrorMessage(err));
+      setChatDetails(null);
+      setMessages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (initialChatId) {
+      const normalizedId = normalizeChatId(initialChatId);
+      setChatIdInput(normalizedId);
+      fetchChat(normalizedId);
+    }
+  }, [initialChatId]);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+        <h2 className="text-xl font-bold text-tertiary mb-4 text-start">
+          {isRTL ? "مراجعة المحادثات" : "Chat Moderation Viewer"}
+        </h2>
+        <div className="flex gap-4">
+          <input
+            type="text"
+            className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-secondary outline-none"
+            placeholder={isRTL ? "أدخل معرف المحادثة (Chat ID)..." : "Enter Chat ID..."}
+            value={chatIdInput}
+            onChange={(e) => setChatIdInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && fetchChat(chatIdInput)}
+          />
+          <button
+            onClick={() => fetchChat(chatIdInput)}
+            disabled={loading || !chatIdInput.trim()}
+            className="px-6 py-2.5 rounded-xl bg-secondary text-white font-bold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : isRTL ? "بحث" : "Load"}
+          </button>
+        </div>
+        {error && <p className="text-red-500 text-sm mt-3 text-start">{error}</p>}
+      </div>
+
+      {chatDetails && (
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col h-[600px] overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+            <div className="flex flex-col gap-4">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-bold font-mono self-start">
+                ID: {chatDetails._id.slice(-6)}
+              </span>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="text-start">
+                  <span className="text-xs text-slate-500 font-bold uppercase">
+                    {isRTL ? "المبادر" : "Initiator"}
+                  </span>
+                  <p className="text-sm font-bold text-tertiary">
+                    {chatDetails.initiatorUserId?.name || "Unknown"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {chatDetails.initiatorUserId?.email}
+                  </p>
+                </div>
+                <div className="text-start sm:text-end">
+                  <span className="text-xs text-slate-500 font-bold uppercase">
+                    {isRTL ? "المستجيب" : "Responder"}
+                  </span>
+                  <p className="text-sm font-bold text-tertiary">
+                    {chatDetails.responderUserId?.name || "Unknown"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {chatDetails.responderUserId?.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <MessageSquare className="h-12 w-12 mb-3 opacity-20" />
+                <p>{isRTL ? "لا توجد رسائل" : "No messages found"}</p>
+              </div>
+            ) : (
+              messages.map((m) => {
+                const isInitiator = m.senderUserId?._id === chatDetails.initiatorUserId?._id;
+                return (
+                  <div key={m._id} className={`flex flex-col ${isInitiator ? "items-end" : "items-start"}`}>
+                    <span className="text-[10px] font-bold text-slate-400 mb-1 px-1">
+                      {m.senderUserId?.name || "Unknown"}
+                    </span>
+                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                      isInitiator ? "bg-secondary text-white rounded-tr-sm" : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm"
+                    }`}>
+                      {m.content && <p className="text-sm break-words whitespace-pre-wrap">{m.content}</p>}
+                      {m.attachmentPath && (
+                        <img src={m.attachmentPath} alt="attachment" className="max-w-full rounded-lg mt-2 max-h-48 object-cover" />
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-400 mt-1 px-1">
+                      {new Date(m.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── User Reports Panel ───────────────────────────────────────────────────────
 function UserReportsPanel({
   t,
   isRTL,
   onReplied,
+  onViewChat,
 }: {
   t: Copy;
   isRTL: boolean;
   onReplied?: () => void;
+  onViewChat: (chatId: string) => void;
 }) {
   const { token } = useAuth();
   const [messages, setMessages] = useState<BackendContactMessage[]>([]);
@@ -2420,21 +2846,37 @@ function UserReportsPanel({
                       )}
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      setReplyingTo(msg);
-                      setReplyMessage("");
-                    }}
-                    disabled={msg.isReplied}
-                    className={`shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                      msg.isReplied
-                        ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                        : "bg-secondary text-white hover:bg-secondary/90"
-                    }`}
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    {isRTL ? "رد" : "Reply"}
-                  </button>
+                  {(() => {
+                    const parsed = parseReportMessage(msg.message);
+                    return (
+                      <div className="flex items-center gap-2 shrink-0">
+                        {parsed["Chat ID"] && (
+                          <button
+                            onClick={() => onViewChat(parsed["Chat ID"] as string)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {isRTL ? "عرض المحادثة" : "View Chat"}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setReplyingTo(msg);
+                            setReplyMessage("");
+                          }}
+                          disabled={msg.isReplied}
+                          className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            msg.isReplied
+                              ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                              : "bg-secondary text-white hover:bg-secondary/90"
+                          }`}
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          {isRTL ? "رد" : "Reply"}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="mt-2 bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm text-slate-700 space-y-2">
                   {(() => {

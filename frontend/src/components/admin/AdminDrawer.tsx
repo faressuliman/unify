@@ -7,7 +7,7 @@ export type AdminDrawerItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
   badge?: number;
-  tone: 'red' | 'amber' | 'slate';
+  tone: 'red' | 'amber' | 'slate' | 'blue';
 };
 
 interface AdminDrawerProps {
@@ -62,7 +62,7 @@ export default function AdminDrawer({
                   }}
                   className={`w-full inline-flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                     isActive
-                      ? 'bg-tertiary text-white shadow-sm'
+                      ? 'bg-primary text-secondary shadow-sm'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -76,7 +76,7 @@ export default function AdminDrawer({
                           : item.tone === 'amber'
                             ? 'bg-amber-500 text-white'
                             : isActive
-                              ? 'bg-white/20 text-white'
+                              ? 'bg-secondary text-white'
                               : 'bg-slate-200 text-slate-600'
                       }`}
                     >

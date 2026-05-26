@@ -60,6 +60,9 @@ export const startChat = async (req, res, next) => {
       responderUserId: responderId,
       isActive: true,
     });
+  } else if (!chat.isActive) {
+    chat.isActive = true;
+    await chat.save();
   }
 
   return res.status(200).json({ chat });
@@ -168,8 +171,8 @@ export const deleteChat = async (req, res, next) => {
 
   if (!isParticipant) return next(new Error("Unauthorized", { cause: 403 }));
 
-  await Chat.findByIdAndDelete(chatId);
-  await Message.deleteMany({ chatId });
+  chat.isActive = false;
+  await chat.save();
 
-  return res.status(200).json({ message: "Chat deleted successfully" });
+  return res.status(200).json({ message: "Chat archived successfully" });
 };

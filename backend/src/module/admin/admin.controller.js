@@ -27,4 +27,8 @@ router.get("/posts", asynchandler(adminService.getAllPostsAdmin));
 router.get("/contact-messages", asynchandler(adminService.getContactMessages));
 router.post("/contact-messages/:id/reply", asynchandler(adminService.replyToContactMessage));
 
+// Moderation
+router.get("/chats/:id", asynchandler(adminService.getChatDetails));
+router.get("/chats/:id/messages", asynchandler(adminService.getChatMessages));
+
 export default router;

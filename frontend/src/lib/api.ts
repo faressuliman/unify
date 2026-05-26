@@ -859,6 +859,35 @@ export const adminApi = {
       },
     );
   },
+  getChatDetails: async (id: string, token: string) => {
+    return apiRequest<{ chat: any }>(`admin/chats/${id}`, {
+      method: "GET",
+      token,
+    });
+  },
+  getChatMessages: async (
+    id: string,
+    token: string,
+    params?: { page?: number; limit?: number },
+  ) => {
+    const qs = new URLSearchParams(
+      Object.entries(params || {}).reduce((acc, [k, v]) => {
+        if (v !== undefined) acc[k] = String(v);
+        return acc;
+      }, {} as Record<string, string>),
+    ).toString();
+    const query = qs ? `?${qs}` : "";
+    return apiRequest<{
+      messages: any[];
+      page: number;
+      limit: number;
+      totalCount: number;
+      totalPages: number;
+    }>(`admin/chats/${id}/messages${query}`, {
+      method: "GET",
+      token,
+    });
+  },
 };
 
 

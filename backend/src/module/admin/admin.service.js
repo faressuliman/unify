@@ -2,6 +2,8 @@ import User from "../../DB/models/user.model.js";
 import Post from "../../DB/models/post.model.js";
 import Claim from "../../DB/models/claim.model.js";
 import ContactMessage from "../../DB/models/contactMessage.model.js";
+import Chat from "../../DB/models/chat.model.js";
+import Message from "../../DB/models/message.model.js";
 import { pagination } from "../../utils/feature/pagination.js";
 import { sendEmail } from "../../service/sendEmail.js";
 import { decrypt } from "../../utils/encrypt/decrypt.js";
@@ -403,4 +405,40 @@ export const replyToContactMessage = async (req, res, next) => {
   await message.save();
 
   return res.status(200).json({ message: "Reply sent successfully" });
+};
+
+// ─── Get Chat Details (Admin) ──────────────────────────────────────────────────
+export const getChatDetails = async (req, res, next) => {
+  const { id } = req.params;
+  const chat = await Chat.findById(id)
+    .populate("initiatorUserId", "name email profileImage")
+    .populate("responderUserId", "name email profileImage");
+
+  if (!chat) return next(new Error("Chat not found", { cause: 404 }));
+
+  return res.status(200).json({ chat });
+};
+
+// ─── Get Chat Messages (Admin) ─────────────────────────────────────────────────
+export const getChatMessages = async (req, res, next) => {
+  const { id } = req.params;
+  const { page = 1, limit = 20 } = req.query;
+
+  const skip = (page - 1) * limit;
+
+  const messages = await Message.find({ chatId: id })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate("senderUserId", "name profileImage email role");
+
+  const totalCount = await Message.countDocuments({ chatId: id });
+
+  return res.status(200).json({
+    messages: messages.reverse(),
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+  });
 };

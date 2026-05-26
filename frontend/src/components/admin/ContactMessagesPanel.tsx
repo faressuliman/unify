@@ -229,19 +229,19 @@ function ReplyModal({
         </div>
         <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-end">
           <button
-            onClick={onClose}
-            disabled={sending}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer disabled:cursor-not-allowed"
-          >
-            {isRTL ? "إلغاء" : "Cancel"}
-          </button>
-          <button
             onClick={handleSubmit}
             disabled={sending || !replyText.trim()}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             {isRTL ? "إرسال" : "Send Reply"}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={sending}
+            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          >
+            {isRTL ? "إلغاء" : "Cancel"}
           </button>
         </div>
       </motion.div>
