@@ -212,7 +212,7 @@ export const authApi = {
 };
 
 export const postApi = {
-  getPosts: (params: Record<string, string | number | undefined>) => {
+  getPosts: async (params: Record<string, string | number | undefined>) => {
     const searchParams = new URLSearchParams();
 
     Object.entries(params).forEach(([key, value]) => {
@@ -221,7 +221,31 @@ export const postApi = {
       }
     });
 
-    return apiRequest<GetPostsResponse>(`posts?${searchParams.toString()}`);
+    const res = await apiRequest<any>(`posts?${searchParams.toString()}`);
+
+    // Normalize possible response shapes from backend (prod may return array directly)
+    if (Array.isArray(res)) {
+      return {
+        data: res,
+        page: 1,
+        limit: res.length,
+        totalCount: res.length,
+        totalPages: 1,
+      } as GetPostsResponse;
+    }
+
+    if (res && typeof res === "object" && "data" in res) {
+      return res as GetPostsResponse;
+    }
+
+    // Fallback safe shape
+    return {
+      data: [],
+      page: 1,
+      limit: 0,
+      totalCount: 0,
+      totalPages: 0,
+    } as GetPostsResponse;
   },
 
   getMapMarkers: (params?: Record<string, string | number | undefined>) => {

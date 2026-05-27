@@ -354,10 +354,10 @@ export function Navbar() {
           
           {/* Left Mobile Action Icons */}
           <div className="flex xl:hidden items-center gap-4 shrink-0">
-            <button onClick={() => handleNavClick('search')} className="cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center">
+            <button onClick={() => handleNavClick('search')} className="cursor-pointer border-none bg-transparent p-0 text-gray-700 flex items-center justify-center">
               <Search className="h-6 w-6" strokeWidth={2} />
             </button>
-            <button onClick={() => handleNavClick('create-post')} className="cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center">
+            <button onClick={() => handleNavClick('create-post')} className="cursor-pointer border-none bg-transparent p-0 text-gray-700 flex items-center justify-center">
               <PlusCircle className="h-6 w-6" strokeWidth={2} />
             </button>
           </div>
@@ -670,7 +670,7 @@ export function Navbar() {
             
             <button
               onClick={() => handleNavClick('map')}
-              className="xl:hidden cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center mx-1"
+              className="xl:hidden cursor-pointer border-none bg-transparent p-0 text-gray-700 flex items-center justify-center mx-1"
             >
               <MapPin className="h-6 w-6" strokeWidth={2} />
             </button>
@@ -679,7 +679,7 @@ export function Navbar() {
 
           <button
             aria-label="Open menu"
-            className="xl:hidden cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center mx-1"
+            className="xl:hidden cursor-pointer border-none bg-transparent p-0 text-gray-700 flex items-center justify-center mx-1"
             onClick={handleOpenDrawer}
             onMouseEnter={() => {
               preloadMobileDrawer();

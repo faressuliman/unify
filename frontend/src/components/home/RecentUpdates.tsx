@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { type ProfileData } from './PersonCard';
 import FoundPersonCard from '../search/FoundPersonCard';
@@ -42,6 +43,7 @@ export default function RecentUpdates() {
   const [activeTab, setActiveTab] = useState<'missing' | 'found'>('missing');
   const [rawPosts, setRawPosts] = useState<BackendPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -64,7 +66,7 @@ export default function RecentUpdates() {
   }, [activeTab]);
 
   const posts = useMemo(
-    () => rawPosts.map((p) => mapBackendPostToCard(p, isRTL)),
+    () => (rawPosts || []).map((p) => mapBackendPostToCard(p, isRTL)),
     [rawPosts, isRTL],
   );
 
@@ -142,7 +144,7 @@ export default function RecentUpdates() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-8 text-center"
         >
-          <button className="px-8 sm:px-10 py-3 rounded-full bg-primary text-slate-900 font-bold hover:bg-[#e6dcaf] transition-colors duration-300 text-sm sm:text-base cursor-pointer">
+          <button onClick={() => navigate('/search?tab=missing&scrollTo=results')} className="px-8 sm:px-10 py-3 rounded-full bg-primary text-slate-900 font-bold hover:bg-[#e6dcaf] transition-colors duration-300 text-sm sm:text-base cursor-pointer">
             {t.loadMore}
           </button>
         </motion.div>

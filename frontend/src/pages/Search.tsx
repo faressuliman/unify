@@ -122,7 +122,17 @@ export default function Search() {
     if (searchParams.get('scrollTo') !== 'results') return;
     if (isLoading) return;
     const timer = window.setTimeout(() => {
-      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const el = resultsRef.current;
+      if (!el) return;
+      // Prefer to scroll the page so the results header sits just below the
+      // fixed site header. We compute the target top offset and call
+      // window.scrollTo rather than relying on scrollIntoView which can
+      // produce inconsistent offsets across browsers when other layout
+      // shifts (images/animations) occur.
+      const header = document.querySelector('header') || document.querySelector('nav');
+      const headerHeight = header ? header.getBoundingClientRect().height : 88;
+      const targetTop = el.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
     }, 80);
     return () => window.clearTimeout(timer);
   }, [searchParams, isLoading]);
