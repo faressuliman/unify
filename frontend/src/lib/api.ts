@@ -117,6 +117,8 @@ export interface BackendMapMarker {
   lng: number;
   age?: number | string;
   details?: string;
+  clothesDescription?: string;
+  postedBy?: string;
   city?: string;
   location?: string;
   address?: string;
@@ -504,6 +506,7 @@ export interface BackendChatUser {
   _id: string;
   name: string;
   email?: string;
+  profilePicture?: string | null;
 }
 
 export interface BackendChat {
@@ -660,6 +663,10 @@ export interface BackendContactMessage {
 
 export interface AdminContactMessagesResponse extends PaginatedResponse {
   messages: BackendContactMessage[];
+}
+
+export interface AdminChatsResponse extends PaginatedResponse {
+  chats: BackendChat[];
 }
 
 export const adminApi = {
@@ -859,8 +866,22 @@ export const adminApi = {
       },
     );
   },
+  getAdminChats: async (
+    token: string,
+    params?: { page?: number; limit?: number; status?: "active" | "inactive" },
+  ) => {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.status) search.set("status", params.status);
+    const qs = search.toString() ? `?${search.toString()}` : "";
+    return apiRequest<AdminChatsResponse>(`admin/chats${qs}`, {
+      method: "GET",
+      token,
+    });
+  },
   getChatDetails: async (id: string, token: string) => {
-    return apiRequest<{ chat: any }>(`admin/chats/${id}`, {
+    return apiRequest<{ chat: BackendChat }>(`admin/chats/${id}`, {
       method: "GET",
       token,
     });
@@ -878,7 +899,7 @@ export const adminApi = {
     ).toString();
     const query = qs ? `?${qs}` : "";
     return apiRequest<{
-      messages: any[];
+      messages: BackendMessage[];
       page: number;
       limit: number;
       totalCount: number;

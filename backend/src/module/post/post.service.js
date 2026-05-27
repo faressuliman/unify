@@ -108,12 +108,34 @@ export const createPost = async (req, res, next) => {
 
   // 1. إنشاء بيانات الخريطة
   let locationId;
-  if (latitude && longitude) {
+  let finalLat = latitude;
+  let finalLng = longitude;
+
+  if (!finalLat || !finalLng) {
+    // Try to geocode from Nominatim based on the location provided
+    const addressToGeocode = postType === "missing" ? lastSeenLocation : foundLocation;
+    const query = `${addressToGeocode || ''} ${city || ''} Egypt`.trim();
+    if (query.length > 5) {
+      try {
+        const geoob = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`, {
+          headers: { "User-Agent": "UnifyMissingPersonsApp/1.0" }
+        });
+        if (geoob.data && geoob.data.length > 0) {
+          finalLat = parseFloat(geoob.data[0].lat);
+          finalLng = parseFloat(geoob.data[0].lon);
+        }
+      } catch (geocodeErr) {
+        console.warn("[Geocoding] Fetch failed:", geocodeErr.message);
+      }
+    }
+  }
+
+  if (finalLat && finalLng) {
     const mapEntry = await MapData.create({
       address: postType === "missing" ? lastSeenLocation : foundLocation,
       zoneType: city,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+      latitude: parseFloat(finalLat),
+      longitude: parseFloat(finalLng),
     });
     locationId = mapEntry._id;
   }
@@ -289,9 +311,10 @@ export const getMapMarkers = async (req, res, next) => {
 
   const posts = await Post.find(filter)
     .select(
-      "name postType status city postImages locationId createdAt age lastSeenDate foundLocation",
+      "name postType status city postImages locationId createdAt age lastSeenDate foundLocation timeAgo details clothesDescription userId",
     )
-    .populate("locationId", "latitude longitude address");
+    .populate("locationId", "latitude longitude address")
+    .populate("userId", "name");
 
   const markers = posts
     .map((p) => {
@@ -306,6 +329,13 @@ export const getMapMarkers = async (req, res, next) => {
         type: p.postType,
         status: p.status,
         city: p.city,
+        age: p.age,
+        details: p.details || p.clothesDescription,
+        clothesDescription: p.clothesDescription,
+        postedBy: p.userId?.name || undefined,
+        createdAt: p.createdAt,
+        lastSeenDate: p.lastSeenDate,
+        timeAgo: p.timeAgo,
         lat,
         lng,
         image: p.postImages?.[0],

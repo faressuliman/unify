@@ -20,7 +20,6 @@ const Contact = lazy(() => import("../pages/Contact"));
 const CreatePost = lazy(() => import("../pages/CreatePost"));
 const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
 const AboutUs = lazy(() => import("../pages/AboutUs"));
-const Notifications = lazy(() => import("../pages/Notifications"));
 const Chat = lazy(() => import("../pages/Chat"));
 const Admin = lazy(() => import("../pages/Admin"));
 
@@ -136,16 +135,6 @@ export const router = createBrowserRouter([
           <Suspense fallback={<LoadingScreen />}>
             <AboutUs />
           </Suspense>
-        ),
-      },
-      {
-        path: "notifications",
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<LoadingScreen />}>
-              <Notifications />
-            </Suspense>
-          </ProtectedRoute>
         ),
       },
       {

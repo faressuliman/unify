@@ -445,6 +445,7 @@ export default function Chat() {
                     const isChatMuted = mutedChats.has(chat._id);
                     const initial =
                       partner?.name?.charAt(0)?.toUpperCase() || "?";
+                    const partnerAvatar = partner?.profilePicture || "";
 
                     const sidebarMenu = (
                       <div className="relative shrink-0 sidebar-menu-container ms-auto">
@@ -557,8 +558,16 @@ export default function Chat() {
                               : "bg-transparent hover:bg-slate-50 border-s-4 border-transparent"
                           }`}
                         >
-                          <div className="h-10 w-10 rounded-full bg-secondary/15 text-secondary font-bold flex items-center justify-center shrink-0">
-                            {initial}
+                          <div className="h-10 w-10 rounded-full bg-secondary/15 text-secondary font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                            {partnerAvatar ? (
+                              <img
+                                src={partnerAvatar}
+                                alt={partner?.name || (isRTL ? "مستخدم" : "User")}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              initial
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center w-full min-w-0">
@@ -631,8 +640,16 @@ export default function Chat() {
                       <ArrowLeft className="h-5 w-5" />
                     )}
                   </button>
-                  <div className="h-10 w-10 rounded-full bg-secondary/15 text-secondary font-bold flex items-center justify-center shrink-0">
-                    {otherUser?.name?.charAt(0)?.toUpperCase() || "?"}
+                  <div className="h-10 w-10 rounded-full bg-secondary/15 text-secondary font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                    {otherUser?.profilePicture ? (
+                      <img
+                        src={otherUser.profilePicture}
+                        alt={otherUser.name || (isRTL ? "مستخدم" : "User")}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      otherUser?.name?.charAt(0)?.toUpperCase() || "?"
+                    )}
                   </div>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     {!isRTL && (
@@ -830,7 +847,7 @@ export default function Chat() {
                 <div className="relative flex-1 min-h-0">
                   <div ref={messagesContainerRef} className="h-full overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/40 min-h-0">
                     {messagesLoading ? (
-                      <div className="flex justify-center py-10">
+                      <div className="flex h-full items-center justify-center">
                         <Loader2 className="h-5 w-5 text-secondary animate-spin" />
                       </div>
                     ) : messages.length === 0 ? (

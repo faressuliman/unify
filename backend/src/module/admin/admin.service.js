@@ -442,3 +442,32 @@ export const getChatMessages = async (req, res, next) => {
     totalPages: Math.ceil(totalCount / limit),
   });
 };
+
+// ─── List Chats (Admin) ──────────────────────────────────────────────────────
+export const getAdminChats = async (req, res, next) => {
+  const { page, limit, status } = req.query;
+  const filter = {};
+
+  if (status === "active") filter.isActive = true;
+  if (status === "inactive") filter.isActive = false;
+
+  const result = await pagination({
+    page,
+    limit,
+    model: Chat,
+    filter,
+    sort: { createdAt: -1 },
+    populate: [
+      { path: "initiatorUserId", select: "name email profilePicture" },
+      { path: "responderUserId", select: "name email profilePicture" },
+    ],
+  });
+
+  return res.status(200).json({
+    chats: result.data,
+    page: result.page,
+    limit: result.limit,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+  });
+};

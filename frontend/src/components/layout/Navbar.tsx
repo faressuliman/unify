@@ -109,6 +109,16 @@ export function Navbar() {
 
   const isRTL = language === 'ar';
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 1280 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1280);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [isReady, setIsReady] = useState(() => {
     return Boolean((window as unknown as { __unifyLoadingComplete?: boolean }).__unifyLoadingComplete);
   });
@@ -335,24 +345,35 @@ export function Navbar() {
       }
       dir={isRTL ? 'rtl' : 'ltr'}
     >
-      <div className="w-full max-w-400 mx-auto px-6 lg:px-12 pointer-events-auto">
+      <div className="w-full max-w-400 mx-auto px-6 lg:px-12 pointer-events-auto relative">
         <div className={`w-full flex h-20 items-center justify-between transition-all duration-300
           ${isScrolledActive 
             ? 'xl:bg-white/95 xl:backdrop-blur-md xl:border-x xl:border-b xl:border-gray-200/50 xl:shadow-md xl:rounded-b-4xl xl:px-6' 
             : 'xl:bg-transparent xl:border-transparent xl:shadow-none'
           }`}>
-          {/* Left: Logo */}
-          <div className="flex items-center shrink-0">
-          <button
-            onClick={() => handleNavClick('landing')}
-            className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
-          >
-            <img src={unifyLogo} alt="Unify" className="h-14 w-auto" />
-            <span className="text-lg font-extrabold tracking-normal text-tertiary">
-              {isRTL ? 'يونيفاي' : 'Unify'}
-            </span>
-          </button>
-        </div>
+          
+          {/* Left Mobile Action Icons */}
+          <div className="flex xl:hidden items-center gap-4 shrink-0">
+            <button onClick={() => handleNavClick('search')} className="cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center">
+              <Search className="h-6 w-6" strokeWidth={2} />
+            </button>
+            <button onClick={() => handleNavClick('create-post')} className="cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center">
+              <PlusCircle className="h-6 w-6" strokeWidth={2} />
+            </button>
+          </div>
+
+          {/* Logo (Desktop Left, Mobile Center) */}
+          <div className="absolute left-1/2 -translate-x-1/2 xl:static xl:translate-x-0 flex items-center shrink-0">
+            <button
+              onClick={() => handleNavClick('landing')}
+              className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
+            >
+              <img src={unifyLogo} alt="Unify" className="h-[72px] w-auto xl:h-14" />
+              <span className="text-lg font-extrabold tracking-normal text-tertiary hidden xl:block">
+                {isRTL ? 'يونيفاي' : 'Unify'}
+              </span>
+            </button>
+          </div>
 
         {/* Center: Navigation */}
         <div className="absolute left-1/2 transform -translate-x-1/2 rounded-full border border-gray-200/50 bg-white hidden xl:flex">
@@ -453,20 +474,24 @@ export function Navbar() {
               <DropdownMenu dir={dropdownDir} modal={false} open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="hidden xl:flex relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                    className="relative flex items-center justify-center transition-all duration-200 cursor-pointer border-none bg-transparent w-auto h-auto mx-1 xl:mx-0 xl:bg-gray-100 xl:hover:bg-gray-200 xl:w-10 xl:h-10 xl:rounded-full"
                     aria-label="Notifications"
                   >
-                    <Bell className="h-5 w-5 text-gray-700" strokeWidth={2} />
+                    <Bell className="h-6 w-6 xl:h-5 xl:w-5 text-gray-700" strokeWidth={2} />
                     {notificationCount > 0 && (
-                      <span className="absolute -right-0.5 -top-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                      <span className="absolute -right-1.5 -top-1.5 xl:-right-0.5 xl:-top-0.5 min-w-4.5 h-4.5 px-1.5 xl:px-1 rounded-full bg-primary text-primary-foreground text-[10px] xl:text-xs flex items-center justify-center font-semibold">
                         {notificationCount}
                       </span>
                     )}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align={dropdownAlign} className="w-90 p-0 overflow-hidden rounded-xl shadow-lg border border-gray-100 mb-2">
+                <DropdownMenuContent 
+                  align={isMobile ? "center" : "end"} 
+                  sideOffset={isMobile ? 24 : 8}
+                  className="w-screen xl:w-90 p-0 overflow-hidden rounded-none xl:rounded-xl shadow-lg border-x-0 xl:border border-gray-100 mt-0 xl:mt-2 z-[60]"
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
-                    <h3 className="font-bold text-lg text-gray-900">{t('notifications.title')}</h3>
+                    <h3 className="font-bold text-lg text-tertiary">{t('notifications.title')}</h3>
                     {notificationCount > 0 && (
                       <button
                         onClick={handleMarkAllRead}
@@ -562,18 +587,6 @@ export function Navbar() {
                       </div>
                     )}
                   </div>
-                  <div className="p-2 border-t border-gray-100 bg-white">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsNotificationsOpen(false);
-                        navigate('/notifications');
-                      }}
-                      className="w-full py-2 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer bg-transparent border-none"
-                    >
-                      {t('notifications.seePrevious')}
-                    </button>
-                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -619,6 +632,7 @@ export function Navbar() {
               </DropdownMenu>
             </>
           ) : (
+            <>
             <div className="hidden xl:flex items-center gap-3">
               <button
                 onClick={toggleLanguage}
@@ -653,13 +667,19 @@ export function Navbar() {
                 {t('nav.register')}
               </Button>
             </div>
+            
+            <button
+              onClick={() => handleNavClick('map')}
+              className="xl:hidden cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center mx-1"
+            >
+              <MapPin className="h-6 w-6" strokeWidth={2} />
+            </button>
+            </>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             aria-label="Open menu"
-            className="cursor-pointer xl:hidden"
+            className="xl:hidden cursor-pointer border-none bg-transparent p-0 text-gray-700 hover:text-primary transition-colors flex items-center justify-center mx-1"
             onClick={handleOpenDrawer}
             onMouseEnter={() => {
               preloadMobileDrawer();
@@ -677,8 +697,8 @@ export function Navbar() {
               preloadAuthRoutes();
             }}
           >
-            <Menu className="h-5 w-5" />
-          </Button>
+            <Menu className="h-6 w-6" strokeWidth={2} />
+          </button>
 
           {isDrawerLoaded ? (
             <Suspense fallback={null}>

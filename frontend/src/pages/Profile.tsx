@@ -35,6 +35,7 @@ import {
   Save,
   X,
   Loader2,
+  Camera,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import MissingPersonCard from "../components/search/MissingPersonCard";
@@ -47,12 +48,13 @@ import BlockedUsersModal from "../components/ui/modals/BlockedUsersModal";
 
 export default function Profile() {
   const { t, language } = useLanguage();
-  const { token } = useAuth();
+  const { token, updateUser } = useAuth();
   const isRTL = language === "ar";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"missing" | "found">("missing");
   const cardsRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -68,6 +70,9 @@ export default function Profile() {
   const [draftPhone, setDraftPhone] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   const [savingPhone, setSavingPhone] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [sightingsModal, setSightingsModal] = useState<{
     open: boolean;
     postId: string;
@@ -156,6 +161,53 @@ export default function Profile() {
     } finally {
       setSavingPhone(false);
     }
+  };
+
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setSelectedPhotoFile(file);
+  };
+
+  const handleSavePhoto = async () => {
+    if (!selectedPhotoFile || !token) return;
+
+    try {
+      setUploadingPhoto(true);
+      const fd = new FormData();
+      fd.append("profilePicture", selectedPhotoFile);
+      const res = await userApi.updateProfile(fd, token);
+      
+      setProfileData(res.user);
+      updateUser(res.user); 
+      
+      toast.success(
+        isRTL ? "تم تحديث الصورة الشخصية" : "Profile picture updated",
+      );
+      handleCancelPhoto();
+    } catch (error) {
+      console.error("Failed to update profile picture:", error);
+      toast.error(isRTL ? "فشل تحديث الصورة" : "Failed to update picture");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleCancelPhoto = () => {
+    setPhotoPreview(null);
+    setSelectedPhotoFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const formatBirthDate = (value?: string) => {
@@ -386,21 +438,74 @@ export default function Profile() {
         >
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 px-6 md:px-8 pt-8 pb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 md:gap-6 w-full md:w-auto">
-              <div className="relative shrink-0">
-                <div className="w-28 h-28 bg-[#faebd7] rounded-full flex items-center justify-center p-2.5 overflow-hidden ring-4 ring-white shadow-sm">
-                  {avatarSrc && !imageError ? (
+              <div className="relative shrink-0 group">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handlePhotoChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <div 
+                  onClick={!photoPreview ? handlePhotoClick : undefined}
+                  className={`w-28 h-28 rounded-full flex items-center justify-center overflow-hidden shadow-sm relative ${!photoPreview ? "cursor-pointer" : ""}`}
+                >
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : avatarSrc && !imageError ? (
                     <img
                       src={avatarSrc}
                       alt=""
                       onError={() => setImageError(true)}
-                      className="w-full h-full object-cover rounded-full"
+                      className="w-full h-full object-cover rounded-full transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full rounded-full flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase">
+                    <div className="w-full h-full rounded-full flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase transition-transform duration-300">
                       {profileData?.name?.charAt(0) || "?"}
                     </div>
                   )}
+
+                  {/* Hover Overlay - only show if not in preview mode */}
+                  {!photoPreview && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
+                      <Camera className="w-6 h-6 text-white mb-1" />
+                      <span className="text-[10px] text-white font-bold uppercase tracking-wider">
+                        {isRTL ? "تغيير الصورة" : "Change Picture"}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Uploading Loader */}
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    </div>
+                  )}
                 </div>
+
+                {/* Save/Cancel Controls - visible when previewing */}
+                {photoPreview && !uploadingPhoto && (
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white rounded-full px-2 py-1 shadow-md border border-slate-100 z-20">
+                    <button
+                      onClick={handleSavePhoto}
+                      title={isRTL ? "حفظ" : "Save"}
+                      className="p-1.5 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors cursor-pointer"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={handleCancelPhoto}
+                      title={isRTL ? "إلغاء" : "Cancel"}
+                      className="p-1.5 bg-blue-50 text-tertiary rounded-full hover:bg-blue-100 transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 text-center sm:text-start w-full">

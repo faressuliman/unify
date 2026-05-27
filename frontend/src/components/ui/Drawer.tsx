@@ -158,20 +158,6 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
                   <span className="font-medium">{t('nav.profile')}</span>
                 </button>
                 <button
-                  onClick={() => handleNavClick('notifications')}
-                  className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8 relative"
-                >
-                  <div className="relative">
-                    <Bell className="h-5 w-5 shrink-0" />
-                    {notificationCount > 0 && (
-                      <span className="absolute -right-1 -top-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
-                        {notificationCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-medium">{t('nav.notifications')}</span>
-                </button>
-                <button
                   onClick={() => handleNavClick('chat')}
                   className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
                 >

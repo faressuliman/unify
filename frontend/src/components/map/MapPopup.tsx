@@ -40,7 +40,9 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
       (post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""),
     details: post.details ?? "",
     age: post.age ? String(post.age) : undefined,
+    clothingDescription: post.clothesDescription,
     city: post.city,
+    postedBy: post.postedBy,
     reportDate: post.createdAt
       ? new Date(post.createdAt).toLocaleDateString()
       : undefined,
