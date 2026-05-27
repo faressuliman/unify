@@ -514,7 +514,7 @@ export default function Profile() {
                     {profileData?.name || (isRTL ? "مستخدم مجهول" : "Unknown User")}
                   </h1>
                   <span
-                    className={`relative top-[2px] inline-flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-full border ${profileData?.isVerified ? "border-secondary/20 bg-secondary/10 text-secondary" : "border-slate-200 bg-slate-100 text-slate-400"}`}
+                    className={`relative top-0.5 inline-flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-full border ${profileData?.isVerified ? "border-secondary/20 bg-secondary/10 text-secondary" : "border-slate-200 bg-slate-100 text-slate-400"}`}
                     title={
                       profileData?.isVerified
                         ? isRTL

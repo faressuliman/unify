@@ -368,7 +368,7 @@ export function Navbar() {
               onClick={() => handleNavClick('landing')}
               className="flex items-center gap-2 hover:opacity-80 hover:cursor-pointer transition-opacity bg-transparent border-none p-0"
             >
-              <img src={unifyLogo} alt="Unify" className="h-[72px] w-auto xl:h-14" />
+              <img src={unifyLogo} alt="Unify" className="h-18 w-auto xl:h-14" />
               <span className="text-lg font-extrabold tracking-normal text-tertiary hidden xl:block">
                 {isRTL ? 'يونيفاي' : 'Unify'}
               </span>
@@ -488,7 +488,7 @@ export function Navbar() {
                 <DropdownMenuContent 
                   align={isMobile ? "center" : "end"} 
                   sideOffset={isMobile ? 24 : 8}
-                  className="w-screen xl:w-90 p-0 overflow-hidden rounded-none xl:rounded-xl shadow-lg border-x-0 xl:border border-gray-100 mt-0 xl:mt-2 z-[60]"
+                  className="w-screen xl:w-90 p-0 overflow-hidden rounded-none xl:rounded-xl shadow-lg border-x-0 xl:border border-gray-100 mt-0 xl:mt-2 z-60"
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
                     <h3 className="font-bold text-lg text-tertiary">{t('notifications.title')}</h3>
@@ -708,7 +708,6 @@ export function Navbar() {
                 currentPage={currentPage}
                 handleNavClick={handleNavClick}
                 handleLogout={handleLogout}
-                notificationCount={notificationCount}
               />
             </Suspense>
           ) : null}

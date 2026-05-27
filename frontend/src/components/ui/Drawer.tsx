@@ -1,5 +1,5 @@
 import { Sheet, SheetContent, SheetClose } from './sheet';
-import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Bell, Mail, LogOut, ShieldCheck } from 'lucide-react';
+import { Search, PlusCircle, FileImage, MapPin, Globe, X, LogIn, UserPlus, User, Mail, LogOut, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,10 +9,9 @@ interface DrawerProps {
   currentPage: string;
   handleNavClick: (page: string) => void;
   handleLogout: () => void;
-  notificationCount: number;
 }
 
-export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleLogout, notificationCount }: DrawerProps) {
+export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleLogout }: DrawerProps) {
   const { language, toggleLanguage, t, isLocked: isLanguageLocked } = useLanguage();
   const { isAuthenticated, user } = useAuth();
 

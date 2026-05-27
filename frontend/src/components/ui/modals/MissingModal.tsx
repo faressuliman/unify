@@ -109,7 +109,7 @@ export default function MissingModal({
                   <img
                     src={profile.image}
                     alt={profile.name}
-                    className="h-[22rem] w-full object-cover sm:h-[26rem]"
+                    className="h-88 w-full object-cover sm:h-104"
                   />
                   <div className={`absolute bottom-4 ${isRTL ? 'right-4' : 'left-4'}`}>
                     <span className="rounded-lg bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/95 border border-white/15 backdrop-blur-sm">
