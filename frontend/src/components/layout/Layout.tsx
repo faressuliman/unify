@@ -24,7 +24,7 @@ export function Layout({ children }: LayoutProps) {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [pathname])
 
-  const authPages = ['/login', '/signup', '/register', '/reset-password'];
+  const authPages = ['/reset-password'];
   const isAuthPage = authPages.includes(normalizedPathname);
 
   return (
