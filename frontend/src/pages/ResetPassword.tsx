@@ -62,7 +62,6 @@ const ResetPassword = () => {
     const [searchParams] = useSearchParams();
     const emailFromQuery = searchParams.get('email') || '';
 
-    const validationDict = contentSignup.validation as Record<string, string>;
     const passwordStrengthContent: PasswordStrengthContent = {
         pwd8Chars: contentSignup.pwd8Chars,
         pwdUpper: contentSignup.pwdUpper,
@@ -73,9 +72,6 @@ const ResetPassword = () => {
         pwdFair: contentSignup.pwdFair,
         pwdGood: contentSignup.pwdGood,
         pwdStrong: contentSignup.pwdStrong,
-    };
-    const localizeError = (message: string) => {
-        return validationDict[message] ?? message;
     };
 
     const [step, setStep] = useState<'otp' | 'password'>('otp');
