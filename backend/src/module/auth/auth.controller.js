@@ -7,6 +7,7 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyOtpSchema,
 } from "./auth.validation.js";
 import * as authService from "./auth.service.js";
 
@@ -25,6 +26,12 @@ router.post(
   "/forgot-password",
   validation(forgotPasswordSchema),
   asynchandler(authService.forgotPassword)
+);
+
+router.post(
+  "/verify-otp",
+  validation(verifyOtpSchema),
+  asynchandler(authService.verifyOtp)
 );
 
 router.post(

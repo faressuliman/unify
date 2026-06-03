@@ -195,6 +195,7 @@ export default function Map() {
   const handleSubmitFilters = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAppliedFilters(draftFilters);
+    setIsFiltersOpen(false);
   };
 
   const renderFiltersContent = (showCloseButton = false) => (
@@ -225,7 +226,7 @@ export default function Map() {
       <div className="p-6 flex flex-col gap-6 bg-slate-50/30">
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
-            <Search className="w-3.5 h-3.5 text-blue-500" />
+            <Search className="w-3.5 h-3.5 text-secondary" />
             {t.keyword}
           </label>
           <FormInput
@@ -241,7 +242,7 @@ export default function Map() {
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
-            <MapPin className="w-3.5 h-3.5 text-rose-500" />
+            <MapPin className="w-3.5 h-3.5 text-secondary" />
             {t.areaRegion}
           </label>
           <SelectMenu
@@ -255,7 +256,7 @@ export default function Map() {
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
-            <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+            <Calendar className="w-3.5 h-3.5 text-secondary" />
             {t.dateMissing}
           </label>
           <LocalizedDateInput
@@ -269,7 +270,7 @@ export default function Map() {
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
           <label className="text-[0.7rem] font-bold text-slate-500 uppercase flex items-center gap-2 mb-4">
-            <Info className="w-3.5 h-3.5 text-amber-500" />
+            <Info className="w-3.5 h-3.5 text-secondary" />
             {t.showStatus}
           </label>
           <SegmentedControl

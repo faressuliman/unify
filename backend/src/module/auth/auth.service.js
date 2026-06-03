@@ -39,10 +39,10 @@ export const register = async (req, res, next) => {
       const aiData = await aiRes.json();
       console.log("[auth.register] AI detection result:", aiData);
 
-      if (aiData.success && typeof aiData.confidence === "number" && aiData.confidence < 90) {
+      if (aiData.success && aiData.is_ai_generated) {
         return next(
           new Error(
-            "Registration blocked: We could not verify the authenticity of the ID document.",
+            "Registration blocked: The uploaded ID document was detected as AI-generated or has insufficient biological authenticity.",
             { cause: 400 },
           ),
         );
@@ -152,6 +152,27 @@ export const forgotPassword = async (req, res, next) => {
   );
 
   return res.status(200).json({ message: "OTP sent to your email" });
+};
+
+// ─── Verify OTP ─────────────────────────────────────────────────────────────
+export const verifyOtp = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return next(new Error("Email not found", { cause: 404 }));
+
+  if (!user.otp || !user.otpExpiry) {
+    return next(new Error("No OTP requested", { cause: 400 }));
+  }
+
+  if (new Date() > user.otpExpiry) {
+    return next(new Error("OTP expired", { cause: 400 }));
+  }
+
+  const isOtpValid = await compare({ key: otp, hashed: user.otp });
+  if (!isOtpValid) return next(new Error("Invalid OTP", { cause: 400 }));
+
+  return res.status(200).json({ message: "OTP verified" });
 };
 
 // ─── Reset Password ───────────────────────────────────────────────────────────

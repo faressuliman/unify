@@ -110,10 +110,11 @@ export default function Search() {
   });
   
   // New state to hold image search results 
-  const [isImageSearchActive, setIsImageSearchActive] = useState<boolean>(!!initialImage);
+  const [isImageSearchActive, setIsImageSearchActive] = useState<boolean>(false);
   const [rawPosts, setRawPosts] = useState<BackendPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [initialImagePreview, setInitialImagePreview] = useState<string | null>(null);
 
   // After a successful post creation we land here with `?scrollTo=results` —
   // wait for the results section to render, then smoothly scroll to it so
@@ -137,41 +138,41 @@ export default function Search() {
     return () => window.clearTimeout(timer);
   }, [searchParams, isLoading]);
 
-  // Image Search Effect
   useEffect(() => {
-    const handleImageSearch = async (imageFile: File) => {
-      setIsLoading(true);
-      setError('');
-      setIsImageSearchActive(true);
-
-      const formData = new FormData();
-      formData.append('searchImage', imageFile);
-
-      try {
-        const res = await axiosInstance.post('/posts/search-image', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-
-        // The AI API returns raw BackendPosts attached with `matchDistance`
-        const postsFromApi = res.data.posts || [];
-        setRawPosts(postsFromApi); 
-      } catch (err: unknown) {
-        setRawPosts([]);
-        if (isAxiosError(err)) {
-          const errorMessage = (err.response?.data as { message?: string } | undefined)?.message;
-          setError(errorMessage ?? 'Failed to search by image. Make sure there is a visible face.');
-        } else {
-          setError('Failed to search by image. Make sure there is a visible face.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (initialImage) {
-      handleImageSearch(initialImage);
-    }
+    if (!initialImage) return;
+    const previewUrl = URL.createObjectURL(initialImage);
+    setInitialImagePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
   }, [initialImage]);
+
+  const handleImageSearch = async (imageFile: File) => {
+    setIsLoading(true);
+    setError('');
+    setIsImageSearchActive(true);
+
+    const formData = new FormData();
+    formData.append('searchImage', imageFile);
+
+    try {
+      const res = await axiosInstance.post('/posts/search-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      // The AI API returns raw BackendPosts attached with `matchDistance`
+      const postsFromApi = res.data.posts || [];
+      setRawPosts(postsFromApi);
+    } catch (err: unknown) {
+      setRawPosts([]);
+      if (isAxiosError(err)) {
+        const errorMessage = (err.response?.data as { message?: string } | undefined)?.message;
+        setError(errorMessage ?? 'Failed to search by image. Make sure there is a visible face.');
+      } else {
+        setError('Failed to search by image. Make sure there is a visible face.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // If an image search is active, we skip the normal textual fetch!
@@ -220,8 +221,21 @@ export default function Search() {
     return applyLocalFilters(posts, appliedFilters);
   }, [posts, appliedFilters]);
 
-  const handleApplyFilters = (values: SearchFilters, shouldScroll = true) => {
+  const handleApplyFilters = (
+    values: SearchFilters,
+    options?: { shouldScroll?: boolean; imageFile?: File | null }
+  ) => {
+    const shouldScroll = options?.shouldScroll ?? true;
+    const imageFile = options?.imageFile ?? null;
+
     setAppliedFilters(values);
+
+    if (imageFile) {
+      handleImageSearch(imageFile);
+    } else {
+      setIsImageSearchActive(false);
+      setRawPosts([]);
+    }
 
     if (shouldScroll) {
       requestAnimationFrame(() => {
@@ -252,7 +266,12 @@ export default function Search() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
           >
-            <SearchFiltersPanel onApplyFilters={handleApplyFilters} />
+            <SearchFiltersPanel
+              onApplyFilters={handleApplyFilters}
+              initialFilters={appliedFilters}
+              initialImageFile={initialImage}
+              initialImagePreview={initialImagePreview}
+            />
           </motion.div>
 
           {/* Results Area */}

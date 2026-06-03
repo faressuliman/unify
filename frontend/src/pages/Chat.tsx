@@ -36,21 +36,28 @@ import { useLanguage } from "../context/LanguageContext";
 import PageHeader from "../components/ui/PageHeader";
 import { getSocket } from "../lib/socket";
 
+function normalizeChatUser(
+  value: BackendChatUser | string | null | undefined,
+): BackendChatUser | null {
+  if (!value) return null;
+  if (typeof value === "object") return value;
+  return { _id: value, name: "" };
+}
+
 function getOtherUser(
   chat: BackendChat,
   currentUserId: string,
 ): BackendChatUser | null {
-  const initiator = chat.initiatorUserId;
-  const responder = chat.responderUserId;
-  const initiatorObj = typeof initiator === "object" ? initiator : null;
-  const responderObj = typeof responder === "object" ? responder : null;
+  const initiator = normalizeChatUser(chat.initiatorUserId);
+  const responder = normalizeChatUser(chat.responderUserId);
+  const initiatorId = initiator?._id;
+  const responderId = responder?._id;
 
-  const initiatorId =
-    initiatorObj?._id || (typeof initiator === "string" ? initiator : "");
-  if (initiatorId === currentUserId) {
-    return responderObj;
-  }
-  return initiatorObj;
+  if (initiatorId && initiatorId === currentUserId) return responder;
+  if (responderId && responderId === currentUserId) return initiator;
+  if (!initiatorId) return responder;
+  if (!responderId) return initiator;
+  return initiator;
 }
 
 function getSenderId(message: BackendMessage): string {
@@ -150,7 +157,11 @@ export default function Chat() {
     return getOtherUser(activeChat, user.id);
   }, [activeChat, user]);
 
-  // Fetch blocked users to instantly hide their chats
+  const isChatBlocked = Boolean(
+    otherUser && blockedUserIds.has(otherUser._id),
+  );
+
+  // Fetch blocked users for blocked chat handling
   useEffect(() => {
     if (token) {
       userApi
@@ -163,23 +174,15 @@ export default function Chat() {
   }, [token]);
 
   const sortedChats = useMemo(() => {
-    return [...chats]
-      .filter((c) => {
-        if (!user) return true;
-        const partner = getOtherUser(c, user.id);
-        return partner && !blockedUserIds.has(partner._id);
-      })
-      .sort((a, b) => {
-        const aPinned = pinnedChats.has(a._id);
-        const bPinned = pinnedChats.has(b._id);
-        if (aPinned && !bPinned) return -1;
-        if (!aPinned && bPinned) return 1;
-        // Fallback sorting: chronological (newest first)
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      });
-  }, [chats, pinnedChats, user, blockedUserIds]);
+    return [...chats].sort((a, b) => {
+      const aPinned = pinnedChats.has(a._id);
+      const bPinned = pinnedChats.has(b._id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      // Fallback sorting: chronological (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [chats, pinnedChats]);
 
   useEffect(() => {
     if (!token) return;
@@ -224,6 +227,11 @@ export default function Chat() {
         }, { replace: true });
       } catch (err) {
         console.error("Failed to open chat from notification", err);
+        toast.error(
+          isRTL
+            ? "تعذر فتح المحادثة الآن"
+            : "Unable to open this chat right now",
+        );
       }
     };
 
@@ -443,6 +451,9 @@ export default function Chat() {
                     const isActive = chat._id === activeChatId;
                     const isPinned = pinnedChats.has(chat._id);
                     const isChatMuted = mutedChats.has(chat._id);
+                    const isChatBlocked = Boolean(
+                      partner && blockedUserIds.has(partner._id),
+                    );
                     const initial =
                       partner?.name?.charAt(0)?.toUpperCase() || "?";
                     const partnerAvatar = partner?.profilePicture || "";
@@ -580,6 +591,11 @@ export default function Chat() {
                                 )}
                                 {isChatMuted && (
                                   <BellOff className="h-3 w-3 text-slate-400 shrink-0" />
+                                )}
+                                {isChatBlocked && (
+                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 shrink-0">
+                                    {isRTL ? "محظور" : "Blocked"}
+                                  </span>
                                 )}
                                 {sidebarMenu}
                               </div>
@@ -927,6 +943,13 @@ export default function Chat() {
                   onSubmit={handleSend}
                   className="border-t border-slate-100 px-4 py-3 bg-white shrink-0"
                 >
+                  {isChatBlocked && (
+                    <div className="mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                      {isRTL
+                        ? "لقد قمت بحظر هذا المستخدم. لا يمكنك إرسال رسائل."
+                        : "You blocked this user. You cannot send messages."}
+                    </div>
+                  )}
                   {attachment && (
                     <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg text-xs">
                       <Paperclip className="h-3.5 w-3.5 text-slate-500" />
@@ -951,6 +974,7 @@ export default function Chat() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
+                      disabled={isChatBlocked}
                       className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                       aria-label={isRTL ? "إرفاق ملف" : "Attach file"}
                     >
@@ -971,11 +995,16 @@ export default function Chat() {
                       placeholder={
                         isRTL ? "اكتب رسالة..." : "Type a message..."
                       }
+                      disabled={isChatBlocked}
                       className="flex-1 min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[16px] md:text-sm focus:bg-white focus:border-secondary outline-none"
                     />
                     <button
                       type="submit"
-                      disabled={sending || (!newMsg.trim() && !attachment)}
+                      disabled={
+                        isChatBlocked ||
+                        sending ||
+                        (!newMsg.trim() && !attachment)
+                      }
                       className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-semibold hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                     >
                       {sending ? (

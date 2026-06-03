@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck, CheckCheck, Eye, EyeOff, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import { Bell, User, LogOut, Search, PlusCircle, FileImage, MapPin, Globe, Mail, Menu, ShieldCheck, Eye, EyeOff, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -274,20 +274,6 @@ export function Navbar() {
     }
   };
 
-  const handleMarkAllRead = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!token || notificationCount === 0) return;
-    const previous = notifications;
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setNotificationCount(0);
-    try {
-      await notificationApi.markAllRead(token);
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-      setNotifications(previous);
-      setNotificationCount(previous.filter((n) => !n.isRead).length);
-    }
-  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -492,15 +478,6 @@ export function Navbar() {
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
                     <h3 className="font-bold text-lg text-tertiary">{t('notifications.title')}</h3>
-                    {notificationCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        className="text-xs font-medium text-primary hover:text-primary-600 transition-colors flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
-                      >
-                        <CheckCheck className="h-3.5 w-3.5" />
-                        {t('notifications.markAllRead')}
-                      </button>
-                    )}
                   </div>
                   <div className="max-h-100 overflow-y-auto bg-white">
                     {notifications.length === 0 ? (

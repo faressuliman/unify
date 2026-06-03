@@ -34,7 +34,7 @@ export default function MapDrawer({
         className="w-[85vw] sm:w-87.5 p-0 overflow-hidden"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <div className="h-full overflow-hidden">
+        <div className="h-full overflow-y-auto">
           {content}
         </div>
       </SheetContent>

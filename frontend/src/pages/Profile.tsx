@@ -290,6 +290,10 @@ export default function Profile() {
           ...r,
           postId: r.missingPersonId?._id || r.missingPersonId,
           postName: r.missingPersonId?.name || (isRTL ? "بدون اسم" : "Unknown"),
+          postOwnerId:
+            typeof r.missingPersonId?.userId === "object"
+              ? r.missingPersonId?.userId?._id
+              : r.missingPersonId?.userId,
         }));
         
         setMySightings(reports);

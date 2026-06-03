@@ -74,20 +74,31 @@ async def detect_ai_image(image: UploadFile = File(...)):
         # Results look like:
         # [{"label": "artificial", "score": 0.97}, {"label": "human", "score": 0.03}]
         top = results[0]
-        is_ai = top["label"] == "artificial"
-        confidence = round(top["score"] * 100, 2)
-        if is_ai and confidence >= 85:
-            decision = "block"
-        elif is_ai and confidence >= 55:
-            decision = "review"
-        else:
+        label = top["label"]
+        score = top["score"]
+
+        # Threshold for ID Verification: Needs to be > 80% Human to PASS
+        if label == "human" and score >= 0.80:
+            is_ai = False
+            confidence = round(score * 100, 2)
             decision = "pass"
+            final_label = "human"
+        else:
+            # It's either artificial or uncertain human
+            is_ai = True
+            decision = "block"
+            final_label = "artificial"
+            # Return the probability that it is NOT a verified human
+            if label == "artificial":
+                confidence = round(score * 100, 2)
+            else:
+                confidence = round((1 - score) * 100, 2)
 
         return {
             "success": True,
             "is_ai_generated": is_ai,
             "confidence": confidence,    # e.g. 97.43
-            "label": top["label"],       # "artificial" or "human"
+            "label": final_label,        # "artificial" or "human"
             "decision": decision
         }
 

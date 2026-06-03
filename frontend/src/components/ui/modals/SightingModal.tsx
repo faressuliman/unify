@@ -270,8 +270,9 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
                   type="submit"
                   className="w-full lg:flex-1 px-8 text-[15px] bg-red-600 shadow-[0_4px_14px_rgba(220,38,38,0.3)] hover:bg-red-700 order-1 lg:order-2"
                   isLoading={isLoading}
+                  aria-label={isRTL ? "إرسال البلاغ" : "Submit sighting"}
                 >
-                  {t.submitSighting}
+                  {!isLoading ? t.submitSighting : null}
                 </SubmitButton>
                 <button
                   type="button"

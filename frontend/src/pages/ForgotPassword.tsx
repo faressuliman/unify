@@ -2,9 +2,10 @@
 
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, ArrowUpRight, ArrowUpLeft } from 'lucide-react';
+import { Mail, ArrowUpRight, ArrowUpLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import PageHeader from '@/components/ui/PageHeader';
 import SubmitButton from '@/components/ui/SubmitButton';
 import FormInput from '@/components/ui/FormInput';
@@ -21,6 +22,7 @@ const ForgetPassword = () => {
     const { language } = useLanguage();
     const content = language === 'ar' ? ar.login : en.login; // Using login strings as fallback
     const isRTL = language === 'ar';
+    const navigate = useNavigate();
     const localizeError = (message: string) => {
         return content.validation[message as keyof typeof content.validation] ?? message;
     };
@@ -55,6 +57,11 @@ const ForgetPassword = () => {
         try {
             await authApi.forgotPassword({ email });
             setSuccess(true);
+            toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent successfully!', {
+                description: isRTL ? 'تحقق من بريدك الإلكتروني للحصول على رمز OTP' : 'Check your email for the OTP code',
+                duration: 4000,
+            });
+            setTimeout(() => navigate(`/reset-password?email=${encodeURIComponent(email)}`), 2000);
         } catch (submitErr) {
             setSubmitError(submitErr instanceof ApiError ? submitErr.message : 'Failed to send reset OTP.');
         } finally {
@@ -63,26 +70,36 @@ const ForgetPassword = () => {
     };
 
     return (
-        <div className={`flex min-h-[calc(100vh-80px)] bg-[#f8fafc] font-sans text-gray-900 relative overflow-hidden ${isRTL ? 'dir-rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="w-full lg:w-1/2 flex flex-col justify-center lg:justify-start lg:pt-20 pb-12 z-10 relative min-h-[calc(100vh-80px)] lg:min-h-0">
-                <div className={`w-full lg:max-w-200 px-6 lg:px-12 flex flex-col items-start text-start ${isRTL ? 'lg:mr-auto' : 'lg:ml-auto'}`}>
+        <div className={`flex min-h-[calc(100vh-120px)] bg-[#f8fafc] font-sans text-gray-900 relative overflow-hidden ${isRTL ? 'dir-rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="w-full lg:w-1/2 flex flex-col justify-center lg:justify-start lg:pt-20 pb-8 z-10 relative min-h-[calc(100vh-120px)] lg:min-h-0">
+                <div className={`w-full lg:max-w-200 px-6 lg:px-12 flex flex-col items-start text-start ${isRTL ? 'lg:mr-auto' : 'lg:ml-auto'} pt-10 sm:pt-12 lg:pt-0`}>
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="w-full lg:max-w-150 flex flex-col"
+                        className="w-full lg:max-w-150"
                     >
-                        <div className="mb-0 lg:mb-4">
-                            <PageHeader
-                                showArrow={true}
-                                navigatedTo={navText}
-                                title={pageTitle}
-                                subtitle={pageSubtitle}
-                                className="mb-8 w-full"
-                            />
+                        <PageHeader
+                            showArrow={true}
+                            navigatedTo={navText}
+                            title={pageTitle}
+                            subtitle={pageSubtitle}
+                            className="mb-8 w-full"
+                        />
+                        {isSubmitting ? (
+                        <div className="flex-1 flex items-center justify-center py-12">
+                            <div className="text-center space-y-4">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                                    className="inline-block"
+                                >
+                                    <Loader2 className="w-12 h-12 text-secondary" />
+                                </motion.div>
+                                <p className="text-gray-600 font-medium">{isRTL ? 'جاري إرسال رابط إعادة التعيين...' : 'Sending reset link...'}</p>
+                            </div>
                         </div>
-                    
-                    {!success ? (
+                    ) : !success ? (
                         <form onSubmit={handleSubmit} className="space-y-6 flex-1">
                             {submitError ? <ErrorMessage msg={submitError} className="text-sm" /> : null}
                             <div>

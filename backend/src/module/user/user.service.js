@@ -102,13 +102,16 @@ export const blockUser = async (req, res, next) => {
     $addToSet: { blockedUsers: userId },
   });
 
-  // Erase any existing chats between them
-  await Chat.findOneAndDelete({
-    $or: [
-      { initiatorUserId: req.user._id, responderUserId: userId },
-      { initiatorUserId: userId, responderUserId: req.user._id },
-    ],
-  });
+  // Keep chat history for admin review but hide it from users.
+  await Chat.findOneAndUpdate(
+    {
+      $or: [
+        { initiatorUserId: req.user._id, responderUserId: userId },
+        { initiatorUserId: userId, responderUserId: req.user._id },
+      ],
+    },
+    { $set: { isActive: false } },
+  );
 
   return res.status(200).json({ message: "User blocked successfully" });
 };

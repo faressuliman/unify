@@ -34,6 +34,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const fallbackAuthContext: AuthContextType = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  login: async () => {
+    return;
+  },
+  register: async () => {
+    return;
+  },
+  updateUser: () => {},
+  logout: () => {},
+};
+
 const AUTH_TOKEN_COOKIE = 'unify.auth.token';
 const AUTH_USER_COOKIE = 'unify.auth.user';
 const REMEMBER_DAYS = 30;
@@ -144,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    return fallbackAuthContext;
   }
   return context;
 }

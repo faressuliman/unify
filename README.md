@@ -22,6 +22,7 @@ Unify addresses the critical need for missing person cases across Egypt and beyo
 
 ### For Public Users
 - **Report Cases**: Post missing or found persons with image uploads
+- **Submit Sighting Reports**: Users can report seeing a missing person, providing location and time details to help families track their loved ones' movements.
 - **Image Search & AI Facial Matching**: Upload images to find similar cases using advanced AI facial matching algorithms that compare uploaded images against the entire database of registered persons
 - **AI Fraud Detection**: All uploaded images (profiles, reports, IDs) are automatically scanned by an AI-powered fraud detector to identify and reject fake or AI-generated images, ensuring data authenticity
 - **Advanced Search**: Search with filters and AI-powered matching capabilities
@@ -46,6 +47,7 @@ Unify addresses the critical need for missing person cases across Egypt and beyo
 
 **Frontend:**
 - React 19 + TypeScript + Vite
+- State Management: React Context (AuthContext, LanguageContext)
 - Tailwind CSS v4 (utility-first styling)
 - Framer Motion (animations)
 - Radix UI primitives + shadcn/ui components
@@ -53,8 +55,13 @@ Unify addresses the critical need for missing person cases across Egypt and beyo
 - Lucide React (icons)
 
 **Backend:**
-- Node.js runtime
-- MySQL database
+- Node.js runtime (Express 5.2)
+- MongoDB database (NoSQL)
+
+**AI Services & Models:**
+- Facial Matching: Advanced algorithms for person identification
+- Image Forgery Detection: AI models to identify AI-generated or fake uploads
+- Python/Flask integration for AI service endpoints
 
 
 **Internationalization:**

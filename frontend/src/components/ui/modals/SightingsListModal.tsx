@@ -3,6 +3,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
 import { X, Eye, MapPin, Phone, User as UserIcon, Loader2, Inbox, Clock, Shirt, Info, MessageCircle } from 'lucide-react';
 import { sightingApi, type BackendSighting } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface SightingsListModalProps {
   isOpen: boolean;
@@ -35,11 +36,11 @@ export default function SightingsListModal({
   const [error, setError] = useState<string | null>(null);
   const highlightedRef = useRef<HTMLLIElement | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const handleOpenChat = (reporterId?: string | { _id: string }) => {
-    const id = typeof reporterId === 'object' ? reporterId?._id : reporterId;
-    if (!id) return;
-    navigate(`/chat?chatWith=${encodeURIComponent(id)}`);
+  const handleOpenChat = (targetId?: string | null) => {
+    if (!targetId) return;
+    navigate(`/chat?chatWith=${encodeURIComponent(targetId)}`);
     onOpenChange(false);
   };
 
@@ -117,6 +118,15 @@ export default function SightingsListModal({
                         const conf = CONFIDENCE_LABELS[s.confidence] || CONFIDENCE_LABELS.not_sure;
                         const isHighlighted = highlightSightingId === s._id;
                         const reporterId = typeof s.reporterId === 'object' ? s.reporterId?._id : s.reporterId;
+                        const postOwnerId =
+                          typeof s.missingPersonId === 'object'
+                            ? typeof s.missingPersonId.userId === 'object'
+                              ? s.missingPersonId.userId._id
+                              : s.missingPersonId.userId
+                            : undefined;
+                        const isReporter = Boolean(user?.id && reporterId && user.id === reporterId);
+                        const chatTargetId = isReporter ? postOwnerId : reporterId;
+                        const canOpenChat = Boolean(chatTargetId && chatTargetId !== user?.id);
                         return (
                           <li
                             key={s._id}
@@ -211,10 +221,10 @@ export default function SightingsListModal({
                                     {s.reporterPhone}
                                   </a>
                                 </div>
-                                {reporterId && (
+                                {canOpenChat && (
                                   <button
                                     type="button"
-                                    onClick={() => handleOpenChat(reporterId)}
+                                    onClick={() => handleOpenChat(chatTargetId || null)}
                                     className="inline-flex items-center gap-2 rounded-lg border border-secondary bg-secondary px-3 py-1.5 text-sm font-bold text-white hover:bg-secondary/90 transition-colors cursor-pointer"
                                   >
                                     <MessageCircle className="h-3.5 w-3.5 text-white" />

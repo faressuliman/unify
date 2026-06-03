@@ -64,17 +64,21 @@ export const router = createBrowserRouter([
       {
         path: "login",
         element: (
-          <Suspense fallback={<LoadingScreen />}>
-            <Login />
-          </Suspense>
+          <ProtectedRoute isAuthRoute>
+            <Suspense fallback={<LoadingScreen />}>
+              <Login />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
         path: "register",
         element: (
-          <Suspense fallback={<LoadingScreen />}>
-            <SignUp />
-          </Suspense>
+          <ProtectedRoute isAuthRoute>
+            <Suspense fallback={<LoadingScreen />}>
+              <SignUp />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {

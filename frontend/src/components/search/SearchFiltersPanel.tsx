@@ -41,18 +41,35 @@ const defaultSearchFilters: SearchFilters = {
 };
 
 interface SearchFiltersPanelProps {
-  onApplyFilters: (values: SearchFilters, shouldScroll?: boolean) => void;
+  onApplyFilters: (
+    values: SearchFilters,
+    options?: { shouldScroll?: boolean; imageFile?: File | null }
+  ) => void;
+  initialFilters?: Partial<SearchFilters>;
+  initialImageFile?: File | null;
+  initialImagePreview?: string | null;
 }
 
-export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPanelProps) {
+export default function SearchFiltersPanel({
+  onApplyFilters,
+  initialFilters,
+  initialImageFile = null,
+  initialImagePreview = null,
+}: SearchFiltersPanelProps) {
   const { t, language } = useLanguage();
   const isRTL = language === 'ar';
-  const [searchImage, setSearchImage] = useState<File | null>(null);
+  const [searchImage, setSearchImage] = useState<File | null>(initialImageFile);
   const [submitError, setSubmitError] = useState('');
 
   const { register, control, handleSubmit, reset, setValue, getValues, watch } = useForm<SearchFilters>({
     defaultValues: defaultSearchFilters,
   });
+
+  useEffect(() => {
+    if (!initialFilters && !initialImageFile) return;
+    reset({ ...defaultSearchFilters, ...initialFilters });
+    setSearchImage(initialImageFile ?? null);
+  }, [initialFilters, initialImageFile, reset]);
 
   const watchedFilters = getValues(); // or use formState if necessary; watch() causes full component re-renders
   // Note: If we really want full re-renders for disabled state, we can use useWatch from react-hook-form 
@@ -94,12 +111,12 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
   const clearFieldAndApply = (field: keyof SearchFilters) => {
     const nextValues = { ...getValues(), [field]: '' };
     setValue(field, '', { shouldDirty: true, shouldTouch: true });
-    onApplyFilters(nextValues, false);
+    onApplyFilters(nextValues, { shouldScroll: false, imageFile: searchImage });
   };
 
   const clearAllAndReset = () => {
     reset(defaultSearchFilters);
-    onApplyFilters(defaultSearchFilters, false);
+    onApplyFilters(defaultSearchFilters, { shouldScroll: false, imageFile: null });
     setSearchImage(null);
     setSubmitError('');
   };
@@ -116,7 +133,7 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
     }
 
     setSubmitError('');
-    onApplyFilters(values);
+    onApplyFilters(values, { imageFile: searchImage });
   };
 
   const renderClearFieldButton = (field: keyof SearchFilters) => {
@@ -163,6 +180,7 @@ export default function SearchFiltersPanel({ onApplyFilters }: SearchFiltersPane
             buttonText={t('search.chooseFile') || 'Choose File'}
             changeText={t('search.changePhoto') || 'Change Photo'}
             removeText={t('search.remove') || 'Remove'}
+            initialImage={initialImagePreview}
           />
         </div>
 

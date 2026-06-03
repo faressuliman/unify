@@ -11,11 +11,25 @@ dotenv.config({ path: path.resolve(".env") });
 
 const app = express();
 
+// Allow preview/dev origins during development (helps vite preview at different port)
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow non-browser requests like curl, or same-origin server-side calls
+      if (!origin) return callback(null, true);
+      // In development mode accept any localhost origin (ports vary)
+      if (process.env.MODE === "DEV" || process.env.NODE_ENV !== "production") {
+        const isLocalhost = origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:");
+        if (isLocalhost) return callback(null, true);
+      }
+      const allowed = process.env.FRONTEND_URL || "http://localhost:5173";
+      if (Array.isArray(allowed) ? allowed.includes(origin) : origin === allowed) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"), false);
+    },
     credentials: true,
-  })
+  }),
 );
 
 const port = process.env.PORT || 3001;

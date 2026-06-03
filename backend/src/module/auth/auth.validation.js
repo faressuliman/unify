@@ -49,3 +49,10 @@ export const resetPasswordSchema = joi
     }),
   })
   .unknown(false);
+
+export const verifyOtpSchema = joi
+  .object({
+    email: genralrules.email.required(),
+    otp: joi.string().required(),
+  })
+  .unknown(false);

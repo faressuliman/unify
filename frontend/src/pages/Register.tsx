@@ -402,7 +402,7 @@ const Register = () => {
                             <ErrorMessage msg={errors.idPicture} className="text-[11px] sm:text-xs" />
                         </div>
                         
-                        <div className="pt-6">
+                        <div className="pt-2">
                             <SubmitButton type="submit" isLoading={isSubmitting}>
                                 {isSubmitting ? content.creatingAccount : content.createAccount}
                             </SubmitButton>

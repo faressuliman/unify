@@ -172,6 +172,12 @@ export const authApi = {
       body: JSON.stringify(payload),
     }),
 
+  verifyOTP: (payload: { email: string; otp: string }) =>
+    apiRequest<{ message: string }>("auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   resetPassword: (payload: {
     email: string;
     otp: string;
@@ -388,9 +394,15 @@ export interface BackendSightingLocation {
   longitude?: number;
 }
 
+export interface BackendSightingPost {
+  _id: string;
+  name?: string;
+  userId?: string | { _id: string };
+}
+
 export interface BackendSighting {
   _id: string;
-  missingPersonId: string;
+  missingPersonId: string | BackendSightingPost;
   confidence: "not_sure" | "possibly" | "pretty_sure" | "very_sure";
   seenAt: string;
   location: BackendSightingLocation;

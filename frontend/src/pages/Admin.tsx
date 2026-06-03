@@ -37,6 +37,7 @@ import {
   ApiError,
   type AdminUser,
   type BackendChat,
+  type BackendChatUser,
   type BackendClaim,
   type BackendMessage,
   type BackendPost,
@@ -2590,6 +2591,27 @@ function AdminChatsPanel({
     return match ? match[0] : cleaned;
   };
 
+  const normalizeChatUser = (
+    value: BackendChat["initiatorUserId"],
+  ): BackendChatUser | null => {
+    if (!value) return null;
+    return typeof value === "object" ? value : { _id: value, name: "" };
+  };
+
+  const getChatUserId = (value: BackendChat["initiatorUserId"]) => {
+    if (!value) return null;
+    return typeof value === "object" ? value._id : value;
+  };
+
+  const getChatUserLabel = (
+    user: BackendChatUser | null,
+    fallback: string,
+  ) => {
+    if (user?.name) return user.name;
+    if (user?._id) return `${fallback} ${user._id.slice(-6)}`;
+    return fallback;
+  };
+
   const getChatErrorMessage = (err: unknown) => {
     if (err instanceof ApiError) {
       if (err.status === 404) {
@@ -2757,18 +2779,9 @@ function AdminChatsPanel({
         ) : (
           <div className="divide-y divide-slate-100">
             {activeChats.map((chat) => {
-              const initiator =
-                typeof chat.initiatorUserId === "object"
-                  ? chat.initiatorUserId
-                  : null;
-              const responder =
-                typeof chat.responderUserId === "object"
-                  ? chat.responderUserId
-                  : null;
-              const initiatorId =
-                typeof chat.initiatorUserId === "object"
-                  ? chat.initiatorUserId._id
-                  : chat.initiatorUserId;
+              const initiator = normalizeChatUser(chat.initiatorUserId);
+              const responder = normalizeChatUser(chat.responderUserId);
+              const initiatorId = getChatUserId(chat.initiatorUserId) || "";
               const isExpanded = expandedChatId === chat._id;
               const ArrowIcon = isExpanded
                 ? ChevronDown
@@ -2803,7 +2816,7 @@ function AdminChatsPanel({
                             </span>
                           </div>
                           <p className="text-sm font-bold text-tertiary">
-                            {initiator?.name || "Unknown"}
+                            {getChatUserLabel(initiator, isRTL ? "مستخدم" : "User")}
                           </p>
                           <p className="text-xs text-slate-500">
                             {initiator?.email || ""}
@@ -2814,7 +2827,7 @@ function AdminChatsPanel({
                             {isRTL ? "المستجيب" : "Responder"}
                           </span>
                           <p className="text-sm font-bold text-tertiary">
-                            {responder?.name || "Unknown"}
+                            {getChatUserLabel(responder, isRTL ? "مستخدم" : "User")}
                           </p>
                           <p className="text-xs text-slate-500">
                             {responder?.email || ""}
@@ -2918,18 +2931,9 @@ function AdminChatsPanel({
 
       {chatDetails &&
         (() => {
-          const initiator =
-            typeof chatDetails.initiatorUserId === "object"
-              ? chatDetails.initiatorUserId
-              : null;
-          const responder =
-            typeof chatDetails.responderUserId === "object"
-              ? chatDetails.responderUserId
-              : null;
-          const initiatorId =
-            typeof chatDetails.initiatorUserId === "object"
-              ? chatDetails.initiatorUserId._id
-              : chatDetails.initiatorUserId;
+          const initiator = normalizeChatUser(chatDetails.initiatorUserId);
+          const responder = normalizeChatUser(chatDetails.responderUserId);
+          const initiatorId = getChatUserId(chatDetails.initiatorUserId) || "";
 
           return (
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col h-150 overflow-hidden">
@@ -2961,7 +2965,7 @@ function AdminChatsPanel({
                         {isRTL ? "المبادر" : "Initiator"}
                       </span>
                       <p className="text-sm font-bold text-tertiary">
-                        {initiator?.name || "Unknown"}
+                        {getChatUserLabel(initiator, isRTL ? "مستخدم" : "User")}
                       </p>
                       <p className="text-xs text-slate-500">
                         {initiator?.email || ""}
@@ -2972,7 +2976,7 @@ function AdminChatsPanel({
                         {isRTL ? "المستجيب" : "Responder"}
                       </span>
                       <p className="text-sm font-bold text-tertiary">
-                        {responder?.name || "Unknown"}
+                        {getChatUserLabel(responder, isRTL ? "مستخدم" : "User")}
                       </p>
                       <p className="text-xs text-slate-500">
                         {responder?.email || ""}
@@ -3181,7 +3185,19 @@ function UserReportsPanel({
                       <div className="flex items-center gap-2 shrink-0">
                         {parsed["Chat ID"] && (
                           <button
-                            onClick={() => onViewChat(parsed["Chat ID"] as string)}
+                            onClick={() => {
+                              const rawId = String(parsed["Chat ID"]);
+                              const match = rawId.match(/[a-f0-9]{24}/i);
+                              if (match) {
+                                onViewChat(match[0]);
+                              } else {
+                                toast.error(
+                                  isRTL
+                                    ? "معرف المحادثة غير صالح"
+                                    : "Invalid chat id",
+                                );
+                              }
+                            }}
                             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />

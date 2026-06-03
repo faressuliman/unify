@@ -74,16 +74,18 @@ export const getSightingsByPost = async (req, res, next) => {
     ? { missingPersonId: postId }
     : { missingPersonId: postId, reporterId: req.user._id };
 
-  const reports = await SightingReport.find(reportsQuery).sort({
-    createdAt: -1,
-  });
+  const reports = await SightingReport.find(reportsQuery)
+    .populate("missingPersonId", "name userId")
+    .sort({
+      createdAt: -1,
+    });
 
   return res.status(200).json({ reports });
 };
 
 export const getMySightings = async (req, res, next) => {
   const reports = await SightingReport.find({ reporterId: req.user._id })
-    .populate("missingPersonId", "name _id")
+    .populate("missingPersonId", "name _id userId")
     .sort({ createdAt: -1 });
 
   return res.status(200).json({ reports });

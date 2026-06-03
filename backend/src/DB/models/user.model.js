@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema(
     phoneNumber: { type: String },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     idImagePath: { type: String },
-    selfieImagePath: { type: String },
     profilePicture: { type: String, default: null },
 
     verificationStatus: {

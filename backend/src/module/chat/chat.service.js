@@ -2,6 +2,7 @@ import Chat from "../../DB/models/chat.model.js";
 import Message from "../../DB/models/message.model.js";
 import User from "../../DB/models/user.model.js";
 import Claim from "../../DB/models/claim.model.js";
+import SightingReport from "../../DB/models/sightingReport.model.js";
 import { emitToChat, emitToUser } from "../../realtime/io.js";
 
 // ─── Start or Get Chat ────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ export const startChat = async (req, res, next) => {
       claimUserId: { $in: [req.user._id, responderId] },
     }).populate({ path: "postId", select: "userId" });
 
-    const allowed = claims.some((c) => {
+    let allowed = claims.some((c) => {
       if (!c.postId) return false;
       const owner = c.postId.userId?.toString();
       const claimant = c.claimUserId?.toString();
@@ -37,9 +38,24 @@ export const startChat = async (req, res, next) => {
     });
 
     if (!allowed) {
+      const sightings = await SightingReport.find({
+        reporterId: { $in: [req.user._id, responderId] },
+      }).populate({ path: "missingPersonId", select: "userId" });
+
+      allowed = sightings.some((report) => {
+        const owner = report.missingPersonId?.userId?.toString();
+        const reporter = report.reporterId?.toString();
+        return (
+          (owner === me && reporter === them) ||
+          (owner === them && reporter === me)
+        );
+      });
+    }
+
+    if (!allowed) {
       return next(
         new Error(
-          "You can only chat with someone after a claim between you has been approved",
+          "You can only chat after an approved claim or a related sighting report",
           { cause: 403 },
         ),
       );
@@ -65,22 +81,21 @@ export const startChat = async (req, res, next) => {
     await chat.save();
   }
 
-  return res.status(200).json({ chat });
+  const populatedChat = await Chat.findById(chat._id)
+    .populate("initiatorUserId", "name email profilePicture")
+    .populate("responderUserId", "name email profilePicture");
+
+  return res.status(200).json({ chat: populatedChat || chat });
 };
 
 // ─── Get My Chats ─────────────────────────────────────────────────────────────
 export const getMyChats = async (req, res, next) => {
-  const currentUser = await User.findById(req.user._id).select("blockedUsers");
-  const blocked = currentUser?.blockedUsers || [];
-
   const chats = await Chat.find({
     $or: [{ initiatorUserId: req.user._id }, { responderUserId: req.user._id }],
-    initiatorUserId: { $nin: blocked },
-    responderUserId: { $nin: blocked },
     isActive: true,
   })
-    .populate("initiatorUserId", "name")
-    .populate("responderUserId", "name")
+    .populate("initiatorUserId", "name profilePicture")
+    .populate("responderUserId", "name profilePicture")
     .sort({ createdAt: -1 });
 
   return res.status(200).json({ chats });
@@ -99,6 +114,31 @@ export const sendMessage = async (req, res, next) => {
     chat.responderUserId.toString() === req.user._id.toString();
 
   if (!isParticipant) return next(new Error("Unauthorized", { cause: 403 }));
+
+  const otherUserId =
+    chat.initiatorUserId.toString() === req.user._id.toString()
+      ? chat.responderUserId.toString()
+      : chat.initiatorUserId.toString();
+
+  const [currentUser, otherUser] = await Promise.all([
+    User.findById(req.user._id).select("blockedUsers"),
+    User.findById(otherUserId).select("blockedUsers"),
+  ]);
+
+  const isBlockedByMe = Boolean(
+    currentUser?.blockedUsers?.some(
+      (id) => id.toString() === otherUserId.toString(),
+    ),
+  );
+  const isBlockedByOther = Boolean(
+    otherUser?.blockedUsers?.some(
+      (id) => id.toString() === req.user._id.toString(),
+    ),
+  );
+
+  if (isBlockedByMe || isBlockedByOther) {
+    return next(new Error("You cannot message a blocked user", { cause: 403 }));
+  }
 
   const attachmentPath = req.file?.path;
 
@@ -126,10 +166,6 @@ export const sendMessage = async (req, res, next) => {
   // when the chat is not currently open.
   emitToChat(chatId, "chat:message", populated);
 
-  const otherUserId =
-    chat.initiatorUserId.toString() === req.user._id.toString()
-      ? chat.responderUserId.toString()
-      : chat.initiatorUserId.toString();
   emitToUser(otherUserId, "chat:message", populated);
 
   return res.status(201).json({ message: populated });

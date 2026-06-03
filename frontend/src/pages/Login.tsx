@@ -171,7 +171,7 @@ const Login = () => {
                             <Link to="/forgot-password" className="text-sm font-bold text-tertiary hover:underline hover:decoration-secondary transition-all">{content.forgotPassword}</Link>
                         </div>
 
-                        <div className="pt-6">
+                        <div className="pt-2">
                             <SubmitButton type="submit" isLoading={isSubmitting}>
                                 {isSubmitting ? content.signingIn : content.signIn}
                             </SubmitButton>
