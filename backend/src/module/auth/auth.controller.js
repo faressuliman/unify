@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { asynchandler } from "../../utils/globalErrorHandling/index.js";
 import { validation } from "../../middleware/validation.js";
-import { multerHost, filetypes } from "../../middleware/multer.js";
+import { multerHost, multerMemory, filetypes } from "../../middleware/multer.js";
 import {
   registerSchema,
   loginSchema,
@@ -15,7 +15,7 @@ const router = Router();
 
 router.post(
   "/register",
-  multerHost(filetypes.image, "unify/ids").single("idPicture"),
+  multerMemory(filetypes.image).single("idPicture"),
   validation(registerSchema),
   asynchandler(authService.register)
 );

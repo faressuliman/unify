@@ -9,6 +9,7 @@ import { ar } from '../../../data/arabic';
 import { claimApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { checkAiImage } from '@/lib/aiImageCheck';
 
 interface ClaimFamilyModalProps {
   isOpen: boolean;
@@ -50,17 +51,34 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, pos
       return;
     }
 
+    // AI authenticity check on the uploaded document
+    const loadingToastId = toast.loading(
+      isRTL
+        ? 'جاري التحقق من صحة الوثيقة، قد يستغرق ذلك لحظات.'
+        : 'Verifying document authenticity, this may take a moment.'
+    );
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
+      const aiResult = await checkAiImage(documentImage);
+      if (!aiResult.passed) {
+        toast.error(isRTL ? 'فشل طلب المطالبة' : 'Claim Request Failed', {
+          description: isRTL
+            ? 'تم اكتشاف أن المستند المرفوع تم إنشاؤه بواسطة الذكاء الاصطناعي أو يفتقر إلى الأصالة البيولوجية الكافية.'
+            : aiResult.reason,
+          duration: 6000,
+        });
+        return;
+      }
+
       const formData = new FormData();
       formData.append('postId', postId);
       formData.append('claimType', 'family_reunion');
       formData.append('additionalInfo', relationship);
       formData.append('document', documentImage);
       formData.append('authorization', token);
-      
+
       await claimApi.createClaim(formData, token);
-      
+
       toast.success(isRTL ? 'تم ارسال الطلب بنجاح' : 'Claim submitted successfully');
       onOpenChange(false);
       setRelationship('');
@@ -70,6 +88,7 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, pos
       const err = error as Error;
       toast.error(err.message || 'Failed to submit claim');
     } finally {
+      toast.dismiss(loadingToastId);
       setIsSubmitting(false);
     }
   };

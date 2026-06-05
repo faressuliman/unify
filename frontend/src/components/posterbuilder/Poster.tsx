@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
 import { toJpeg } from 'html-to-image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

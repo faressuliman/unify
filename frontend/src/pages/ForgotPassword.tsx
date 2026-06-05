@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -29,8 +26,8 @@ const ForgetPassword = () => {
 
     const pageTitle = isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?';
     const pageSubtitle = isRTL 
-        ? 'أدخل البريد الإلكتروني المستخدم لحسابك وسنرسل لك رابطًا لإعادة تعيين كلمة المرور' 
-        : "Enter the email used for your account and we'll send you a link to reset your password";
+        ? 'أدخل البريد الإلكتروني المستخدم لحسابك وسنرسل لك رمز OTP لإعادة تعيين كلمة المرور' 
+        : "Enter the email used for your account and we'll send you an OTP on your email to reset your password";
     
     const navText = isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login';
 
@@ -120,7 +117,7 @@ const ForgetPassword = () => {
 
                             <div className="pt-2 lg:pt-6">
                                 <SubmitButton type="submit" className="py-4 text-base" disabled={isSubmitting}>
-                                    {isSubmitting ? (isRTL ? 'جارٍ الإرسال...' : 'Sending...') : (isRTL ? 'إرسال رابط إعادة التعيين' : 'Send Reset Link')}
+                                    {isSubmitting ? (isRTL ? 'جارٍ الإرسال...' : 'Sending...') : (isRTL ? 'إرسال رمز OTP' : 'Send OTP')}
                                 </SubmitButton>
                             </div>
                         </form>
@@ -175,7 +172,7 @@ const ForgetPassword = () => {
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="w-24 h-24 mb-8 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl"
                     >
-                        <Mail className="w-10 h-10 text-blue-300" strokeWidth={1.5} />
+                        <Mail className="w-10 h-10 text-secondary" strokeWidth={1.5} />
                     </motion.div>
                     
                     <motion.h2 
@@ -198,17 +195,6 @@ const ForgetPassword = () => {
                     </motion.p>
                 </div>
 
-                {/* Decorative Elements */}
-                <motion.div 
-                    animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }} 
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/4 right-1/4 w-32 h-32 rounded-full border border-white/10"
-                />
-                <motion.div 
-                    animate={{ y: [0, 20, 0], rotate: [0, -10, 0], scale: [1, 1.1, 1] }} 
-                    transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute bottom-1/4 left-1/4 w-48 h-48 rounded-full border border-white/5 bg-white/5 backdrop-blur-md"
-                />
             </div>
         </div>
     );

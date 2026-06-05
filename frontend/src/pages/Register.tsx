@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, Lock, Fingerprint, BellRing, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Lock, Fingerprint, ShieldCheck, ArrowUpRight, ArrowUpLeft, Eye, EyeOff } from 'lucide-react';
 import { signUpSchema } from '../validation';
 import PageHeader from '@/components/ui/PageHeader';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -449,7 +449,7 @@ const Register = () => {
                             />
 
                             <FeatureCard 
-                                icon={<BellRing className="w-7 h-7" />}
+                                icon={<ShieldCheck className="w-7 h-7" />}
                                 title={content.realTimeAlerts}
                                 desc={content.realTimeDesc}
                             />

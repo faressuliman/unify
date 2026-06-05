@@ -35,10 +35,10 @@ export const genralrules = {
     size: joi.number().positive().required(),
     mimetype: joi.string().required(),
     encoding: joi.string().required(),
-    filename: joi.string().required(),
-    path: joi.string().required(),
-
+    filename: joi.string().optional(),
+    path: joi.string().optional(),
     originalname: joi.string().required(),
     fieldname: joi.string().required(),
+    buffer: joi.any().optional(),
   }),
 };

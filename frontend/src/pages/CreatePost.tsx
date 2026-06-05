@@ -118,6 +118,12 @@ const CreatePost = () => {
             return { ...prev, [name]: value };
         });
 
+        if (name === 'postType') {
+            setErrors({});
+            setSubmitError('');
+            return;
+        }
+
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -309,7 +315,7 @@ const CreatePost = () => {
                                                 isRTL={isRTL}
                                                 className={errors.firstName ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
                                             />
-                                            <ErrorMessage msg={errors.firstName} className="text-[12px] mt-1 text-red-500" />
+                                            <ErrorMessage msg={errors.firstName} className="text-[11px] sm:text-xs" />
                                         </div>
                                         <div>
                                             <FormInput 
@@ -322,7 +328,7 @@ const CreatePost = () => {
                                                 isRTL={isRTL}
                                                 className={errors.lastName ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
                                             />
-                                            <ErrorMessage msg={errors.lastName} className="text-[12px] mt-1 text-red-500" />
+                                            <ErrorMessage msg={errors.lastName} className="text-[11px] sm:text-xs" />
                                         </div>
                                     </div>
 
@@ -337,7 +343,7 @@ const CreatePost = () => {
                                                     onChange={(val) => handleSelectChange('ageUnit', val)}
                                                     isRTL={isRTL}
                                                 />
-                                                <ErrorMessage msg={errors.ageUnit} className="text-[12px] mt-1 text-red-500" />
+                                                <ErrorMessage msg={errors.ageUnit} className="text-[11px] sm:text-xs" />
                                             </div>
                                             
                                             {formData.ageUnit && (
@@ -367,7 +373,7 @@ const CreatePost = () => {
                                                         isRTL={isRTL}
                                                         className={errors.age ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
                                                     />
-                                                    <ErrorMessage msg={errors.age} className="text-[12px] mt-1 text-red-500" />
+                                                    <ErrorMessage msg={errors.age} className="text-[11px] sm:text-xs" />
                                                 </motion.div>
                                             )}
                                         </div>
@@ -380,7 +386,7 @@ const CreatePost = () => {
                                                 onChange={(val) => handleSelectChange('gender', val)}
                                                 isRTL={isRTL}
                                             />
-                                            <ErrorMessage msg={errors.gender} className="text-[12px] mt-1 text-red-500" />
+                                            <ErrorMessage msg={errors.gender} className="text-[11px] sm:text-xs" />
                                         </div>
                                     </div>
                                     
@@ -393,7 +399,7 @@ const CreatePost = () => {
                                             onChange={(val) => handleSelectChange('city', val)}
                                             isRTL={isRTL}
                                         />
-                                        <ErrorMessage msg={errors.city} className="text-[12px] mt-1 text-red-500" />
+                                        <ErrorMessage msg={errors.city} className="text-[11px] sm:text-xs" />
                                     </div>
                                 </div>
                             </div>
@@ -418,7 +424,7 @@ const CreatePost = () => {
                                                 onChange={(val) => handleSelectChange('hairColor', val)}
                                                 isRTL={isRTL}
                                             />
-                                            <ErrorMessage msg={errors.hairColor} className="text-[12px] mt-1 text-red-500" />
+                                            <ErrorMessage msg={errors.hairColor} className="text-[11px] sm:text-xs" />
                                         </div>
                                         <div>
                                             <SelectMenu 
@@ -429,7 +435,7 @@ const CreatePost = () => {
                                                 onChange={(val) => handleSelectChange('eyeColor', val)}
                                                 isRTL={isRTL}
                                             />
-                                            <ErrorMessage msg={errors.eyeColor} className="text-[12px] mt-1 text-red-500" />
+                                            <ErrorMessage msg={errors.eyeColor} className="text-[11px] sm:text-xs" />
                                         </div>
                                     </div>
 
@@ -444,7 +450,7 @@ const CreatePost = () => {
                                             rows={3}
                                             className={`resize-none font-sans ${errors.clothingDescription ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}`}
                                         />
-                                        <ErrorMessage msg={errors.clothingDescription} className="text-[12px] mt-1 text-red-500" />
+                                        <ErrorMessage msg={errors.clothingDescription} className="text-[11px] sm:text-xs" />
                                     </div>
                                 </div>
                             </div>
@@ -472,7 +478,7 @@ const CreatePost = () => {
                                                     isRTL={isRTL}
                                                     className={errors.lastSeenLocation ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
                                                 />
-                                                <ErrorMessage msg={errors.lastSeenLocation} className="text-[12px] mt-1 text-red-500" />
+                                                <ErrorMessage msg={errors.lastSeenLocation} className="text-[11px] sm:text-xs" />
                                             </div>
 
                                             <div>
@@ -484,7 +490,7 @@ const CreatePost = () => {
                                                     placeholder={t.lastSeenDatePlaceholder}
                                                     isRTL={isRTL}
                                                 />
-                                                <ErrorMessage msg={errors.lastSeenDate} className="text-[12px] mt-1 text-red-500" />
+                                                <ErrorMessage msg={errors.lastSeenDate} className="text-[11px] sm:text-xs" />
                                             </div>
                                         </>
                                     ) : (
@@ -500,7 +506,7 @@ const CreatePost = () => {
                                                     isRTL={isRTL}
                                                     className={errors.foundLocation ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
                                                 />
-                                                <ErrorMessage msg={errors.foundLocation} className="text-[12px] mt-1 text-red-500" />
+                                                <ErrorMessage msg={errors.foundLocation} className="text-[11px] sm:text-xs" />
                                             </div>
 
                                             <div className="rounded-xl border border-slate-200 p-4 min-w-0">
@@ -525,7 +531,7 @@ const CreatePost = () => {
                                                             isRTL={isRTL}
                                                             className={errors.organizationName ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
                                                         />
-                                                        <ErrorMessage msg={errors.organizationName} className="text-[12px] mt-1 text-red-500" />
+                                                        <ErrorMessage msg={errors.organizationName} className="text-[11px] sm:text-xs" />
                                                     </div>
                                                 )}
                                             </div>
@@ -546,7 +552,7 @@ const CreatePost = () => {
                                                     isRTL={isRTL}
                                                     className={errors.reporterPhone ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : ''}
                                                 />
-                                                <ErrorMessage msg={errors.reporterPhone} className="text-[12px] mt-1 text-red-500" />
+                                                <ErrorMessage msg={errors.reporterPhone} className="text-[11px] sm:text-xs" />
                                             </div>
                                         </>
                                     )}
@@ -576,7 +582,7 @@ const CreatePost = () => {
                                     changeText={t.changePhoto}
                                     removeText={t.removeText}
                                 />
-                                <ErrorMessage msg={errors.photo} className="text-[12px] mt-2 text-red-500" />
+                                <ErrorMessage msg={errors.photo} className="text-[11px] sm:text-xs mt-1" />
                             </div>
 
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row gap-3 w-full">

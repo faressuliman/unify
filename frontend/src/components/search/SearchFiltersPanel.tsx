@@ -11,6 +11,8 @@ import ImageUpload from '../ui/ImageUpload';
 import { useLanguage } from '../../context/LanguageContext';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../../data/cities';
 import { getEyeColorOptions, getHairColorOptions } from '../../data/appearanceOptions';
+import { checkAiImage } from '../../lib/aiImageCheck';
+import { toast } from 'sonner';
 
 export interface SearchFilters {
   firstName: string;
@@ -60,6 +62,7 @@ export default function SearchFiltersPanel({
   const isRTL = language === 'ar';
   const [searchImage, setSearchImage] = useState<File | null>(initialImageFile);
   const [submitError, setSubmitError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const { register, control, handleSubmit, reset, setValue, getValues, watch } = useForm<SearchFilters>({
     defaultValues: defaultSearchFilters,
@@ -121,7 +124,7 @@ export default function SearchFiltersPanel({
     setSubmitError('');
   };
 
-  const onSubmit = (values: SearchFilters) => {
+  const onSubmit = async (values: SearchFilters) => {
     const hasAnyFilter = Object.values(values).some((value) => value.trim() !== '');
 
     if (!hasAnyFilter && !searchImage) {
@@ -133,6 +136,32 @@ export default function SearchFiltersPanel({
     }
 
     setSubmitError('');
+
+    // Run AI authenticity check when an image is attached
+    if (searchImage) {
+      const loadingToastId = toast.loading(
+        isRTL
+          ? 'جاري التحقق من صحة الصورة، قد يستغرق ذلك لحظات.'
+          : 'Verifying image authenticity, this may take a moment.'
+      );
+      setIsVerifying(true);
+      try {
+        const result = await checkAiImage(searchImage);
+        if (!result.passed) {
+          toast.error(isRTL ? 'فشل البحث بالصورة' : 'Image Search Failed', {
+            description: isRTL
+              ? 'تم اكتشاف أن الصورة المرفوعة تم إنشاؤها بواسطة الذكاء الاصطناعي أو تفتقر إلى الأصالة البيولوجية الكافية.'
+              : result.reason,
+            duration: 6000,
+          });
+          return;
+        }
+      } finally {
+        toast.dismiss(loadingToastId);
+        setIsVerifying(false);
+      }
+    }
+
     onApplyFilters(values, { imageFile: searchImage });
   };
 
@@ -354,9 +383,11 @@ export default function SearchFiltersPanel({
           />
         </div>
 
-        <SubmitButton type="submit">
+        <SubmitButton type="submit" disabled={isVerifying}>
           <Search className="h-5 w-5" />
-          {t('search.searchButton') || 'Search'}
+          {isVerifying
+            ? (isRTL ? 'جاري التحقق...' : 'Verifying...')
+            : (t('search.searchButton') || 'Search')}
         </SubmitButton>
         <ErrorMessage msg={submitError} />
       </form>

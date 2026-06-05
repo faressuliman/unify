@@ -22,20 +22,20 @@ export const register = async (req, res, next) => {
 
   let idImagePath;
   if (req.file) {
-    idImagePath = req.file.path;
-    
-    // AI Verification
+    // ── AI Verification (uses buffer directly — no Cloudinary re-download) ──
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 2500));
     try {
-      const imgRes = await fetch(idImagePath);
-      const imgBlob = await imgRes.blob();
-
       const form = new FormData();
-      form.append("image", imgBlob, "id.jpg");
+      const blob = new Blob([req.file.buffer], { type: req.file.mimetype });
+      form.append("image", blob, req.file.originalname || "id.jpg");
 
-      const aiRes = await fetch("http://127.0.0.1:8000/detect-ai-image", {
-        method: "POST",
-        body: form,
-      });
+      const [aiRes] = await Promise.all([
+        fetch("http://127.0.0.1:8000/detect-ai-image", {
+          method: "POST",
+          body: form,
+        }),
+        minDelay,
+      ]);
       const aiData = await aiRes.json();
       console.log("[auth.register] AI detection result:", aiData);
 
@@ -48,9 +48,22 @@ export const register = async (req, res, next) => {
         );
       }
     } catch (error) {
+      await minDelay;
       console.error("AI Image Detection failed:", error);
       // We log but continue, so the app doesn't break if the AI microservice is offline
     }
+
+    // ── Upload to Cloudinary from buffer (replaces multerHost stream) ──
+    idImagePath = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: "unify/ids", resource_type: "auto" },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result.secure_url);
+        },
+      );
+      uploadStream.end(req.file.buffer);
+    });
   }
 
   const hashedPassword = await Hash({ key: password });
@@ -84,6 +97,7 @@ export const register = async (req, res, next) => {
 
   return res.status(201).json({ message: "Registered successfully", user });
 };
+
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 export const login = async (req, res, next) => {

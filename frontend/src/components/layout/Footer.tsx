@@ -66,7 +66,7 @@ export default function Footer() {
       </motion.div>
 
       <div className="relative z-10 mx-auto w-full max-w-350 px-6 lg:px-12 pt-4 sm:pt-4 md:pt-6 pb-24 sm:pb-24 md:pb-24 border-b border-tertiary/10">
-        <div className="grid gap-8 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-3">
+        <div className="grid gap-8 sm:gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -85,7 +85,7 @@ export default function Footer() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.85 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="sm:flex sm:justify-center"
+            className="lg:flex lg:justify-center"
           >
             <div>
               <h4 className="mb-3 sm:mb-3 md:mb-4 text-base sm:text-lg md:text-lg font-bold text-tertiary text-start">{t.quickLinksTitle}</h4>
@@ -106,7 +106,7 @@ export default function Footer() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.85 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="sm:flex sm:justify-end"
+            className="lg:flex lg:justify-end"
           >
             <div>
               <h4 className="mb-3 sm:mb-3 md:mb-4 text-base sm:text-lg md:text-lg font-bold text-tertiary text-start">{t.contactTitle}</h4>
@@ -136,7 +136,7 @@ export default function Footer() {
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 z-10 w-full bg-white/50 backdrop-blur-md border-t border-tertiary/5">
-        <div className="mx-auto flex w-full max-w-350 flex-col items-center justify-between gap-4 px-6 lg:px-12 py-4 md:flex-row">
+        <div className="mx-auto flex w-full max-w-350 flex-col items-center justify-between gap-4 px-6 lg:px-12 py-4 lg:flex-row">
           <p className="text-xs md:text-sm text-tertiary/70 font-semibold">{t.rights}</p>
           <div className="group flex items-center gap-1.5 sm:gap-2 text-xs md:text-sm text-tertiary bg-red-100 px-3 py-1.5 rounded-full border border-red-200 cursor-pointer transition-all duration-500 hover:bg-red-50 shadow-sm hover:shadow-md">
             <Phone className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
