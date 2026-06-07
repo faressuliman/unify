@@ -41,6 +41,9 @@ export default function MapPopup({ post, isRTL, t }: MapPopupProps) {
     details: post.details ?? "",
     age: post.age ? String(post.age) : undefined,
     clothingDescription: post.clothesDescription,
+    physicalDescription: post.hairColour && post.eyeColour 
+      ? `Hair: ${post.hairColour}, Eyes: ${post.eyeColour}`
+      : post.hairColour || post.eyeColour || "",
     city: post.city,
     postedBy: post.postedBy,
     reportDate: post.createdAt

@@ -341,7 +341,7 @@ export const getMapMarkers = async (req, res, next) => {
 
   const posts = await Post.find(filter)
     .select(
-      "name postType status city postImage locationId createdAt age lastSeenDate foundLocation timeAgo details clothesDescription userId",
+      "name postType status city postImage locationId createdAt age lastSeenDate foundLocation timeAgo details clothesDescription hairColour eyeColour userId",
     )
     .populate("locationId", "latitude longitude address")
     .populate("userId", "name");
@@ -362,6 +362,8 @@ export const getMapMarkers = async (req, res, next) => {
         age: p.age,
         details: p.details || p.clothesDescription,
         clothesDescription: p.clothesDescription,
+        hairColour: p.hairColour,
+        eyeColour: p.eyeColour,
         postedBy: p.userId?.name || undefined,
         createdAt: p.createdAt,
         lastSeenDate: p.lastSeenDate,

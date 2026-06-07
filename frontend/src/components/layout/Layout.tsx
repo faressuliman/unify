@@ -5,6 +5,7 @@ import { Navbar } from './Navbar'
 import LoadingScreen from '../ui/LoadingScreen'
 import ScrollToTopButton from '../ui/ScrollToTopButton'
 import Footer from './Footer'
+import AIAssistant from '../ui/AIAssistant'
 
 interface LayoutProps {
   children: ReactNode
@@ -34,6 +35,7 @@ export function Layout({ children }: LayoutProps) {
       <ScrollToTopButton />
       {children}
       {!isAuthPage && <Footer />}
+      <AIAssistant />
     </div>
   )
 }

@@ -118,6 +118,8 @@ export interface BackendMapMarker {
   age?: number | string;
   details?: string;
   clothesDescription?: string;
+  hairColour?: string;
+  eyeColour?: string;
   postedBy?: string;
   city?: string;
   location?: string;

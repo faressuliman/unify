@@ -288,6 +288,7 @@ const NAME_DICT: Record<string, string> = {
   'zeyad': 'زياد',
   'ziad': 'زياد',
   'ziyad': 'زياد',
+  'elzahed': 'الزاهد',
   'seif': 'سيف',
   'saif': 'سيف',
   'sayf': 'سيف',
