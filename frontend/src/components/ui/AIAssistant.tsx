@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { X, Send } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 import chatbotIcon from '../../assets/chatbot.png'
 
 interface Message {
@@ -14,7 +15,7 @@ type Language = 'en' | 'ar' | null
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
-  const [language, setLanguage] = useState<Language>(null)
+  const [assistantLanguage, setAssistantLanguage] = useState<Language>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -22,6 +23,7 @@ export default function AIAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { language: appLanguage, t } = useLanguage()
   const previousAuth = useRef(isAuthenticated)
 
   const scrollToBottom = () => {
@@ -41,7 +43,7 @@ export default function AIAssistant() {
   }, [])
 
   const resetChat = () => {
-    setLanguage(null)
+    setAssistantLanguage(null)
     setMessages([])
     setInput('')
     setIsLoading(false)
@@ -76,15 +78,7 @@ export default function AIAssistant() {
   }, [isClosing])
 
   const getIntroBubbleText = () => {
-    if (language === 'ar') {
-      return 'مرحبًا! أنا مساعد يونيفاي. انقر على الأيقونة للدردشة.'
-    }
-
-    if (language === 'en') {
-      return "Hi, I'm your Unify assistant! Click the icon below to chat."
-    }
-
-    return 'Hi, I\'m your Unify assistant! Click the icon below to chat. | مرحبًا! أنا مساعد يونيفاي. انقر على الأيقونة للدردشة.'
+    return t('assistant.introBubble')
   }
 
   const getSystemPrompt = (lang: 'en' | 'ar') => {
@@ -109,7 +103,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
   }
 
   const handleLanguageSelect = (selectedLang: 'en' | 'ar') => {
-    setLanguage(selectedLang)
+    setAssistantLanguage(selectedLang)
     const welcomeMessage = selectedLang === 'ar' 
       ? 'مرحبًا! أنا هنا لمساعدتك في منصة يونيفاي. كيف يمكنني مساعدتك اليوم؟'
       : 'Hello! I\'m here to help you with the Unify platform. How can I assist you today?'
@@ -141,7 +135,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
   }
 
   const sendMessage = async () => {
-    if (!input.trim() || !language || isLoading) return
+    if (!input.trim() || !assistantLanguage || isLoading) return
 
     const userMessage = input.trim()
     setInput('')
@@ -162,7 +156,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
           body: JSON.stringify({
             model: 'meta-llama/llama-3.3-70b-instruct',
             messages: [
-              { role: 'system', content: getSystemPrompt(language) },
+              { role: 'system', content: getSystemPrompt(assistantLanguage) },
               ...messages.map(msg => ({
                 role: msg.role,
                 content: msg.content
@@ -189,7 +183,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
       }
     } catch (error) {
       console.error('Error sending message:', error)
-      const errorMessage = language === 'ar'
+      const errorMessage = assistantLanguage === 'ar'
         ? 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.'
         : 'Sorry, an error occurred. Please try again.'
       setMessages(prev => [...prev, { role: 'assistant', content: errorMessage }])
@@ -232,10 +226,10 @@ Always be warm, concise, and helpful. Use English in all your responses.`
       {(isOpen || isClosing) && (
         <div
           className={`fixed bottom-6 left-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 delay-100 modal-pop ${
-            language === 'ar' ? 'rtl' : 'ltr'
+            (assistantLanguage ?? appLanguage) === 'ar' ? 'rtl' : 'ltr'
           }`}
           data-state={isClosing ? 'closed' : 'open'}
-          dir={language === 'ar' ? 'rtl' : 'ltr'}
+          dir={(assistantLanguage ?? appLanguage) === 'ar' ? 'rtl' : 'ltr'}
         >
           <div className="modal-panel">
           {/* Header */}
@@ -259,7 +253,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
 
           {/* Messages area */}
           <div className="h-80 overflow-y-auto p-4 bg-gray-50">
-            {!language ? (
+            {!assistantLanguage ? (
               <div className="flex flex-col gap-4">
                 <p className="text-gray-800 text-sm">
                   Welcome to Unify! Would you like to continue in English or Arabic?
@@ -321,7 +315,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
           </div>
 
           {/* Input area */}
-          {language && (
+          {assistantLanguage && (
             <div className="p-4 border-t border-gray-200 bg-white">
               <div className="flex gap-2">
                 <input
@@ -329,7 +323,7 @@ Always be warm, concise, and helpful. Use English in all your responses.`
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={language === 'ar' ? 'اكتب رسالتك...' : 'Type your message...'}
+                  placeholder={assistantLanguage === 'ar' ? 'اكتب رسالتك...' : 'Type your message...'}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary text-sm"
                   disabled={isLoading}
                 />

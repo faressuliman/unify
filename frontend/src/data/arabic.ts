@@ -18,6 +18,8 @@ export const ar = {
         'nav.changeLanguage': 'اللغة',
         'nav.getStarted': 'ابدأ الآن',
         'nav.account': 'الحساب',
+        'assistant.introBubble': 'مرحبًا! أنا مساعد يونيفاي. انقر على الأيقونة للدردشة.',
+        'assistant.welcome': 'مرحبًا! أنا هنا لمساعدتك في منصة يونيفاي. كيف يمكنني مساعدتك اليوم؟',
 
         'notifications.title': 'الإشعارات',
         'notifications.empty': 'لا توجد إشعارات في الوقت الحالي.',

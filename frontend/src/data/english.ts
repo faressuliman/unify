@@ -18,6 +18,8 @@ export const en = {
         'nav.changeLanguage': 'Language',
         'nav.getStarted': 'Get Started',
         'nav.account': 'Account',
+        'assistant.introBubble': "Hi, I'm your Unify assistant! Click the icon below to chat.",
+        'assistant.welcome': "Hello! I'm here to help you with the Unify platform. How can I assist you today?",
         
         'notifications.title': 'Notifications',
         'notifications.empty': 'No notifications at this time.',
