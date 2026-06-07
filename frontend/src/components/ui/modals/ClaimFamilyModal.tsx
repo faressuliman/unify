@@ -59,7 +59,7 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, pos
     );
     setIsSubmitting(true);
     try {
-      const aiResult = await checkAiImage(documentImage);
+      const aiResult = await checkAiImage(documentImage, 'claim_family');
       if (!aiResult.passed) {
         toast.error(isRTL ? 'فشل طلب المطالبة' : 'Claim Request Failed', {
           description: isRTL
@@ -175,8 +175,9 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, pos
                 <SubmitButton
                   type="submit"
                   isLoading={isSubmitting}
-                  className="w-full lg:flex-1 px-8 text-[15px] bg-blue-600 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:bg-blue-700 order-1 lg:order-2"
+                  className="w-full lg:flex-1 px-8 text-[15px] bg-blue-600 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:bg-blue-700 order-1 lg:order-2 flex items-center justify-center gap-2"
                 >
+                  <HeartHandshake className="w-5 h-5" />
                   {t.submitClaim}
                 </SubmitButton>
                 <button

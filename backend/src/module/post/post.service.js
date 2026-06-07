@@ -31,7 +31,7 @@ export const searchByImage = async (req, res, next) => {
   try {
     // 1. طلب البصمة من سيرفر البايثون لصورة البحث
     const form = new FormData();
-    form.append("image", fs.createReadStream(req.file.path));
+    form.append("image", req.file.buffer, { filename: "search.jpg" });
 
     const aiResponse = await axios.post(
       "http://127.0.0.1:8000/get-face-encoding",
@@ -50,27 +50,44 @@ export const searchByImage = async (req, res, next) => {
 
     const searchVector = aiResponse.data.encoding;
 
-    // 2. جلب كل الحالات النشطة التي تمتلك بصمة وجه
-    const allPosts = await Post.find({
+    // 2. تجميع فلاتر البحث من الطلب
+    const { firstName, lastName, city, location, clothing, gender, ageMin, ageMax, hairColor, eyeColor } = req.body;
+    
+    const filter = {
       faceEncoding: { $exists: true, $ne: [] },
       status: "active",
-    });
+    };
 
-    // 3. المقارنة وحساب نسبة الثقة
-    const matches = allPosts
+    if (firstName) {
+      // Allow partial match on the full name
+      filter.name = new RegExp(firstName, "i");
+    }
+    // We can also add other filters if needed, but for now we focus on name and city
+    if (city) filter.city = new RegExp(city, "i");
+    if (gender) filter.gender = gender;
+    // ...
+
+    // 3. جلب الحالات النشطة التي تطابق الفلاتر مع جلب بيانات الناشر
+    const filteredPosts = await Post.find(filter).populate("userId", "name");
+
+    // 4. المقارنة وحساب نسبة الثقة
+    const matches = filteredPosts
       .map((post) => {
         const distance = euclideanDistance(searchVector, post.faceEncoding);
-        // تحويل المسافة لنسبة مئوية (المسافة الأقل تعني شبه أكبر)
-        const confidence = Math.max(0, 100 - distance * 100).toFixed(2);
+        
+        // DeepFace Facenet512 threshold for a match is ~23.56.
+        // We map distance 0 -> 100% confidence, distance 23.56 -> 70% confidence.
+        let rawConfidence = 100 - (distance / 23.56) * 30;
+        const confidence = Math.max(0, Math.min(100, rawConfidence)).toFixed(2);
 
         return {
           ...post._doc,
           confidence: parseFloat(confidence),
         };
       })
-      .filter((p) => p.confidence > 40) // عرض النتائج التي تتخطى 40% شبه
+      .filter((p) => p.confidence > 0) // نعرض أعلى 5 حتى لو نسبة الشبه قليلة
       .sort((a, b) => b.confidence - a.confidence)
-      .slice(0, 6);
+      .slice(0, 5);
 
     return res.status(200).json({
       success: true,
@@ -140,47 +157,60 @@ export const createPost = async (req, res, next) => {
     locationId = mapEntry._id;
   }
 
-  const postImages = req.files?.map((f) => f.path) || [];
+  const postImage = req.file?.path || null;
   const fullName = `${firstName} ${lastName}`.trim();
 
-  // 2. استخراج بصمة الوجه آلياً عند إنشاء البوست
-  let faceEncoding = [];
-  if (postImages.length > 0) {
-    try {
-      const form = new FormData();
-      form.append("image", fs.createReadStream(req.files[0].path));
-
-      const aiResponse = await axios.post(
-        "http://127.0.0.1:8000/get-face-encoding",
-        form,
-        {
-          headers: { ...form.getHeaders() },
-          timeout: 15000,
-        },
-      );
-
-      if (aiResponse.data.success) {
-        faceEncoding = aiResponse.data.encoding;
-      }
-    } catch (err) {
-      console.warn("[AI Service] Encoding extraction skipped:", err.message);
-    }
-  }
-
-  // 3. حفظ البوست النهائي
+  // 2. حفظ البوست النهائي أولاً (بدون بصمة — تُضاف في الخلفية)
   const post = await Post.create({
     ...req.body,
     userId: req.user._id,
     name: fullName,
     nameSearchKey: toSearchKey(fullName),
-    postImages,
-    faceEncoding: faceEncoding.length > 0 ? faceEncoding : undefined,
+    postImage,
     locationId,
     status: "active",
   });
 
+  // 3. استخراج بصمة الوجه — إذا أرسل العميل encoding جاهز نحفظه مباشرة،
+  //    وإلا نطلبه في الخلفية (fire-and-forget)
+  const pendingEncoding = req.body.pendingEncoding
+    ? JSON.parse(req.body.pendingEncoding)
+    : null;
+
+  if (pendingEncoding && pendingEncoding.length > 0) {
+    await Post.findByIdAndUpdate(post._id, { faceEncoding: pendingEncoding });
+    console.log(`[AI Service] Face encoding (prefetched) saved for post: ${post._id}`);
+  } else if (postImage) {
+    (async () => {
+      try {
+        const imageResponse = await axios.get(postImage, {
+          responseType: "stream",
+          timeout: 20000,
+        });
+        const form = new FormData();
+        form.append("image", imageResponse.data, { filename: "upload.jpg" });
+
+        const aiResponse = await axios.post(
+          "http://127.0.0.1:8000/get-face-encoding",
+          form,
+          { headers: { ...form.getHeaders() }, timeout: 30000 },
+        );
+
+        if (aiResponse.data.success && aiResponse.data.encoding?.length > 0) {
+          await Post.findByIdAndUpdate(post._id, {
+            faceEncoding: aiResponse.data.encoding,
+          });
+          console.log(`[AI Service] Face encoding (background) saved for post: ${post._id}`);
+        }
+      } catch (err) {
+        console.warn("[AI Service] Background encoding skipped:", err.message);
+      }
+    })();
+  }
+
   return res.status(201).json({ message: "Post successfully created", post });
 };
+
 
 // ─── باقي الدوال (Get, Update, Delete, Stats) ──────────────────────────────────
 
@@ -311,7 +341,7 @@ export const getMapMarkers = async (req, res, next) => {
 
   const posts = await Post.find(filter)
     .select(
-      "name postType status city postImages locationId createdAt age lastSeenDate foundLocation timeAgo details clothesDescription userId",
+      "name postType status city postImage locationId createdAt age lastSeenDate foundLocation timeAgo details clothesDescription userId",
     )
     .populate("locationId", "latitude longitude address")
     .populate("userId", "name");
@@ -338,7 +368,7 @@ export const getMapMarkers = async (req, res, next) => {
         timeAgo: p.timeAgo,
         lat,
         lng,
-        image: p.postImages?.[0],
+        image: p.postImage || null,
         address:
           p.locationId?.address ||
           p.foundLocation ||
@@ -385,7 +415,7 @@ export const getPublicMap = async (req, res, next) => {
     postType: { $in: ["missing", "found"] },
   })
     .populate("locationId", "latitude longitude address")
-    .select("name postType postImages city locationId lastSeenDate");
+    .select("name postType postImage city locationId lastSeenDate");
 
   const cases = posts
     .map((p) => {
@@ -398,7 +428,7 @@ export const getPublicMap = async (req, res, next) => {
         _id: p._id,
         name: p.name,
         status: p.postType,
-        image: p.postImages?.[0],
+        image: p.postImage || null,
         location: { lat, lng },
         city: p.city,
         date: p.lastSeenDate,
@@ -421,4 +451,51 @@ export const getPublicStats = async (req, res, next) => {
       activeMissing: missingCount,
       foundCases: foundCount,
     });
+};
+
+// ─── Log AI Detection Results ──────────────────────────────────────────────────
+export const logAiDetectionResult = async (req, res, next) => {
+  const { source, is_ai_generated, confidence, label, decision, error } = req.body;
+  
+  console.log(`[${source}] AI detection result:`, {
+    success: error ? false : true,
+    is_ai_generated,
+    confidence,
+    label,
+    decision,
+    ...(error ? { error } : {})
+  });
+  
+  return res.status(200).json({ success: true, message: "AI detection result logged" });
+};
+
+// ─── Prefetch Face Encoding (called immediately on image select in frontend) ───
+export const prefetchEncoding = async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No image provided" });
+  }
+
+  try {
+    const form = new FormData();
+    form.append("image", req.file.buffer, { filename: req.file.originalname || "upload.jpg" });
+
+    const aiResponse = await axios.post(
+      "http://127.0.0.1:8000/get-face-encoding",
+      form,
+      { headers: { ...form.getHeaders() }, timeout: 30000 },
+    );
+
+    if (aiResponse.data.success && aiResponse.data.encoding?.length > 0) {
+      console.log(`[AI Service] Prefetch encoding done: ${aiResponse.data.encoding.length} dims`);
+      return res.status(200).json({
+        success: true,
+        encoding: aiResponse.data.encoding,
+      });
+    }
+
+    return res.status(200).json({ success: false, message: "No face detected" });
+  } catch (err) {
+    console.warn("[AI Service] Prefetch encoding failed:", err.message);
+    return res.status(200).json({ success: false, message: "AI service unavailable" });
+  }
 };

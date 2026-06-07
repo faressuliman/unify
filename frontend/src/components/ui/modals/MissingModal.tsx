@@ -12,6 +12,7 @@ import {
   User,
   UserRound,
   X,
+  Eye,
 } from 'lucide-react';
 import { en } from '../../../data/english';
 import { ar } from '../../../data/arabic';
@@ -182,8 +183,9 @@ export default function MissingModal({
                 <SubmitButton
                   type="button"
                   onClick={() => setIsSightingOpen(true)}
-                  className="w-full px-6 text-[15px] sm:text-[16px] bg-red-600 hover:bg-red-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]"
+                  className="w-full px-6 text-[15px] sm:text-[16px] bg-secondary hover:bg-secondary/90 shadow-[0_4px_14px_rgba(212,180,74,0.3)] flex items-center justify-center gap-2 text-white"
                 >
+                  <Eye className="w-5 h-5" />
                   {t.seenThem}
                 </SubmitButton>
               </div>

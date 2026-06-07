@@ -12,12 +12,6 @@ const userSchema = new mongoose.Schema(
     idImagePath: { type: String },
     profilePicture: { type: String, default: null },
 
-    verificationStatus: {
-      type: String,
-      enum: ["pending", "verified", "rejected"],
-      default: "pending",
-    },
-
     isVerified: { type: Boolean, default: false },
     isdeleted: { type: Boolean, default: false },
     isbanned: { type: Boolean, default: false },

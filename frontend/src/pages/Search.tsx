@@ -1,27 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Info, Search as SearchIcon } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import MissingPersonCard from '../components/search/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
 import FoundPersonCard from '../components/search/FoundPersonCard';
 import { motion } from 'framer-motion';
-import { isAxiosError } from 'axios';
 import SearchFiltersPanel, { type SearchFilters } from '../components/search/SearchFiltersPanel';
 import UnderlineTabSelector from '../components/ui/UnderlineTabSelector';
 import InfoBanner from '../components/ui/InfoBanner';
 import { ApiError, type BackendPost, postApi } from '@/lib/api';
 import type { ProfileData } from '@/components/home/PersonCard';
 import { mapPostFields } from '@/lib/postFormatters';
-import { axiosInstance } from '@/lib/axiosInstance';
 
-type SearchProfile = ProfileData & {
+export type SearchProfile = ProfileData & {
   dateMissing?: string;
   rawClothing?: string;
   rawLocation?: string;
 };
 
-const defaultSearchFilters: SearchFilters = {
+export const defaultSearchFilters: SearchFilters = {
   firstName: '',
   lastName: '',
   ageMin: '',
@@ -35,7 +33,7 @@ const defaultSearchFilters: SearchFilters = {
   city: '',
 };
 
-const mapBackendPostToCard = (post: BackendPost, isRTL: boolean): SearchProfile => {
+export const mapBackendPostToCard = (post: BackendPost, isRTL: boolean): SearchProfile => {
   const fields = mapPostFields(post, isRTL);
   return {
     id: post._id,
@@ -45,7 +43,7 @@ const mapBackendPostToCard = (post: BackendPost, isRTL: boolean): SearchProfile 
     location: fields.location,
     timeAgo: fields.timeAgo,
     details: fields.details,
-    image: post.postImages?.[0],
+    image: post.postImage,
     city: fields.city,
     age: fields.age,
     physicalDescription: fields.physicalDescription,
@@ -92,6 +90,7 @@ export default function Search() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Extract the payload passed from Hero (if any)
   const initialQuery = location.state?.initialQuery || '';
@@ -102,12 +101,14 @@ export default function Search() {
   const initialTab = searchParams.get('tab') === 'found' ? 'found' : 'missing';
   const [activeTab, setActiveTab] = useState<'missing' | 'found'>(initialTab);
   
-  // Set initial filters using the query passed from Hero
-  const [appliedFilters, setAppliedFilters] = useState<SearchFilters>({
-    ...defaultSearchFilters,
-    firstName: initialQuery.split(' ')[0] || '',
-    lastName: initialQuery.split(' ').slice(1).join(' ') || ''
-  });
+  // Set initial filters using the query passed from Hero, or passed back from SearchResults
+  const [appliedFilters, setAppliedFilters] = useState<SearchFilters>(
+    location.state?.initialFilters || {
+      ...defaultSearchFilters,
+      firstName: initialQuery.split(' ')[0] || '',
+      lastName: initialQuery.split(' ').slice(1).join(' ') || ''
+    }
+  );
   
   // New state to hold image search results 
   const [isImageSearchActive, setIsImageSearchActive] = useState<boolean>(false);
@@ -144,35 +145,6 @@ export default function Search() {
     setInitialImagePreview(previewUrl);
     return () => URL.revokeObjectURL(previewUrl);
   }, [initialImage]);
-
-  const handleImageSearch = async (imageFile: File) => {
-    setIsLoading(true);
-    setError('');
-    setIsImageSearchActive(true);
-
-    const formData = new FormData();
-    formData.append('searchImage', imageFile);
-
-    try {
-      const res = await axiosInstance.post('/posts/search-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      // The AI API returns raw BackendPosts attached with `matchDistance`
-      const postsFromApi = res.data.posts || [];
-      setRawPosts(postsFromApi);
-    } catch (err: unknown) {
-      setRawPosts([]);
-      if (isAxiosError(err)) {
-        const errorMessage = (err.response?.data as { message?: string } | undefined)?.message;
-        setError(errorMessage ?? 'Failed to search by image. Make sure there is a visible face.');
-      } else {
-        setError('Failed to search by image. Make sure there is a visible face.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
     // If an image search is active, we skip the normal textual fetch!
@@ -228,14 +200,15 @@ export default function Search() {
     const shouldScroll = options?.shouldScroll ?? true;
     const imageFile = options?.imageFile ?? null;
 
-    setAppliedFilters(values);
-
     if (imageFile) {
-      handleImageSearch(imageFile);
-    } else {
-      setIsImageSearchActive(false);
-      setRawPosts([]);
+      // Navigate to the new SearchResults page, passing the form data and the image
+      navigate('/search-results', { state: { filters: values, imageFile } });
+      return;
     }
+
+    setAppliedFilters(values);
+    setIsImageSearchActive(false);
+    setRawPosts([]);
 
     if (shouldScroll) {
       requestAnimationFrame(() => {

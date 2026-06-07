@@ -1647,9 +1647,9 @@ function PostsPanel({
                 className="px-5 py-4 flex flex-col md:flex-row md:items-center gap-4 hover:bg-slate-50/50"
               >
                 <div className="shrink-0 h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400">
-                  {post.postImages?.[0] ? (
+                  {post.postImage ? (
                     <img
-                      src={post.postImages[0]}
+                      src={post.postImage}
                       alt={post.name}
                       className="w-full h-full object-cover"
                     />

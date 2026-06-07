@@ -12,19 +12,34 @@ export interface AiImageCheckResult {
  * - Never exposes the confidence score in the returned reason string.
  * - Returns { passed: true } when the image passes (≥ 80 % human).
  * - Returns { passed: false, reason } when blocked or on error.
+ * - Sends results to backend for server-side logging.
  *
- * Used by: SearchFiltersPanel, ClaimFamilyModal.
+ * Used by: SearchFiltersPanel, ClaimFamilyModal, CreatePost.
  * (Register uses the backend-only flow via auth.service.js)
  */
 /** Minimum time (ms) the loading toast stays visible */
 const MIN_DISPLAY_MS = 2500;
 
-export async function checkAiImage(file: File): Promise<AiImageCheckResult> {
+async function logToBackend(source: string, data: any) {
+  try {
+    const backendUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/";
+    await fetch(`${backendUrl}posts/log-ai-detection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source, ...data }),
+    });
+  } catch (err) {
+    console.error('[aiImageCheck] Backend logging failed:', err);
+  }
+}
+
+export async function checkAiImage(file: File, source: string = 'unknown'): Promise<AiImageCheckResult> {
   const minDelay = new Promise<void>((resolve) => setTimeout(resolve, MIN_DISPLAY_MS));
 
   try {
     const fd = new FormData();
     fd.append('image', file);
+    fd.append('source', source);
 
     const aiServiceUrl = import.meta.env.VITE_AI_SERVICE_URL;
     const [res] = await Promise.all([
@@ -46,6 +61,9 @@ export async function checkAiImage(file: File): Promise<AiImageCheckResult> {
 
     // Always log full details (including confidence) to the console only.
     console.log('[aiImageCheck] AI detection result:', data);
+
+    // Send to backend for server-side logging
+    logToBackend(source, data);
 
     if (!data.success) {
       return {

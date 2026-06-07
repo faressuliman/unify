@@ -268,10 +268,11 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
               <div className="flex flex-col lg:flex-row gap-3 pt-2">
                 <SubmitButton
                   type="submit"
-                  className="w-full lg:flex-1 px-8 text-[15px] bg-red-600 shadow-[0_4px_14px_rgba(220,38,38,0.3)] hover:bg-red-700 order-1 lg:order-2"
+                  className="w-full lg:flex-1 px-8 text-[15px] bg-red-600 shadow-[0_4px_14px_rgba(220,38,38,0.3)] hover:bg-red-700 order-1 lg:order-2 flex items-center justify-center gap-2"
                   isLoading={isLoading}
                   aria-label={isRTL ? "إرسال البلاغ" : "Submit sighting"}
                 >
+                  <Eye className="w-5 h-5" />
                   {!isLoading ? t.submitSighting : null}
                 </SubmitButton>
                 <button

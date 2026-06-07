@@ -11,8 +11,6 @@ import ImageUpload from '../ui/ImageUpload';
 import { useLanguage } from '../../context/LanguageContext';
 import { EGYPTIAN_CITIES, EGYPTIAN_CITIES_AR } from '../../data/cities';
 import { getEyeColorOptions, getHairColorOptions } from '../../data/appearanceOptions';
-import { checkAiImage } from '../../lib/aiImageCheck';
-import { toast } from 'sonner';
 
 export interface SearchFilters {
   firstName: string;
@@ -62,7 +60,7 @@ export default function SearchFiltersPanel({
   const isRTL = language === 'ar';
   const [searchImage, setSearchImage] = useState<File | null>(initialImageFile);
   const [submitError, setSubmitError] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerifying] = useState(false);
 
   const { register, control, handleSubmit, reset, setValue, getValues, watch } = useForm<SearchFilters>({
     defaultValues: defaultSearchFilters,
@@ -137,29 +135,9 @@ export default function SearchFiltersPanel({
 
     setSubmitError('');
 
-    // Run AI authenticity check when an image is attached
+    // AI authenticity check removed per request
     if (searchImage) {
-      const loadingToastId = toast.loading(
-        isRTL
-          ? 'جاري التحقق من صحة الصورة، قد يستغرق ذلك لحظات.'
-          : 'Verifying image authenticity, this may take a moment.'
-      );
-      setIsVerifying(true);
-      try {
-        const result = await checkAiImage(searchImage);
-        if (!result.passed) {
-          toast.error(isRTL ? 'فشل البحث بالصورة' : 'Image Search Failed', {
-            description: isRTL
-              ? 'تم اكتشاف أن الصورة المرفوعة تم إنشاؤها بواسطة الذكاء الاصطناعي أو تفتقر إلى الأصالة البيولوجية الكافية.'
-              : result.reason,
-            duration: 6000,
-          });
-          return;
-        }
-      } finally {
-        toast.dismiss(loadingToastId);
-        setIsVerifying(false);
-      }
+      // Just proceed to search directly
     }
 
     onApplyFilters(values, { imageFile: searchImage });

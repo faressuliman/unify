@@ -10,6 +10,7 @@ import ProtectedRoute from "./ProtectedRoute";
 // Lazy loaded pages
 const Index = lazy(() => import("../pages/Index"));
 const Search = lazy(() => import("../pages/Search"));
+const SearchResults = lazy(() => import("../pages/SearchResults"));
 const PosterBuilder = lazy(() => import("../pages/PosterBuilder"));
 const Map = lazy(() => import("../pages/Map"));
 const Login = lazy(() => import("../pages/Login"));
@@ -42,6 +43,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingScreen />}>
             <Search />
+          </Suspense>
+        ),
+      },
+      {
+        path: "search-results",
+        element: (
+          <Suspense fallback={<LoadingScreen />}>
+            <SearchResults />
           </Suspense>
         ),
       },

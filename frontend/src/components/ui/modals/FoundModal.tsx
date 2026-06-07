@@ -10,6 +10,7 @@ import {
   User,
   UserRound,
   X,
+  HeartHandshake,
 } from 'lucide-react';
 import { en } from '../../../data/english';
 import { ar } from '../../../data/arabic';
@@ -186,8 +187,9 @@ export default function FoundModal({
                 <SubmitButton
                   type="button"
                   onClick={() => setIsClaimOpen(true)}
-                  className="w-full px-6 text-[15px] sm:text-[16px]"
+                  className="w-full px-6 text-[15px] sm:text-[16px] flex items-center justify-center gap-2"
                 >
+                  <HeartHandshake className="w-5 h-5" />
                   {t.claimAsFamilyMember}
                 </SubmitButton>
               </div>

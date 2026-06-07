@@ -105,7 +105,7 @@ export interface BackendPost {
   affiliation?: string;
   organizationName?: string;
   reporterPhone?: string;
-  postImages?: string[];
+  postImage?: string;
   createdAt?: string;
 }
 
@@ -156,7 +156,8 @@ type CreatePostPayload = {
   reporterPhone?: string;
   latitude?: number;
   longitude?: number;
-  photos?: File[];
+  photo?: File;
+  pendingEncoding?: number[] | null;
 };
 
 export const authApi = {
@@ -300,9 +301,12 @@ export const postApi = {
     if (payload.reporterPhone)
       formData.append("reporterPhone", payload.reporterPhone);
 
-    payload.photos?.forEach((photo) => {
-      formData.append("photos", photo);
-    });
+    if (payload.photo) {
+      formData.append("photo", payload.photo);
+    }
+    if (payload.pendingEncoding && payload.pendingEncoding.length > 0) {
+      formData.append("pendingEncoding", JSON.stringify(payload.pendingEncoding));
+    }
 
     // Required by backend joi schema which validates merged request body/query/params.
     formData.append("authorization", token);

@@ -12,9 +12,20 @@ const router = Router();
 router.get("/", validation(getPostsSchema), asynchandler(postService.getPosts));
 
 router.post(
-  "/search-by-face",
+  "/search-image",
+  multerMemory(filetypes.image).single("searchImage"),
+  asynchandler(postService.searchByImage)
+);
+
+router.post(
+  "/log-ai-detection",
+  asynchandler(postService.logAiDetectionResult)
+);
+
+router.post(
+  "/prefetch-encoding",
   multerMemory(filetypes.image).single("image"),
-  asynchandler(postService.searchByFace)
+  asynchandler(postService.prefetchEncoding)
 );
 
 router.get("/map-markers", asynchandler(postService.getMapMarkers));
@@ -24,7 +35,7 @@ router.get("/:id", asynchandler(postService.getPostById));
 router.post(
   "/",
   authenticate,
-  multerHost(filetypes.image, "unify/posts").array("photos", 5),
+  multerHost(filetypes.image, "unify/posts").single("photo"),
   validation(createPostSchema),
   asynchandler(postService.createPost)
 );

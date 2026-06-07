@@ -95,6 +95,7 @@ const CreatePost = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [pendingEncoding, setPendingEncoding] = useState<number[] | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -132,6 +133,28 @@ const CreatePost = () => {
 
         if (name === 'affiliation' && errors.organizationName) {
             setErrors(prev => ({ ...prev, organizationName: '' }));
+        }
+    };
+
+    // Called when user picks a file — immediately kicks off face encoding prefetch
+    const handlePhotoSelected = async (file: File | null) => {
+        setPhoto(file);
+        setPendingEncoding(null);
+        if (errors.photo) setErrors(prev => ({ ...prev, photo: '' }));
+        if (!file) return;
+        try {
+            const fd = new FormData();
+            fd.append('image', file);
+            const res = await fetch('/api/posts/prefetch-encoding', { method: 'POST', body: fd });
+            if (res.ok) {
+                const data = await res.json() as { success: boolean; encoding?: number[] };
+                if (data.success && data.encoding) {
+                    setPendingEncoding(data.encoding);
+                    console.log('[CreatePost] Face encoding prefetched:', data.encoding.length, 'dims');
+                }
+            }
+        } catch (err) {
+            console.warn('[CreatePost] Prefetch encoding failed (AI service offline?):', err);
         }
     };
 
@@ -199,6 +222,8 @@ const CreatePost = () => {
         setSubmitError('');
         setIsSubmitting(true);
 
+        // AI authenticity check removed per request
+
         try {
             const response = await postApi.createPost(
                 {
@@ -223,7 +248,8 @@ const CreatePost = () => {
                     reporterPhone: formData.postType === 'found' && formData.reporterPhone.trim()
                         ? formData.reporterPhone.trim()
                         : undefined,
-                    photos: photo ? [photo] : [],
+                    photo: photo ?? undefined,
+                    pendingEncoding,
                 },
                 token
             );
@@ -249,6 +275,8 @@ const CreatePost = () => {
             setIsSubmitting(false);
         }
     };
+
+
 
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -333,50 +361,6 @@ const CreatePost = () => {
                                     </div>
 
                                     <div className="grid gap-4 sm:grid-cols-2 font-sans items-start">
-                                        <div className="flex flex-col gap-4">
-                                            <div>
-                                                <SelectMenu 
-                                                    id="ageUnit"
-                                                    label={language === 'ar' ? 'اختر وحدة العمر' : 'Select Age Unit'}
-                                                    value={formData.ageUnit}
-                                                    options={ageUnitOptions}
-                                                    onChange={(val) => handleSelectChange('ageUnit', val)}
-                                                    isRTL={isRTL}
-                                                />
-                                                <ErrorMessage msg={errors.ageUnit} className="text-[11px] sm:text-xs" />
-                                            </div>
-                                            
-                                            {formData.ageUnit && (
-                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                                                    <FormInput 
-                                                        label={
-                                                            formData.ageUnit === 'years' ? (language === 'ar' ? 'العمر (بالسنوات)' : 'Age (Years)') : 
-                                                            formData.ageUnit === 'months' ? (language === 'ar' ? 'العمر (بالأشهر)' : 'Age (Months)') : 
-                                                            (language === 'ar' ? 'العمر (بالأيام)' : 'Age (Days)')
-                                                        }
-                                                        type="text" 
-                                                        name="age"
-                                                        inputMode="numeric"
-                                                        pattern="[0-9]*"
-                                                        placeholder={t.agePlaceholder} 
-                                                        value={formData.age}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value.replace(/\D/g, '');
-                                                            if (val !== '') {
-                                                                const num = Number(val);
-                                                                if (formData.ageUnit === 'years' && num > 90) return;
-                                                                if (formData.ageUnit === 'months' && num > 11) return;
-                                                                if (formData.ageUnit === 'days' && num > 30) return;
-                                                            }
-                                                            handleSelectChange('age', val);
-                                                        }}
-                                                        isRTL={isRTL}
-                                                        className={errors.age ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
-                                                    />
-                                                    <ErrorMessage msg={errors.age} className="text-[11px] sm:text-xs" />
-                                                </motion.div>
-                                            )}
-                                        </div>
                                         <div>
                                             <SelectMenu 
                                                 id="gender"
@@ -388,7 +372,49 @@ const CreatePost = () => {
                                             />
                                             <ErrorMessage msg={errors.gender} className="text-[11px] sm:text-xs" />
                                         </div>
+                                        <div>
+                                            <SelectMenu 
+                                                id="ageUnit"
+                                                label={language === 'ar' ? 'اختر وحدة العمر' : 'Select Age Unit'}
+                                                value={formData.ageUnit}
+                                                options={ageUnitOptions}
+                                                onChange={(val) => handleSelectChange('ageUnit', val)}
+                                                isRTL={isRTL}
+                                            />
+                                            <ErrorMessage msg={errors.ageUnit} className="text-[11px] sm:text-xs" />
+                                        </div>
                                     </div>
+                                    
+                                    {formData.ageUnit && (
+                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                            <FormInput 
+                                                label={
+                                                    formData.ageUnit === 'years' ? (language === 'ar' ? 'العمر (بالسنوات)' : 'Age (Years)') : 
+                                                    formData.ageUnit === 'months' ? (language === 'ar' ? 'العمر (بالأشهر)' : 'Age (Months)') : 
+                                                    (language === 'ar' ? 'العمر (بالأيام)' : 'Age (Days)')
+                                                }
+                                                type="text" 
+                                                name="age"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                placeholder={t.agePlaceholder} 
+                                                value={formData.age}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val !== '') {
+                                                        const num = Number(val);
+                                                        if (formData.ageUnit === 'years' && num > 90) return;
+                                                        if (formData.ageUnit === 'months' && num > 11) return;
+                                                        if (formData.ageUnit === 'days' && num > 30) return;
+                                                    }
+                                                    handleSelectChange('age', val);
+                                                }}
+                                                isRTL={isRTL}
+                                                className={errors.age ? 'border-red-400 focus:ring-1 focus:ring-red-500/20' : 'font-sans'}
+                                            />
+                                            <ErrorMessage msg={errors.age} className="text-[11px] sm:text-xs" />
+                                        </motion.div>
+                                    )}
                                     
                                     <div>
                                         <SelectMenu 
@@ -569,12 +595,7 @@ const CreatePost = () => {
                                 </h2>
 
                                 <ImageUpload 
-                                    onImageChange={(file) => {
-                                        setPhoto(file);
-                                        if (errors.photo) {
-                                            setErrors(prev => ({ ...prev, photo: '' }));
-                                        }
-                                    }}
+                                    onImageChange={handlePhotoSelected}
                                     title={t.uploadPhoto}
                                     dragDropText={t.dragDropText}
                                     subtitle={t.uploadHint} 

@@ -1,5 +1,6 @@
+from typing import Optional
 from deepface import DeepFace
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
 import cv2
@@ -62,7 +63,7 @@ async def get_face_encoding(image: UploadFile = File(...)):
 # AI Image Detection Endpoint
 # ----------------------------------------------------
 @app.post('/detect-ai-image')
-async def detect_ai_image(image: UploadFile = File(...)):
+async def detect_ai_image(image: UploadFile = File(...), source: Optional[str] = Form(None)):
     try:
         contents = await image.read()
 
@@ -77,8 +78,12 @@ async def detect_ai_image(image: UploadFile = File(...)):
         label = top["label"]
         score = top["score"]
 
-        # Threshold for ID Verification: Needs to be > 80% Human to PASS
-        if label == "human" and score >= 0.80:
+        # Dynamically set threshold based on source
+        # create_post and search_filter get 50%, claim_family and registration (no source) get 80%
+        threshold_value = 0.50 if source in ['create_post', 'search_filter'] else 0.80
+
+        # Threshold check
+        if label == "human" and score >= threshold_value:
             is_ai = False
             confidence = round(score * 100, 2)
             decision = "pass"

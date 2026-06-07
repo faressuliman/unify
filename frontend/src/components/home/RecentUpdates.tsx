@@ -22,7 +22,7 @@ const mapBackendPostToCard = (post: BackendPost, isRTL: boolean): ProfileData =>
     location: fields.location,
     timeAgo: fields.timeAgo,
     details: fields.details,
-    image: post.postImages?.[0],
+    image: post.postImage,
     city: fields.city,
     age: fields.age,
     physicalDescription: fields.physicalDescription,

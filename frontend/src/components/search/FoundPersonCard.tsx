@@ -59,10 +59,10 @@ export default function FoundPersonCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: idx * 0.1 }}
-      className={`flex-none w-[calc(85%-0.5rem)] md:w-[calc(45%-1rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm ${cardOpensModal ? 'cursor-pointer' : ''} ${className}`}
+      className={`flex-none w-[calc(85%-0.5rem)] md:w-[calc(45%-1rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] snap-start group bg-white rounded-lg border border-primary-300 overflow-hidden shadow-sm flex flex-col ${cardOpensModal ? 'cursor-pointer' : ''} ${className}`}
       onClick={handleCardClick}
     >
-      <div className="relative h-48 sm:h-52 overflow-hidden rounded-t-lg">
+      <div className="relative h-48 sm:h-52 shrink-0 overflow-hidden rounded-t-lg">
         {showImage ? (
           <>
             <div
@@ -91,7 +91,7 @@ export default function FoundPersonCard({
         )}
       </div>
       
-      <div className="p-4 sm:p-5 flex flex-col h-[calc(100%-12rem)] sm:h-[calc(100%-13rem)] min-h-45 justify-between">
+      <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between min-h-45">
         <div>
           <div className="flex justify-between items-start mb-2">
             <h3

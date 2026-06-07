@@ -26,7 +26,6 @@ interface AuthContextType {
     birthDate?: string;
     idPicture?: File | null;
     selfiePicture?: File | null;
-    verificationStatus?: string;
   }) => Promise<void>;
   updateUser: (user: AuthUser | null) => void;
   logout: () => void;
@@ -121,7 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     birthDate?: string;
     idPicture?: File | null;
     selfiePicture?: File | null;
-    verificationStatus?: string;
   }) => {
     await authApi.register(payload);
   };

@@ -22,7 +22,7 @@ const postSchema = new mongoose.Schema(
     },
     organizationName: { type: String },
     reporterPhone: { type: String },
-    postImages: [{ type: String }],
+    postImage: { type: String },
     faceEncoding: { type: [Number], default: [] },
     status: { type: String, enum: ["active", "resolved", "closed"], default: "active" },
     locationId: { type: mongoose.Schema.Types.ObjectId, ref: "MapData" },
