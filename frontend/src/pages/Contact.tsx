@@ -56,7 +56,7 @@ const Contact = () => {
         emergency: 'خط الطوارئ الساخن',
         emergencyDesc: 'متاح للتدخل الفوري 24/7',
         emergencyNum: '12345',
-        success: 'تم إرسال رسالتك بنجاح. سنتواصل معك قريبًا.',
+        success: 'تم إرسال رسالتك بنجاح. سيتم الرد عليك عبر البريد الإلكتروني قريباً.',
         directContact: 'طرق التواصل المباشر',
         dropMessage: 'اترك لنا رسالة'
     } : {
@@ -82,7 +82,7 @@ const Contact = () => {
         emergency: 'Emergency Hotline',
         emergencyDesc: 'Available for immediate response 24/7',
         emergencyNum: '12345',
-        success: 'Your message has been sent successfully. We will get back to you soon.',
+        success: 'Your message has been sent successfully. You will receive a reply via email soon.',
         directContact: 'Direct Contact Methods',
         dropMessage: 'Drop Us a Message'
     };
@@ -135,7 +135,7 @@ const Contact = () => {
 
             setErrors({});
             setFormData({ name: '', email: '', subject: '', message: '' });
-            toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
+            toast.success(t.success);
         } catch (error) {
             const message = error instanceof ApiError
                 ? error.message

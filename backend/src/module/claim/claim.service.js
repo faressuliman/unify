@@ -99,6 +99,9 @@ export const adminReviewClaim = async (req, res, next) => {
   // Update claim status
   claim.status = result;
   claim.reviewedAt = new Date();
+  if (result === "rejected" && notes) {
+    claim.rejectionReason = notes;
+  }
   await claim.save();
 
   // If approved, resolve the post
@@ -126,6 +129,7 @@ export const adminReviewClaim = async (req, res, next) => {
       userId: claim.claimUserId,
       postId: claim.postId,
       type: "claim_rejected",
+      referenceId: claim._id.toString(),
     });
   }
 

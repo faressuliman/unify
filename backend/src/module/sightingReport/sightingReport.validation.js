@@ -13,7 +13,11 @@ export const createSightingSchema = joi
     address: joi.string().required(),
     latitude: joi.number().optional(),
     longitude: joi.number().optional(),
-    description: joi.string().min(5).required(),
+    description: joi.string().min(5).required().messages({
+      "string.min": "Please provide a more detailed description (at least 5 characters).",
+      "string.empty": "Description is required.",
+      "any.required": "Description is required."
+    }),
     // Allow empty additionalDetails (reporters may leave this blank)
     additionalDetails: joi.string().allow('').optional(),
     reporterName: joi.string().required(),

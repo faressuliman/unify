@@ -20,8 +20,9 @@ router.get("/verifications/pending", asynchandler(adminService.getPendingVerific
 router.post("/users/:id/verify", asynchandler(adminService.verifyUser));
 router.post("/users/:id/reject-verification", asynchandler(adminService.rejectVerification));
 
-// Post moderation
+// Post moderation & sightings
 router.get("/posts", asynchandler(adminService.getAllPostsAdmin));
+router.get("/sightings", asynchandler(adminService.getAllSightingsAdmin));
 
 // Contact messages
 router.get("/contact-messages", asynchandler(adminService.getContactMessages));

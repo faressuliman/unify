@@ -110,7 +110,15 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
     } catch (err) {
       console.error('Sighting submit failed:', err);
       const e = err as any;
-      const msg = e?.response?.data?.message || e?.message || (isRTL ? 'فشل إرسال البلاغ' : 'Failed to submit sighting');
+      let msg = e?.response?.data?.message || e?.message || (isRTL ? 'فشل إرسال البلاغ' : 'Failed to submit sighting');
+      
+      // Map Joi validation error to localized string
+      if (typeof msg === 'string' && (msg.includes('detailed description') || msg.includes('"description"'))) {
+        msg = isRTL 
+          ? 'يرجى توفير وصف مفصل للملابس أو الحالة (5 أحرف على الأقل)' 
+          : 'Please provide a more detailed description (at least 5 characters).';
+      }
+
       toast.error(msg);
       // do not rethrow; keep modal open so user can correct
     } finally {
@@ -272,7 +280,7 @@ export default function SightingModal({ isOpen, onOpenChange, personName, isRTL,
                   isLoading={isLoading}
                   aria-label={isRTL ? "إرسال البلاغ" : "Submit sighting"}
                 >
-                  <Eye className="w-5 h-5" />
+                  {!isLoading && <Eye className="w-5 h-5" />}
                   {!isLoading ? t.submitSighting : null}
                 </SubmitButton>
                 <button

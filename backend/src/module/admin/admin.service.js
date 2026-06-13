@@ -4,6 +4,7 @@ import Claim from "../../DB/models/claim.model.js";
 import ContactMessage from "../../DB/models/contactMessage.model.js";
 import Chat from "../../DB/models/chat.model.js";
 import Message from "../../DB/models/message.model.js";
+import SightingReport from "../../DB/models/sightingReport.model.js";
 import { pagination } from "../../utils/feature/pagination.js";
 import { sendEmail } from "../../service/sendEmail.js";
 import { decrypt } from "../../utils/encrypt/decrypt.js";
@@ -173,6 +174,7 @@ export const getDashboardStats = async (req, res, next) => {
     pendingVerifications,
     pendingContactMessages,
     pendingUserReports,
+    sightingReports,
   ] = await Promise.all([
     User.countDocuments({ isdeleted: false }),
     Post.countDocuments(),
@@ -189,6 +191,7 @@ export const getDashboardStats = async (req, res, next) => {
       subject: { $regex: /^User Report:/i },
       isReplied: false,
     }),
+    SightingReport.countDocuments(),
   ]);
 
   return res.status(200).json({
@@ -202,6 +205,7 @@ export const getDashboardStats = async (req, res, next) => {
       pendingVerifications,
       pendingContactMessages,
       pendingUserReports,
+      sightingReports,
     },
   });
 };
@@ -465,6 +469,30 @@ export const getAdminChats = async (req, res, next) => {
 
   return res.status(200).json({
     chats: result.data,
+    page: result.page,
+    limit: result.limit,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+  });
+};
+
+export const getAllSightingsAdmin = async (req, res, next) => {
+  const { page, limit } = req.query;
+
+  const result = await pagination({
+    page,
+    limit,
+    model: SightingReport,
+    filter: {},
+    sort: { createdAt: -1 },
+    populate: [
+      { path: "missingPersonId", select: "name postType status userId" },
+      { path: "reporterId", select: "name email phoneNumber profilePicture" },
+    ],
+  });
+
+  return res.status(200).json({
+    sightings: result.data,
     page: result.page,
     limit: result.limit,
     totalCount: result.totalCount,

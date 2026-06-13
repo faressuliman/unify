@@ -38,7 +38,12 @@ const start = async () => {
 
   const httpServer = createServer(app);
   initSocket(httpServer);
-  httpServer.listen(port, () => console.log(`Server listening on port ${port}`));
+  const isProduction = process.env.MODE === "PROD";
+  if (isProduction) {
+    httpServer.listen(port, "127.0.0.1", () => console.log(`Server listening on 127.0.0.1:${port}`));
+  } else {
+    httpServer.listen(port, () => console.log(`Server listening on port ${port}`));
+  }
 };
 
 start();

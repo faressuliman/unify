@@ -24,6 +24,7 @@ import {
   ClipboardList,
   Mail,
   MessageSquare,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
@@ -43,6 +44,7 @@ import {
   type BackendPost,
   type DashboardStats,
   type BackendContactMessage,
+  type BackendSighting,
 } from "../lib/api";
 
 type Section =
@@ -53,7 +55,8 @@ type Section =
   | "posts"
   | "contact_messages"
   | "user_reports"
-  | "chats";
+  | "chats"
+  | "sighting_reports";
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 type ClaimsTab = "pending" | "processed";
 
@@ -130,6 +133,12 @@ export default function Admin() {
   // Chats
   const [adminChatsTargetId, setAdminChatsTargetId] = useState<string>("");
 
+  // Sighting Reports
+  const [sightingReports, setSightingReports] = useState<BackendSighting[]>([]);
+  const [sightingReportsLoading, setSightingReportsLoading] = useState(false);
+  const [sightingReportsPage, setSightingReportsPage] = useState(1);
+  const [sightingReportsTotalPages, setSightingReportsTotalPages] = useState(1);
+
   useEffect(() => {
     if (!token) return;
     void fetchStats();
@@ -146,6 +155,8 @@ export default function Admin() {
       void fetchPendingVerifications(pendingUsersPage, pendingUserSearch);
     if (activeSection === "posts")
       void fetchPosts(postPage, postSearch, postTypeFilter);
+    if (activeSection === "sighting_reports")
+      void fetchSightingReports(sightingReportsPage);
   }, [
     activeSection,
     claimsTab,
@@ -159,6 +170,7 @@ export default function Admin() {
     postPage,
     postSearch,
     postTypeFilter,
+    sightingReportsPage,
     token,
   ]);
 
@@ -273,6 +285,21 @@ export default function Admin() {
       toast.error(tCopy.errors.posts);
     } finally {
       setPostsLoading(false);
+    }
+  };
+
+  const fetchSightingReports = async (page: number) => {
+    if (!token) return;
+    try {
+      setSightingReportsLoading(true);
+      const res = await adminApi.getSightings(token, page, PAGE_LIMIT);
+      setSightingReports(res.sightings);
+      setSightingReportsTotalPages(res.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch sighting reports", err);
+      toast.error(isRTL ? "فشل جلب بلاغات المشاهدة" : "Failed to fetch sighting reports");
+    } finally {
+      setSightingReportsLoading(false);
     }
   };
 
@@ -438,6 +465,13 @@ export default function Admin() {
       icon: ClipboardList,
       badge: stats?.pendingClaims,
       tone: "red",
+    },
+    {
+      id: "sighting_reports",
+      label: tCopy.sectionTitles.sighting_reports,
+      icon: Eye,
+      badge: stats?.sightingReports,
+      tone: "slate",
     },
     {
       id: "verifications",
@@ -703,6 +737,17 @@ export default function Admin() {
                 onDelete={handleDeletePost}
                 deletingPostId={deletingPostId}
                 t={tCopy}
+                isRTL={isRTL}
+              />
+            )}
+
+            {activeSection === "sighting_reports" && (
+              <SightingReportsPanel
+                reports={sightingReports}
+                loading={sightingReportsLoading}
+                page={sightingReportsPage}
+                totalPages={sightingReportsTotalPages}
+                onPageChange={setSightingReportsPage}
                 isRTL={isRTL}
               />
             )}
@@ -2295,6 +2340,7 @@ function getCopy(isRTL: boolean): Copy {
         contact_messages: "رسائل التواصل",
         user_reports: "بلاغات المستخدمين",
         chats: "المحادثات",
+        sighting_reports: "بلاغات المشاهدة",
       },
       sectionSubtitles: {
         overview: "لمحة سريعة عن النشاط على المنصة.",
@@ -2305,6 +2351,7 @@ function getCopy(isRTL: boolean): Copy {
         contact_messages: "قراءة الرسائل والرد عليها عبر البريد الإلكتروني.",
         user_reports: "مراجعة بلاغات المستخدمين واتخاذ الإجراءات اللازمة.",
         chats: "مراجعة وتوثيق المحادثات بين المستخدمين.",
+        sighting_reports: "مراجعة جميع بلاغات المشاهدة وتفاصيلها.",
       },
       stats: {
         totalUsers: "إجمالي المستخدمين",
@@ -2431,6 +2478,7 @@ function getCopy(isRTL: boolean): Copy {
       contact_messages: "Contact Messages",
       user_reports: "User Reports",
       chats: "Chats",
+      sighting_reports: "Sighting Reports",
     },
     sectionSubtitles: {
       overview: "A quick snapshot of platform activity.",
@@ -2441,6 +2489,7 @@ function getCopy(isRTL: boolean): Copy {
       contact_messages: "Read and reply to support messages via email.",
       user_reports: "Review user reports and take necessary actions.",
       chats: "Review and moderate chat conversations.",
+      sighting_reports: "Review all sighting reports and their details.",
     },
     stats: {
       totalUsers: "Total users",
@@ -3346,6 +3395,130 @@ function UserReportsPanel({
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Sighting Reports Panel ───────────────────────────────────────────────────
+function SightingReportsPanel({
+  reports,
+  loading,
+  page,
+  totalPages,
+  onPageChange,
+  isRTL,
+}: {
+  reports: BackendSighting[];
+  loading: boolean;
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
+  isRTL: boolean;
+}) {
+  if (loading) {
+    return (
+      <div className="bg-white p-12 rounded-2xl border border-slate-200 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 text-secondary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!reports.length) {
+    return (
+      <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-500">
+        {isRTL ? "لا توجد بلاغات مشاهدة" : "No sighting reports found"}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+            <tr>
+              <th className={`px-4 py-3 font-semibold ${isRTL ? "text-right" : "text-left"}`}>
+                {isRTL ? "الشخص المفقود" : "Missing Person"}
+              </th>
+              <th className={`px-4 py-3 font-semibold ${isRTL ? "text-right" : "text-left"}`}>
+                {isRTL ? "المُبلّغ" : "Reporter"}
+              </th>
+              <th className={`px-4 py-3 font-semibold ${isRTL ? "text-right" : "text-left"}`}>
+                {isRTL ? "الثقة" : "Confidence"}
+              </th>
+              <th className={`px-4 py-3 font-semibold ${isRTL ? "text-right" : "text-left"}`}>
+                {isRTL ? "تاريخ الرؤية" : "Seen At"}
+              </th>
+              <th className={`px-4 py-3 font-semibold ${isRTL ? "text-right" : "text-left"}`}>
+                {isRTL ? "التفاصيل" : "Details"}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {reports.map((report) => (
+              <tr key={report._id} className="hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3 align-top max-w-[200px]">
+                  <p className="font-bold text-slate-800 truncate">
+                    {typeof report.missingPersonId === 'object' && report.missingPersonId?.name 
+                      ? report.missingPersonId.name 
+                      : (isRTL ? "غير معروف" : "Unknown")}
+                  </p>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 truncate">
+                        {report.reporterName || (isRTL ? "مجهول" : "Anonymous")}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">{report.reporterPhone}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                    {report.confidence.replace("_", " ").toUpperCase()}
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-top text-slate-600 text-xs">
+                  {report.seenAt}
+                </td>
+                <td className="px-4 py-3 align-top max-w-[300px]">
+                  <p className="text-xs text-slate-700 line-clamp-2">
+                    {report.description}
+                  </p>
+                  {report.location?.address && (
+                    <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">
+                      {report.location.address}
+                    </p>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="p-4 border-t border-slate-200 flex items-center justify-between bg-slate-50 mt-auto">
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white bg-transparent"
+          >
+            {isRTL ? "السابق" : "Prev"}
+          </button>
+          <span className="text-sm font-medium text-slate-500">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white bg-transparent"
+          >
+            {isRTL ? "التالي" : "Next"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

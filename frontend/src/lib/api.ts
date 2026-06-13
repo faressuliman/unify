@@ -460,6 +460,7 @@ export interface BackendClaim {
   status: "pending" | "approved" | "rejected";
   documentPath?: string;
   additionalInfo?: string;
+  rejectionReason?: string;
   reviewedAt?: string;
   createdAt: string;
   updatedAt?: string;
@@ -653,6 +654,7 @@ export interface DashboardStats {
   pendingVerifications?: number;
   pendingContactMessages?: number;
   pendingUserReports?: number;
+  sightingReports?: number;
 }
 
 export interface AdminUser {
@@ -894,6 +896,16 @@ export const adminApi = {
       },
     );
   },
+  getSightings: (token: string, page: number = 1, limit: number = 20) =>
+    apiRequest<{
+      sightings: BackendSighting[];
+      page: number;
+      totalPages: number;
+      totalCount: number;
+    }>(`admin/sightings?page=${page}&limit=${limit}`, {
+      method: "GET",
+      token,
+    }),
   replyToContactMessage: async (
     id: string,
     replyMessage: string,

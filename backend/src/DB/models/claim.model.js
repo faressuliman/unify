@@ -21,6 +21,7 @@ const claimSchema = new mongoose.Schema(
     },
     reviewedAt: { type: Date },
     documentPath: { type: String },
+    rejectionReason: { type: String },
   },
   { timestamps: { createdAt: "createdAt", updatedAt: false } }
 );

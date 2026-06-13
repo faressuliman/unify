@@ -509,9 +509,12 @@ export function Navbar() {
                                 const postId = typeof notification.postId === 'string'
                                   ? notification.postId
                                   : notification.postId._id;
+                                const postName = typeof notification.postId === 'object' && notification.postId.name
+                                  ? notification.postId.name
+                                  : 'Unknown';
                                 const sightingId = notification.referenceId ? `&sightingId=${encodeURIComponent(notification.referenceId)}` : '';
                                 setIsNotificationsOpen(false);
-                                navigate(`/profile?sightingPostId=${encodeURIComponent(postId)}${sightingId}`);
+                                navigate(`/profile?sightingPostId=${encodeURIComponent(postId as string)}&postName=${encodeURIComponent(postName)}${sightingId}`);
                                 return;
                               }
 
@@ -534,6 +537,12 @@ export function Navbar() {
                               if (notification.type === 'claim_approved_owner' && notification.referenceId) {
                                 setIsNotificationsOpen(false);
                                 navigate(`/chat?chatWith=${encodeURIComponent(notification.referenceId)}`);
+                                return;
+                              }
+
+                              if (notification.type === 'claim_rejected' && notification.referenceId) {
+                                setIsNotificationsOpen(false);
+                                navigate(`/profile?rejectedClaimId=${encodeURIComponent(notification.referenceId)}`);
                                 return;
                               }
 

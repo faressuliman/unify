@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -36,6 +37,7 @@ import {
   X,
   Loader2,
   Camera,
+  ClipboardList,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import MissingPersonCard from "../components/search/MissingPersonCard";
@@ -91,6 +93,15 @@ export default function Profile() {
   }>({
     open: false,
     postId: "",
+    postName: "",
+  });
+  const [rejectionModal, setRejectionModal] = useState<{
+    open: boolean;
+    reason: string;
+    postName: string;
+  }>({
+    open: false,
+    reason: "",
     postName: "",
   });
   const [imageError, setImageError] = useState(false);
@@ -352,24 +363,48 @@ export default function Profile() {
   useEffect(() => {
     const postId = searchParams.get("sightingPostId");
     const sightingId = searchParams.get("sightingId");
+    const rejectedClaimId = searchParams.get("rejectedClaimId");
 
-    if (!token || !postId) return;
+    if (!token) return;
 
-    const matchedPost = posts.find((post) => post._id === postId);
-    setSightingsModal({
-      open: true,
-      postId,
-      postName: matchedPost?.name || "",
-      highlightSightingId: sightingId,
-    });
+    let shouldUpdateParams = false;
+    let nextParams = new URLSearchParams(searchParams);
 
-    setSearchParams((current) => {
-      const next = new URLSearchParams(current);
-      next.delete("sightingPostId");
-      next.delete("sightingId");
-      return next;
-    }, { replace: true });
-  }, [posts, searchParams, setSearchParams, token]);
+    if (postId) {
+      const matchedPost = posts.find((post) => post._id === postId);
+      setSightingsModal({
+        open: true,
+        postId,
+        postName: matchedPost?.name || searchParams.get("postName") || (isRTL ? "غير معروف" : "Unknown"),
+        highlightSightingId: sightingId,
+      });
+      nextParams.delete("sightingPostId");
+      nextParams.delete("sightingId");
+      nextParams.delete("postName");
+      shouldUpdateParams = true;
+    }
+
+    if (rejectedClaimId && claims.length > 0) {
+      const matchedClaim = claims.find((c) => c._id === rejectedClaimId);
+      if (matchedClaim) {
+        const pName =
+          typeof matchedClaim.postId === "object" && matchedClaim.postId !== null
+            ? (matchedClaim.postId as BackendPost).name || "Unknown"
+            : "Unknown";
+        setRejectionModal({
+          open: true,
+          reason: matchedClaim.rejectionReason || (isRTL ? "تم رفض المطالبة بواسطة المسؤول." : "The claim was rejected by an admin."),
+          postName: pName,
+        });
+      }
+      nextParams.delete("rejectedClaimId");
+      shouldUpdateParams = true;
+    }
+
+    if (shouldUpdateParams) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [posts, claims, searchParams, setSearchParams, token, isRTL]);
 
   if (loading) {
     return (
@@ -396,25 +431,19 @@ export default function Profile() {
     );
   }
 
-  const handleStartChat = async (claim: BackendClaim) => {
-    try {
-      let responderId = "";
-      if (typeof claim.claimUserId === "object" && claim.claimUserId?._id) {
-        responderId = claim.claimUserId._id;
-      } else if (typeof claim.postId === "object" && claim.postId?.userId) {
-        const uid = claim.postId.userId;
-        responderId = typeof uid === "object" ? uid._id : uid;
-      }
-      if (!responderId) {
-        console.warn("Could not find user to chat with.");
-        return;
-      }
-
-      await chatApi.startChat(responderId, token!);
-      navigate("/chat");
-    } catch (err) {
-      console.error("Failed to start chat", err);
+  const handleStartChat = (claim: BackendClaim) => {
+    let responderId = "";
+    if (typeof claim.claimUserId === "object" && claim.claimUserId?._id) {
+      responderId = claim.claimUserId._id;
+    } else if (typeof claim.postId === "object" && claim.postId?.userId) {
+      const uid = claim.postId.userId;
+      responderId = typeof uid === "object" ? uid._id : uid;
     }
+    if (!responderId) {
+      console.warn("Could not find user to chat with.");
+      return;
+    }
+    navigate(`/chat?chatWith=${responderId}`);
   };
 
   return (
@@ -954,14 +983,20 @@ export default function Profile() {
                         onClick={() => {
                           if (claim.status === "approved") {
                             handleStartChat(claim);
+                          } else if (claim.status === "rejected") {
+                            setRejectionModal({
+                              open: true,
+                              reason: claim.rejectionReason || (isRTL ? "تم رفض المطالبة بواسطة المسؤول." : "The claim was rejected by an admin."),
+                              postName: postName,
+                            });
                           }
                         }}
-                        className={`p-4 flex gap-4 transition-colors ${claim.status === "approved" ? "cursor-pointer hover:bg-slate-50" : "cursor-default"}`}
+                        className={`p-4 flex gap-4 transition-colors ${(claim.status === "approved" || claim.status === "rejected") ? "cursor-pointer hover:bg-slate-50" : "cursor-default"}`}
                       >
                         <div
                           className={`size-10 rounded-lg bg-white flex items-center justify-center shrink-0 border border-primary-200 ${claim.status === "approved" ? "text-green-500" : claim.status === "rejected" ? "text-red-500" : "text-amber-500"}`}
                         >
-                          <StatusIcon className="w-5 h-5" />
+                          <ClipboardList className="w-5 h-5" />
                         </div>
                         <div className="flex flex-col items-start text-start min-w-0 flex-1">
                           <p className="text-sm font-bold text-tertiary truncate w-full">
@@ -991,6 +1026,22 @@ export default function Profile() {
                             aria-label={isRTL ? "بدء المحادثة" : "Start Chat"}
                           >
                             <MessageCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                        {claim.status === "rejected" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRejectionModal({
+                                open: true,
+                                reason: claim.rejectionReason || (isRTL ? "تم رفض المطالبة بواسطة المسؤول." : "The claim was rejected by an admin."),
+                                postName: postName,
+                              });
+                            }}
+                            className="ml-auto w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center text-red-600 transition-colors"
+                            aria-label={isRTL ? "عرض سبب الرفض" : "View Rejection Reason"}
+                          >
+                            <XCircle className="w-4 h-4" />
                           </button>
                         )}
                       </div>
@@ -1201,6 +1252,71 @@ export default function Profile() {
           onStartChat={handleStartChat}
         />
       )}
+
+      {/* Rejection Reason Modal */}
+      <DialogPrimitive.Root
+        open={rejectionModal.open}
+        onOpenChange={(open) =>
+          setRejectionModal((prev) => ({ ...prev, open }))
+        }
+      >
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-slate-950/40 modal-overlay" />
+          <DialogPrimitive.Content
+            className="fixed left-1/2 top-1/2 z-71 w-[calc(100%-1.25rem)] max-h-[90vh] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col focus:outline-none modal-pop"
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            <div className="modal-panel flex h-full min-h-0 flex-col">
+              <div className="relative px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <div
+                  className={`absolute top-5 ${isRTL ? "left-5" : "right-5"}`}
+                >
+                  <DialogPrimitive.Close className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200/60 text-slate-500 transition-colors hover:bg-slate-200">
+                    <X className="h-4 w-4" />
+                  </DialogPrimitive.Close>
+                </div>
+                <div className="flex items-start gap-3 pe-10">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                    <XCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogPrimitive.Title className="text-xl font-bold text-slate-900">
+                      {isRTL ? "تم رفض المطالبة" : "Claim Rejected"}
+                    </DialogPrimitive.Title>
+                    <DialogPrimitive.Description className="text-sm text-slate-500 mt-0.5">
+                      {isRTL
+                        ? `بخصوص: ${rejectionModal.postName}`
+                        : `Regarding: ${rejectionModal.postName}`}
+                    </DialogPrimitive.Description>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-6 flex-1 overflow-y-auto">
+                <div className="bg-red-50 border border-red-100 rounded-2xl p-5">
+                  <h4 className="text-sm font-bold text-red-800 mb-2">
+                    {isRTL ? "سبب الرفض" : "Reason for rejection"}
+                  </h4>
+                  <p className="text-sm text-red-700 whitespace-pre-wrap leading-relaxed">
+                    {rejectionModal.reason}
+                  </p>
+                </div>
+                <p className="text-sm text-slate-500 mt-5 text-center px-4">
+                  {isRTL
+                    ? "إذا كنت تعتقد أن هذا خطأ، يمكنك تقديم مطالبة جديدة مع معلومات أدق."
+                    : "If you believe this is a mistake, you can submit a new claim with more accurate information."}
+                </p>
+              </div>
+
+              <div className="px-6 py-5 border-t border-slate-100 bg-slate-50 flex shrink-0">
+                <DialogPrimitive.Close className="w-full flex items-center justify-center rounded-xl bg-slate-200 px-5 py-3 text-[15px] font-bold text-slate-700 hover:bg-slate-300 transition-colors active:scale-[0.98]">
+                  {isRTL ? "إغلاق" : "Close"}
+                </DialogPrimitive.Close>
+              </div>
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </div>
   );
 }
