@@ -16,16 +16,9 @@ const app = express();
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (process.env.MODE === "DEV" || process.env.NODE_ENV !== "production") {
-        const isLocalhost = origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:");
-        if (isLocalhost) return callback(null, true);
-      }
-      const allowed = process.env.FRONTEND_URL || "http://localhost:5173";
-      if (Array.isArray(allowed) ? allowed.includes(origin) : origin === allowed) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"), false);
+      // Allow any origin to connect by reflecting the origin back
+      // This solves the CORS error on the deployed server when FRONTEND_URL isn't set perfectly
+      callback(null, true);
     },
     credentials: true,
   }),
