@@ -8,7 +8,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   userApi,
   claimApi,
-  chatApi,
   sightingApi,
   type UserProfileInfo,
   type BackendPost,
@@ -30,7 +29,6 @@ import {
   Pencil,
   MessageCircle,
   XCircle,
-  Clock,
   Eye,
   UserX,
   Save,
@@ -970,12 +968,6 @@ export default function Profile() {
                           ? "Rejected"
                           : "Pending";
 
-                    const StatusIcon =
-                      claim.status === "approved"
-                        ? ShieldCheck
-                        : claim.status === "rejected"
-                          ? XCircle
-                          : Clock;
 
                     return (
                       <div
