@@ -75,22 +75,17 @@ const Poster = () => {
       setPdfMessage(t('poster.genPdf'));
       if (!previewRef.current) return;
       await new Promise(r => setTimeout(r, 400));
-      const imgData = await toJpeg(previewRef.current, { quality:1.0, pixelRatio:3 });
-      const pdf = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
-      
-      const imgProps = pdf.getImageProperties(imgData);
-      let pdfWidth = 210;
-      let pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      if (pdfHeight > 297) {
-        pdfHeight = 297;
-        pdfWidth = (imgProps.width * pdfHeight) / imgProps.height;
-      }
-      
-      const x = (210 - pdfWidth) / 2;
-      const y = (297 - pdfHeight) / 2;
-      
-      pdf.addImage(imgData, 'JPEG', x, y, pdfWidth, pdfHeight, undefined, 'FAST');
+      const imgData = await toJpeg(previewRef.current, { quality: 1.0, pixelRatio: 3 });
+
+      // Size the PDF exactly to the poster element — no white bars
+      const posterW = previewRef.current.offsetWidth;
+      const posterH = previewRef.current.offsetHeight;
+      const pdf = new jsPDF({
+        orientation: posterH >= posterW ? 'p' : 'l',
+        unit: 'px',
+        format: [posterW, posterH],
+      });
+      pdf.addImage(imgData, 'JPEG', 0, 0, posterW, posterH, undefined, 'FAST');
       const fileName = fullName.trim() !== '' ? `${fullName.trim()}.pdf` : 'Missing_Person_Poster.pdf';
       pdf.save(fileName);
       setPdfStatus('done');
@@ -121,9 +116,24 @@ const Poster = () => {
   };
 
   return (
-    <section className="bg-slate-50 py-8" dir={isRTL ? 'rtl' : 'ltr'}>
+    <section className="bg-slate-50 py-8 print:bg-white print:py-0" dir={isRTL ? 'rtl' : 'ltr'}>
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #poster-preview, #poster-preview * { visibility: visible !important; }
+          #poster-preview {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       <motion.div initial="hidden" animate="visible" variants={containerVariants}>
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="print:hidden">
           <PageHeader
             navigatedTo={t('poster.title')}
             title={t('poster.title')}
@@ -133,9 +143,9 @@ const Poster = () => {
           />
         </motion.div>
 
-        <div className="max-w-400 mx-auto px-6 lg:px-12 w-full">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-start mt-6">
-          <motion.div className="space-y-6" variants={itemVariants}>
+        <div className="px-6 lg:px-12 w-full">
+          <div className="flex flex-col lg:flex-row gap-8 lg:items-start mt-6">
+          <motion.div className="space-y-6 w-full lg:w-1/2 shrink-0 print:hidden pb-12" variants={itemVariants}>
             {/* Personal Details Card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
               <h2 className="flex items-center gap-3 text-lg font-bold text-slate-800 mb-6 font-sans">
@@ -336,12 +346,13 @@ const Poster = () => {
 
           {/* Preview Column */}
           <motion.div 
-            className="hidden lg:flex bg-slate-100 rounded-[2.5rem] border border-slate-200 shadow-inner h-fit lg:sticky lg:top-24"
+            className="hidden lg:flex flex-col w-full lg:w-1/2 lg:sticky lg:top-24 lg:self-start pb-12"
             variants={itemVariants}
           >
             <div 
+              id="poster-preview"
               ref={previewRef} 
-              className="w-full mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
+              className="w-full bg-white overflow-hidden shadow-2xl border border-slate-200 flex flex-col"
             >
               {/* Header */}
               <div className="bg-red-700 py-6 text-center">
@@ -354,7 +365,7 @@ const Poster = () => {
               </div>
 
               {/* Image Section */}
-              <div className="relative w-full aspect-square bg-slate-200 flex items-center justify-center">
+              <div className="relative w-full bg-slate-200 flex items-center justify-center overflow-hidden">
                 <AnimatePresence mode="wait">
                   {previewImage ? (
                     <motion.img 
@@ -363,14 +374,14 @@ const Poster = () => {
                       animate={{ opacity: 1 }}
                       src={previewImage} 
                       alt="Preview" 
-                      className="object-cover w-full h-full" 
+                      className="w-full h-auto object-contain block" 
                     />
                   ) : (
                     <motion.div 
                       key="no-image"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-slate-300 flex flex-col items-center gap-2"
+                      className="text-slate-300 flex flex-col items-center gap-2 min-h-64 justify-center"
                     >
                       <FontAwesomeIcon icon={faImage} className="text-8xl opacity-20" />
                       <span className="text-sm font-bold opacity-30 uppercase tracking-[0.2em] font-sans">{t('poster.noPhoto')}</span>
@@ -420,8 +431,8 @@ const Poster = () => {
                   </p>
                 </div>
 
-                <div className="mt-2 bg-red-50 border border-red-100 rounded-[1.25rem] p-6 text-center shadow-sm">
-                  <div className="bg-red-700 text-white px-2 sm:px-6 py-4 rounded-xl font-black text-base sm:text-xl shadow-lg flex items-center justify-center gap-2 sm:gap-3 leading-tight">
+                <div className="mt-2 bg-red-50 border border-red-100 p-6 text-center shadow-sm">
+                  <div className="bg-red-700 text-white px-2 sm:px-6 py-4 font-black text-base sm:text-xl shadow-lg flex items-center justify-center gap-2 sm:gap-3 leading-tight">
                     <FontAwesomeIcon icon={faCloudArrowUp} className={`text-base shrink-0 ${isRTL ? '-rotate-90' : 'rotate-90'}`} />
                     <span dir="ltr" className="break-all sm:break-normal">{contact || t('poster.contactAuth')}</span>
                   </div>

@@ -156,15 +156,13 @@ export function Drawer({ isOpen, setIsOpen, currentPage, handleNavClick, handleL
                   <User className="h-5 w-5 shrink-0" />
                   <span className="font-medium">{t('nav.profile')}</span>
                 </button>
-                {user?.role !== 'admin' && (
-                  <button
-                    onClick={() => handleNavClick('chat')}
-                    className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
-                  >
-                    <Mail className="h-5 w-5 shrink-0" />
-                    <span className="font-medium">{t('nav.messages')}</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => handleNavClick('chat')}
+                  className="flex items-center gap-3 px-6 py-4 bg-transparent hover:bg-gray-50 transition-all duration-300 text-gray-700 w-full border-none border-s-4 border-transparent hover:ps-8"
+                >
+                  <Mail className="h-5 w-5 shrink-0" />
+                  <span className="font-medium">{t('nav.messages')}</span>
+                </button>
                 {user?.role === 'admin' && (
                   <>
                     <div className="h-px bg-gray-200 my-2 mx-6" />

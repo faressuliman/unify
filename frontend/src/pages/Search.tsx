@@ -12,6 +12,8 @@ import InfoBanner from '../components/ui/InfoBanner';
 import { ApiError, type BackendPost, postApi } from '@/lib/api';
 import type { ProfileData } from '@/components/home/PersonCard';
 import { mapPostFields } from '@/lib/postFormatters';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 export type SearchProfile = ProfileData & {
   dateMissing?: string;
@@ -86,6 +88,7 @@ const applyLocalFilters = (posts: SearchProfile[], filters: SearchFilters): Sear
 
 export default function Search() {
   const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const isRTL = language === 'ar';
   const resultsRef = useRef<HTMLDivElement>(null);
   const [searchParams] = useSearchParams();
@@ -173,7 +176,34 @@ export default function Search() {
           limit: 20,
         });
 
-        setRawPosts(response.data);
+        let finalPosts = response.data;
+        const hasActiveFilters = Object.values(appliedFilters).some((val) => val && val.trim() !== '');
+
+        if (finalPosts.length === 0 && hasActiveFilters) {
+          const otherTab = activeTab === 'missing' ? 'found' : 'missing';
+          const otherResponse = await postApi.getPosts({
+            postType: otherTab,
+            status: 'active',
+            firstName: appliedFilters.firstName || undefined,
+            lastName: appliedFilters.lastName || undefined,
+            ageMin: appliedFilters.ageMin || undefined,
+            ageMax: appliedFilters.ageMax || undefined,
+            hairColour: appliedFilters.hairColor || undefined,
+            eyeColour: appliedFilters.eyeColor || undefined,
+            gender: appliedFilters.gender || undefined,
+            city: appliedFilters.city || undefined,
+            dateMissing: appliedFilters.dateMissing || undefined,
+            page: 1,
+            limit: 20,
+          });
+
+          if (otherResponse.data && otherResponse.data.length > 0) {
+            setActiveTab(otherTab);
+            finalPosts = otherResponse.data;
+          }
+        }
+
+        setRawPosts(finalPosts);
       } catch (fetchErr) {
         setError(fetchErr instanceof ApiError ? fetchErr.message : 'Failed to load search results.');
       } finally {
@@ -203,6 +233,10 @@ export default function Search() {
     const imageFile = options?.imageFile ?? null;
 
     if (imageFile) {
+      if (!isAuthenticated) {
+        toast.error(isRTL ? 'يجب عليك تسجيل الدخول أولاً!' : 'You are required to login first!');
+        return;
+      }
       // Navigate to the new SearchResults page, passing the form data and the image
       navigate('/search-results', { state: { filters: values, imageFile } });
       return;

@@ -217,9 +217,11 @@ export function Navbar() {
           const statsRes = await adminApi.getDashboardStats(token);
           if (!cancelled && statsRes.stats) {
             const s = statsRes.stats;
+            const storedSightingsCount = parseInt(localStorage.getItem('adminSightingReportsCount') || '0', 10);
+            const unreadSightings = Math.max(0, (s.sightingReports || 0) - storedSightingsCount);
             const totalActionable = 
               (s.pendingClaims || 0) + 
-              (s.sightingReports || 0) + 
+              unreadSightings + 
               (s.pendingVerifications || 0) + 
               (s.pendingContactMessages || 0) + 
               (s.pendingUserReports || 0);
@@ -258,10 +260,16 @@ export function Navbar() {
       socket.on('chat:message', handleChatMessage);
     }
 
+    const handleAdminSightingsViewed = () => {
+      void fetchNotificationsData();
+    };
+    window.addEventListener('adminSightingsViewed', handleAdminSightingsViewed);
+
     const interval = setInterval(fetchNotificationsData, 60000);
     return () => {
       cancelled = true;
       clearInterval(interval);
+      window.removeEventListener('adminSightingsViewed', handleAdminSightingsViewed);
       if (socket) {
         socket.off('notification:unread-count', handleUnreadCount);
         socket.off('notification:new', handleNew);

@@ -196,16 +196,24 @@ const Login = () => {
                 <div className="absolute inset-0 bg-linear-to-tr from-slate-900/90 via-slate-800/80 to-secondary/30"></div>
                 <div className="absolute inset-0 bg-grid-slate-800/[0.04] bg-position-[bottom_1px_center] mask-[linear-gradient(to_bottom,transparent,black)]"></div>
                 
-                <div className="relative z-10 w-full max-w-lg text-center">
+                <div className="relative z-10 w-full max-w-xl">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.2 }}
+                        className={`relative py-4 ${isRTL ? 'text-start pr-8' : 'text-start pl-8'}`}
                     >
-                        <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6">
-                            {content.heroTitle}
+                        {/* Unique Left Accent Line (Modern Unify Style) */}
+                        <div className={`absolute top-0 bottom-0 ${isRTL ? 'right-0' : 'left-0'} w-1.5 bg-linear-to-b from-yellow-400 to-amber-600 rounded-full opacity-90 shadow-[0_0_20px_rgba(251,191,36,0.4)]`}></div>
+
+                        <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6 tracking-wide">
+                            {content.heroTitle.split(/(Unify|يونيفاي)/).map((part, i) => 
+                                (part === 'Unify' || part === 'يونيفاي') 
+                                    ? <span key={i} className="text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-amber-500">{part}</span> 
+                                    : part
+                            )}
                         </h2>
-                        <p className="text-lg text-blue-100/80 font-light leading-relaxed">
+                        <p className="text-lg text-blue-100/80 font-light leading-relaxed max-w-lg">
                             {content.heroSubtitle}
                         </p>
                     </motion.div>

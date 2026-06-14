@@ -8,7 +8,7 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 import { ApiError, contactApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { useLanguage } from '../context/LanguageContext';
-import contactImg from '../assets/contact.png';
+import contactImg from '../assets/contactbg.png';
 
 const ContactCard = ({ icon, title, detail, delay, href }: { icon: React.ReactNode, title: string, detail: string, delay: number, href?: string }) => {
     const Wrapper = href ? motion.a : motion.div;
@@ -18,7 +18,8 @@ const ContactCard = ({ icon, title, detail, delay, href }: { icon: React.ReactNo
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay }}
-            className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] border border-gray-100 hover:border-secondary/20 hover:-translate-y-1 transition-all duration-300 group h-full cursor-pointer"
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] border border-gray-100 hover:border-secondary/20 transition-all duration-300 group h-full cursor-pointer"
         >
             <div className="w-14 h-14 bg-secondary/10 rounded-full flex items-center justify-center text-secondary mb-4 group-hover:scale-110 group-hover:bg-secondary group-hover:text-white transition-all duration-300">
                 {icon}
@@ -154,10 +155,10 @@ const Contact = () => {
             {/* Hero Header Section */}
             <div className="relative pt-20 pb-24 lg:pt-24 lg:pb-28 overflow-hidden bg-primary-dark">
                 <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-40"
+                    className="absolute inset-0 bg-cover bg-[85%_center] lg:bg-center opacity-40"
                     style={{ backgroundImage: `url(${contactImg})` }}
                 ></div>
-                <div className="absolute inset-0 bg-slate-900/50"></div>
+                <div className="absolute inset-0 bg-black/50"></div>
                 <div className="absolute inset-0 bg-grid-white/[0.04] bg-position-[bottom_1px_center] mask-[linear-gradient(to_bottom,transparent,black)]"></div>
                 
                 <div className="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">
@@ -223,9 +224,9 @@ const Contact = () => {
                     {/* Left Column: Form Container */}
                     <div className="text-start order-2 lg:order-1">
                         <motion.div 
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.5 }}
+                            initial={{ opacity: 0, x: -30, y: 20 }}
+                            animate={{ opacity: 1, x: 0, y: 0 }}
+                            transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
                             className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 md:p-8 border border-gray-100"
                         >
                             <div className="mb-6 w-full text-start">

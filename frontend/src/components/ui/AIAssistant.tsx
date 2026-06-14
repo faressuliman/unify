@@ -20,6 +20,7 @@ export default function AIAssistant() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showInitialMessage, setShowInitialMessage] = useState(false)
+  const [botAnimState, setBotAnimState] = useState<'idle' | 'spin' | 'scale' | 'normal'>('idle')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
@@ -39,6 +40,32 @@ export default function AIAssistant() {
     if (!hasSeenIntro) {
       setShowInitialMessage(true)
       sessionStorage.setItem('unifyAiAssistantIntroShown', 'true')
+    }
+  }, [])
+
+  useEffect(() => {
+    const startAnimation = () => {
+      setBotAnimState('spin')
+      const scaleTimer = setTimeout(() => setBotAnimState('normal'), 4400)
+      const spinTimer = setTimeout(() => setBotAnimState('scale'), 1400)
+      return () => {
+        clearTimeout(scaleTimer)
+        clearTimeout(spinTimer)
+      }
+    }
+
+    if ((window as any).__unifyLoadingComplete) {
+      return startAnimation()
+    } else {
+      let cleanup: (() => void) | undefined
+      const handleLoad = () => {
+        cleanup = startAnimation()
+      }
+      window.addEventListener('loadingComplete', handleLoad)
+      return () => {
+        window.removeEventListener('loadingComplete', handleLoad)
+        if (cleanup) cleanup()
+      }
     }
   }, [])
 
@@ -218,7 +245,14 @@ Always be warm, concise, and helpful. Use English in all your responses.`
           className="fixed bottom-6 left-6 z-50 inline-flex items-center justify-center bg-primary hover:bg-primary-300 text-primary-foreground p-2 rounded-full shadow-lg transition-all duration-300 delay-100 hover:scale-110 cursor-pointer"
           aria-label="Open AI Assistant"
         >
-          <img src={chatbotIcon} alt="AI Assistant" className="w-14 h-14" />
+          <img 
+            src={chatbotIcon} 
+            alt="AI Assistant" 
+            className={`w-14 h-14 transition-transform duration-500 ease-out ${
+              botAnimState === 'spin' ? 'animate-[spin_0.7s_ease-in-out_2]' : 
+              botAnimState === 'scale' ? 'scale-[1.2]' : 'scale-100'
+            }`} 
+          />
         </button>
       )}
 

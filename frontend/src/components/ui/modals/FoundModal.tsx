@@ -19,6 +19,7 @@ import ClaimFamilyModal from './ClaimFamilyModal';
 import SubmitButton from '../SubmitButton';
 import { useAuth } from '../../../context/AuthContext';
 import { toArabicDisplay, toRTLDisplay } from '../../../lib/transliterate';
+import { toast } from 'sonner';
 
 interface FoundModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export default function FoundModal({
 }: FoundModalProps) {
   const t = isRTL ? ar.recentUpdates.foundModal : en.recentUpdates.foundModal;
   const [isClaimOpen, setIsClaimOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const isOwnPost = !!(user?.id && profile.postUserId && user.id === profile.postUserId);
 
@@ -186,7 +187,13 @@ export default function FoundModal({
                 </div>
                 <SubmitButton
                   type="button"
-                  onClick={() => setIsClaimOpen(true)}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      toast.error(isRTL ? 'يجب عليك تسجيل الدخول أولاً!' : 'You are required to login first!');
+                      return;
+                    }
+                    setIsClaimOpen(true);
+                  }}
                   className="w-full px-6 text-[15px] sm:text-[16px] flex items-center justify-center gap-2"
                 >
                   <HeartHandshake className="w-5 h-5" />

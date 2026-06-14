@@ -465,8 +465,9 @@ export default function Profile() {
       <main className="w-full max-w-400 mx-auto px-6 lg:px-12 flex flex-col gap-6">
         {/* Profile Hero Section */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.98, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="bg-white rounded-2xl border border-primary-200 flex flex-col gap-6 shadow-sm relative overflow-hidden"
         >
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 px-6 md:px-8 pt-8 pb-6">
@@ -494,10 +495,10 @@ export default function Profile() {
                       src={avatarSrc}
                       alt=""
                       onError={() => setImageError(true)}
-                      className="w-full h-full object-cover rounded-full transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-full transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full rounded-full flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase transition-transform duration-300">
+                    <div className="w-full h-full rounded-full flex items-center justify-center bg-secondary/20 text-secondary text-4xl font-bold uppercase transition-transform duration-500 group-hover:scale-110">
                       {profileData?.name?.charAt(0) || "?"}
                     </div>
                   )}

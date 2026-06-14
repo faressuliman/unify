@@ -1,4 +1,4 @@
-﻿import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { memo } from "react";
 import { useLanguage } from "../../context/LanguageContext";
@@ -27,12 +27,12 @@ const HomeFeatureCard = memo(function HomeFeatureCard({
   const { language } = useLanguage();
   
   const cardContent = (
-    <div className={`relative z-10 bg-white border border-slate-200 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md ${isMobile
+    <div className={`group relative z-10 bg-white border border-slate-200 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md ${isMobile
       ? "p-6 pb-8 h-82 flex flex-col items-center text-center"
       : "p-4 sm:p-6 md:p-4 lg:p-8 h-full flex flex-col items-center text-center"
       }`}>
       <div className="mb-4 sm:mb-6 md:mb-3 lg:mb-6 flex items-center justify-center w-full">
-        <div className="p-4 rounded-full bg-primary inline-flex items-center justify-center transition-colors duration-300 text-secondary">
+        <div className="p-4 rounded-full bg-primary inline-flex items-center justify-center transition-all duration-300 text-secondary group-hover:scale-110 group-hover:rotate-[15deg]">
           <Icon className="w-8 h-8 lg:w-10 lg:h-10" strokeWidth={2} />
         </div>
       </div>

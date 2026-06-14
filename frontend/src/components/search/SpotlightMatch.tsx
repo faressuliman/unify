@@ -9,6 +9,9 @@ import ClaimFamilyModal from '../ui/modals/ClaimFamilyModal';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
+
 interface SpotlightMatchProps {
   profile: any; // Using any to access extended fields like physicalDescription
   rawPost: BackendPost & { confidence?: number };
@@ -16,6 +19,7 @@ interface SpotlightMatchProps {
 }
 
 export default function SpotlightMatch({ profile, rawPost, isRTL }: SpotlightMatchProps) {
+  const { isAuthenticated } = useAuth();
   const [isSightingOpen, setIsSightingOpen] = useState(false);
   const [isClaimOpen, setIsClaimOpen] = useState(false);
 
@@ -149,7 +153,13 @@ export default function SpotlightMatch({ profile, rawPost, isRTL }: SpotlightMat
           <div className="mt-auto pt-4 border-t border-slate-100 shrink-0">
             {profile.type === 'found' ? (
               <button
-                onClick={() => setIsClaimOpen(true)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    toast.error(isRTL ? 'يجب عليك تسجيل الدخول أولاً!' : 'You are required to login first!');
+                    return;
+                  }
+                  setIsClaimOpen(true);
+                }}
                 className="w-full py-3.5 px-6 rounded-xl bg-secondary text-white font-bold text-[15px] hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <HeartHandshake className="w-5 h-5" />
