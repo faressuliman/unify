@@ -118,10 +118,12 @@ export default function Footer() {
                   <span dir="ltr" className="text-sm md:text-base text-tertiary/80 transition-colors cursor-pointer font-medium hover:text-secondary">{t.phone}</span>
                 </li>
                 <li className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5">
-                    <Mail className="h-5 w-5 text-secondary border-none" />
-                  </div>
-                  <span className="break-all text-sm md:text-base text-tertiary/80 transition-colors cursor-pointer font-medium hover:text-secondary">{t.email}</span>
+                  <Link to="/contact" className="flex items-center gap-4 group/mail cursor-pointer">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5 transition-colors group-hover/mail:border-secondary/20">
+                      <Mail className="h-5 w-5 text-secondary border-none" />
+                    </div>
+                    <span className="break-all text-sm md:text-base text-tertiary/80 transition-colors font-medium group-hover/mail:text-secondary">{t.email}</span>
+                  </Link>
                 </li>
                 <li className="flex items-center gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-tertiary/5">

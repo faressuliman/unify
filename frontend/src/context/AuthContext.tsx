@@ -15,7 +15,7 @@ interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
+  login: (email: string, password: string, rememberMe: boolean) => Promise<AuthUser | null>;
   register: (payload: {
     name: string;
     email: string;
@@ -38,7 +38,7 @@ const fallbackAuthContext: AuthContextType = {
   token: null,
   isAuthenticated: false,
   login: async () => {
-    return;
+    return null;
   },
   register: async () => {
     return;
@@ -108,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCookie(AUTH_USER_COOKIE, JSON.stringify(nextUser), { days });
       setCookie(AUTH_TOKEN_COOKIE, nextToken, { days });
     }
+    return nextUser;
   };
 
   const register = async (payload: {

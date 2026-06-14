@@ -1030,18 +1030,6 @@ export default function Admin() {
 
     },
 
-    {
-
-      id: "messages",
-
-      label: isRTL ? "الرسائل" : "Messages",
-
-      icon: Mail,
-
-      tone: "slate",
-
-    },
-
   ];
 
 
@@ -3392,13 +3380,13 @@ function PostsPanel({
 
                 key={post._id}
 
-                className="px-5 py-4 flex flex-col gap-3 hover:bg-slate-50/50"
+                className="px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:bg-slate-50/50"
 
               >
 
-                {/* Top row: image + info side by side */}
+                {/* Left side: image + info */}
 
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 min-w-0">
 
                   <div className="shrink-0 h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400">
 
@@ -3424,41 +3412,45 @@ function PostsPanel({
 
                   <div className="flex-1 min-w-0">
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2">
 
-                      <span className="font-bold text-tertiary truncate">
+                      <span className="font-bold text-tertiary truncate text-start block">
 
                         {post.name}
 
                       </span>
 
-                      <span
+                      <div className="flex flex-wrap items-center justify-start gap-2">
 
-                        className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full border ${typeTone}`}
+                        <span
 
-                      >
+                          className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full border ${typeTone}`}
 
-                        {t.posts.filters[post.postType]}
+                        >
 
-                      </span>
+                          {t.posts.filters[post.postType]}
 
-                      <span
+                        </span>
 
-                        className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        <span
 
-                          post.status === "active"
+                          className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full ${
 
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
+                            post.status === "active"
 
-                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
 
-                        }`}
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
 
-                      >
+                          }`}
 
-                        {post.status}
+                        >
 
-                      </span>
+                          {post.status}
+
+                        </span>
+
+                      </div>
 
                     </div>
 
@@ -3502,7 +3494,7 @@ function PostsPanel({
 
                 </div>
 
-                {/* Delete button full width below */}
+                {/* Right side: Delete button */}
 
                 <button
 
@@ -3510,7 +3502,7 @@ function PostsPanel({
 
                   disabled={deletingPostId === post._id}
 
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-full md:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-red-50 text-red-700 border border-red-100 hover:bg-red-100/80 transition-colors cursor-pointer disabled:opacity-50"
 
                 >
 

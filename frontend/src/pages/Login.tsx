@@ -69,8 +69,16 @@ const Login = () => {
         setIsSubmitting(true);
 
         try {
-            await login(formData.email, formData.password, rememberMe);
-            toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Welcome back!');
+            const loggedInUser = await login(formData.email, formData.password, rememberMe);
+
+            const displayName = loggedInUser?.name;
+
+            toast.success(
+                isRTL
+                    ? (displayName ? `مرحباً بعودتك، ${displayName}!` : 'تم تسجيل الدخول بنجاح')
+                    : (displayName ? `Welcome back, ${displayName}!` : 'Welcome back!')
+            );
+
             navigate('/');
         } catch (error) {
             const message = error instanceof ApiError ? error.message : 'Unable to log in right now.';
