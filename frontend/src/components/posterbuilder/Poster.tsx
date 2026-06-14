@@ -143,7 +143,7 @@ const Poster = () => {
           />
         </motion.div>
 
-        <div className="px-6 lg:px-12 w-full">
+        <div className="px-6 lg:px-12 w-full max-w-400 mx-auto">
           <div className="flex flex-col lg:flex-row gap-8 lg:items-start mt-6">
           <motion.div className="space-y-6 w-full lg:w-1/2 shrink-0 print:hidden pb-12" variants={itemVariants}>
             {/* Personal Details Card */}
