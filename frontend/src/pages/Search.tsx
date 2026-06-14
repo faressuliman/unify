@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Info, Search as SearchIcon, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Info, Search as SearchIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import MissingPersonCard from '../components/search/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
@@ -372,7 +372,7 @@ export default function Search() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4 }}
-                  className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  className="flex overflow-x-auto gap-4 md:gap-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
                   {filteredPosts.map((profile, idx) =>
                     profile.type === 'missing' ? (
@@ -395,18 +395,22 @@ export default function Search() {
                 
                 {filteredPosts.length > 2 && (
                   <>
-                    <button 
+                    <motion.button
                       onClick={() => scrollByAmount('left')}
-                      className={`hidden lg:flex absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-secondary shadow-md text-tertiary items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollLeft ? 'hidden lg:hidden' : ''}`}
+                      whileTap={{ scale: 0.88 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                      className={`hidden lg:flex absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-primary-500 shadow-md text-white items-center justify-center rounded-full cursor-pointer hover:bg-primary-600 ${!canScrollLeft ? 'hidden lg:hidden' : ''}`}
                     >
-                      <ArrowLeft className="w-6 h-6" />
-                    </button>
-                    <button 
+                      <ChevronLeft className="w-5 h-5" />
+                    </motion.button>
+                    <motion.button
                       onClick={() => scrollByAmount('right')}
-                      className={`hidden lg:flex absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-secondary shadow-md text-tertiary items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollRight ? 'hidden lg:hidden' : ''}`}
+                      whileTap={{ scale: 0.88 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                      className={`hidden lg:flex absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-primary-500 shadow-md text-white items-center justify-center rounded-full cursor-pointer hover:bg-primary-600 ${!canScrollRight ? 'hidden lg:hidden' : ''}`}
                     >
-                      <ArrowRight className="w-6 h-6" />
-                    </button>
+                      <ChevronRight className="w-5 h-5" />
+                    </motion.button>
                   </>
                 )}
               </div>

@@ -930,7 +930,7 @@ export default function Admin() {
 
       badge: stats?.pendingClaims,
 
-      tone: "red",
+      tone: "secondary",
 
     },
 
@@ -1142,9 +1142,9 @@ export default function Admin() {
 
                           className={`shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-bold ${
 
-                            item.tone === "red"
+                            item.tone === "secondary"
 
-                              ? "bg-red-500 text-white"
+                              ? "bg-secondary text-white"
 
                               : item.tone === "amber"
 

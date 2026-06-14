@@ -36,8 +36,6 @@ import {
   Loader2,
   Camera,
   ClipboardList,
-  ArrowRight,
-  ArrowLeft,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import MissingPersonCard from "../components/search/MissingPersonCard";
@@ -359,6 +357,7 @@ export default function Profile() {
     window.addEventListener("resize", updateScrollControls);
     return () => window.removeEventListener("resize", updateScrollControls);
   }, [activeTab, filteredPosts.length]);
+
 
   useEffect(() => {
     const postId = searchParams.get("sightingPostId");
@@ -1153,49 +1152,49 @@ export default function Profile() {
                 </motion.div>
 
                 {filteredPosts.length > 2 && canScrollLeft && (
-                  <button
+                  <motion.button
                     onClick={() => {
                       if (cardsRef.current) {
                         cardsRef.current.scrollBy({
-                          left: isRTL
-                            ? cardsRef.current.clientWidth
-                            : -cardsRef.current.clientWidth,
-                          behavior: "smooth",
+                          left: isRTL ? cardsRef.current.clientWidth : -cardsRef.current.clientWidth,
+                          behavior: 'smooth',
                         });
                       }
                     }}
-                    className={`hidden lg:flex absolute ${isRTL ? "-right-5" : "-left-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-secondary shadow-md rounded-full transition-colors cursor-pointer text-tertiary hover:bg-[#c4a643]`}
+                    whileTap={{ scale: 0.88 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                    className={`hidden lg:flex absolute ${isRTL ? "-right-5" : "-left-5"} top-[42%] -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-primary-500 shadow-md rounded-full cursor-pointer text-white hover:bg-primary-600`}
                     aria-label="Scroll left"
                   >
                     {isRTL ? (
-                      <ArrowRight className="w-6 h-6" />
+                      <ChevronRight className="w-5 h-5" />
                     ) : (
-                      <ArrowLeft className="w-6 h-6" />
+                      <ChevronLeft className="w-5 h-5" />
                     )}
-                  </button>
+                  </motion.button>
                 )}
 
                 {filteredPosts.length > 2 && canScrollRight && (
-                  <button
+                  <motion.button
                     onClick={() => {
                       if (cardsRef.current) {
                         cardsRef.current.scrollBy({
-                          left: isRTL
-                            ? -cardsRef.current.clientWidth
-                            : cardsRef.current.clientWidth,
-                          behavior: "smooth",
+                          left: isRTL ? -cardsRef.current.clientWidth : cardsRef.current.clientWidth,
+                          behavior: 'smooth',
                         });
                       }
                     }}
-                    className={`hidden lg:flex absolute ${isRTL ? "-left-5" : "-right-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-secondary shadow-md rounded-full transition-colors cursor-pointer text-tertiary hover:bg-[#c4a643]`}
+                    whileTap={{ scale: 0.88 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                    className={`hidden lg:flex absolute ${isRTL ? "-left-5" : "-right-5"} top-[42%] -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-primary-500 shadow-md rounded-full cursor-pointer text-white hover:bg-primary-600`}
                     aria-label="Scroll right"
                   >
                     {isRTL ? (
-                      <ArrowLeft className="w-6 h-6" />
+                      <ChevronLeft className="w-5 h-5" />
                     ) : (
-                      <ArrowRight className="w-6 h-6" />
+                      <ChevronRight className="w-5 h-5" />
                     )}
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </motion.div>

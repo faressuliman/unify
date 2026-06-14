@@ -7,7 +7,7 @@ import MissingPersonCard from '../search/MissingPersonCard';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import { motion } from 'framer-motion';
-import { ArrowDownRight, ArrowDownLeft, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowDownRight, ArrowDownLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import UnderlineTabSelector from '../ui/UnderlineTabSelector';
 import { postApi, type BackendPost } from '@/lib/api';
 import { mapPostFields } from '@/lib/postFormatters';
@@ -159,7 +159,7 @@ export default function RecentUpdates() {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, amount: 0.85 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              className="flex overflow-x-auto gap-4 md:gap-6 pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
               {posts.map((profile, idx) => (
                 profile.type === 'found' ? (
@@ -172,18 +172,22 @@ export default function RecentUpdates() {
             
             {posts.length > 4 && (
               <>
-                <button 
+                <motion.button
                   onClick={() => scrollByAmount('left')}
-                  className={`absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-secondary shadow-md text-tertiary flex items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollLeft ? 'hidden' : ''}`}
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  className={`absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-primary-500 shadow-md text-white flex items-center justify-center rounded-full cursor-pointer hover:bg-primary-600 ${!canScrollLeft ? 'hidden' : ''}`}
                 >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <button 
+                  <ChevronLeft className="w-5 h-5" />
+                </motion.button>
+                <motion.button
                   onClick={() => scrollByAmount('right')}
-                  className={`absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-secondary shadow-md text-tertiary flex items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollRight ? 'hidden' : ''}`}
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  className={`absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-primary-500 shadow-md text-white flex items-center justify-center rounded-full cursor-pointer hover:bg-primary-600 ${!canScrollRight ? 'hidden' : ''}`}
                 >
-                  <ArrowRight className="w-5 h-5" />
-                </button>
+                  <ChevronRight className="w-5 h-5" />
+                </motion.button>
               </>
             )}
           </div>
