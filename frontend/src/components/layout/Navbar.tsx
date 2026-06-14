@@ -499,7 +499,7 @@ export function Navbar() {
               <DropdownMenu dir={dropdownDir} modal={false} open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative flex items-center justify-center transition-all duration-200 cursor-pointer border-none bg-slate-50 w-auto h-auto mx-1 xl:mx-0 xl:bg-slate-50 xl:hover:bg-slate-200 xl:w-10 xl:h-10 xl:rounded-full"
+                    className="relative flex items-center justify-center transition-all duration-200 cursor-pointer border-none bg-transparent w-auto h-auto mx-1 xl:mx-0 xl:bg-slate-50 xl:hover:bg-slate-200 xl:w-10 xl:h-10 xl:rounded-full"
                     aria-label="Notifications"
                   >
                     <Bell className="h-6 w-6 xl:h-5 xl:w-5 text-gray-700" strokeWidth={2} />
