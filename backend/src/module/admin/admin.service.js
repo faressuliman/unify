@@ -265,7 +265,7 @@ export const verifyUser = async (req, res, next) => {
     verificationApprovedTemplate({
       name: user.name,
       loginUrl: process.env.FRONTEND_URL
-        ? `${process.env.FRONTEND_URL}/login`
+        ? `${process.env.FRONTEND_URL.replace(/\/+$/, "")}/login`
         : undefined,
     }),
   ).catch((err) =>
