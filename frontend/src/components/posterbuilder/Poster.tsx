@@ -374,14 +374,14 @@ const Poster = () => {
                       animate={{ opacity: 1 }}
                       src={previewImage} 
                       alt="Preview" 
-                      className="w-full h-auto object-contain block" 
+                      className="w-full h-auto block" 
                     />
                   ) : (
                     <motion.div 
                       key="no-image"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-slate-300 flex flex-col items-center gap-2 min-h-64 justify-center"
+                      className="text-slate-300 flex flex-col items-center gap-2 min-h-[500px] justify-center w-full"
                     >
                       <FontAwesomeIcon icon={faImage} className="text-8xl opacity-20" />
                       <span className="text-sm font-bold opacity-30 uppercase tracking-[0.2em] font-sans">{t('poster.noPhoto')}</span>
