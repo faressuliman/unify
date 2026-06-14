@@ -8,7 +8,7 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 import { ApiError, contactApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { useLanguage } from '../context/LanguageContext';
-import compassImg from '../assets/compass.jpg';
+import contactImg from '../assets/contact.png';
 
 const ContactCard = ({ icon, title, detail, delay, href }: { icon: React.ReactNode, title: string, detail: string, delay: number, href?: string }) => {
     const Wrapper = href ? motion.a : motion.div;
@@ -154,12 +154,10 @@ const Contact = () => {
             {/* Hero Header Section */}
             <div className="relative pt-20 pb-24 lg:pt-24 lg:pb-28 overflow-hidden bg-primary-dark">
                 <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-20"
-                    style={{ backgroundImage: `url(${compassImg})` }}
+                    className="absolute inset-0 bg-cover bg-center opacity-40"
+                    style={{ backgroundImage: `url(${contactImg})` }}
                 ></div>
-                {/* Darker overlay for better contrast */}
-                <div className="absolute inset-0 bg-slate-900/60"></div>
-                <div className="absolute inset-0 bg-linear-to-b from-transparent to-primary-dark/95"></div>
+                <div className="absolute inset-0 bg-slate-900/50"></div>
                 <div className="absolute inset-0 bg-grid-white/[0.04] bg-position-[bottom_1px_center] mask-[linear-gradient(to_bottom,transparent,black)]"></div>
                 
                 <div className="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">

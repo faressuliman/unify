@@ -214,7 +214,7 @@ export default function LiveMap() {
       </MapContainer>
 
       {/* الـ Badge */}
-      <div className="absolute top-4 right-4 z-1000 flex flex-col gap-2">
+      <div className="absolute bottom-4 left-4 z-1000 flex flex-col gap-2">
         <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
           <span className="text-[12px] font-bold text-slate-700">

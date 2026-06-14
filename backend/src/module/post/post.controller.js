@@ -18,6 +18,12 @@ router.post(
 );
 
 router.post(
+  "/detect-ai-image",
+  multerMemory(filetypes.image).single("image"),
+  asynchandler(postService.detectAiImage)
+);
+
+router.post(
   "/log-ai-detection",
   asynchandler(postService.logAiDetectionResult)
 );

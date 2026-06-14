@@ -23,6 +23,38 @@ function euclideanDistance(vec1, vec2) {
   return Math.sqrt(sum);
 }
 
+// ─── Detect AI Image Proxy ──────────────────────────────────────────────────
+export const detectAiImage = async (req, res, next) => {
+  if (!req.file) {
+    return next(new Error("Please upload an image to check", { cause: 400 }));
+  }
+
+  try {
+    const form = new FormData();
+    form.append("image", req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+    if (req.body.source) {
+      form.append("source", req.body.source);
+    }
+
+    const aiResponse = await axios.post(
+      `${process.env.AI_SERVICE_URL}/detect-ai-image`,
+      form,
+      {
+        headers: { ...form.getHeaders() },
+        timeout: 120000,
+      }
+    );
+
+    return res.status(200).json(aiResponse.data);
+  } catch (error) {
+    console.error("AI Detect Error:", error.message);
+    return res.status(500).json({ success: false, error: "AI detection failed" });
+  }
+};
+
 // ─── Search by Image (AI Face Matching) ───────────────────────────────────────
 export const searchByImage = async (req, res, next) => {
   if (!req.file)
@@ -34,7 +66,7 @@ export const searchByImage = async (req, res, next) => {
     form.append("image", req.file.buffer, { filename: "search.jpg" });
 
     const aiResponse = await axios.post(
-      "http://127.0.0.1:8000/get-face-encoding",
+      `${process.env.AI_SERVICE_URL}/get-face-encoding`,
       form,
       {
         headers: { ...form.getHeaders() },
@@ -191,7 +223,7 @@ export const createPost = async (req, res, next) => {
         form.append("image", imageResponse.data, { filename: "upload.jpg" });
 
         const aiResponse = await axios.post(
-          "http://127.0.0.1:8000/get-face-encoding",
+          `${process.env.AI_SERVICE_URL}/get-face-encoding`,
           form,
           { headers: { ...form.getHeaders() }, timeout: 30000 },
         );
@@ -482,7 +514,7 @@ export const prefetchEncoding = async (req, res, next) => {
     form.append("image", req.file.buffer, { filename: req.file.originalname || "upload.jpg" });
 
     const aiResponse = await axios.post(
-      "http://127.0.0.1:8000/get-face-encoding",
+      `${process.env.AI_SERVICE_URL}/get-face-encoding`,
       form,
       { headers: { ...form.getHeaders() }, timeout: 30000 },
     );

@@ -7,7 +7,7 @@ import MissingPersonCard from '../search/MissingPersonCard';
 import { en } from '../../data/english';
 import { ar } from '../../data/arabic';
 import { motion } from 'framer-motion';
-import { ArrowDownRight, ArrowDownLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowDownRight, ArrowDownLeft, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import UnderlineTabSelector from '../ui/UnderlineTabSelector';
 import { postApi, type BackendPost } from '@/lib/api';
 import { mapPostFields } from '@/lib/postFormatters';
@@ -174,15 +174,15 @@ export default function RecentUpdates() {
               <>
                 <button 
                   onClick={() => scrollByAmount('left')}
-                  className={`absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white border border-slate-200 shadow-md text-tertiary flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-slate-50 ${!canScrollLeft ? 'hidden' : ''}`}
+                  className={`absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-secondary shadow-md text-tertiary flex items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollLeft ? 'hidden' : ''}`}
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={() => scrollByAmount('right')}
-                  className={`absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white border border-slate-200 shadow-md text-tertiary flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-slate-50 ${!canScrollRight ? 'hidden' : ''}`}
+                  className={`absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-secondary shadow-md text-tertiary flex items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollRight ? 'hidden' : ''}`}
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ArrowRight className="w-5 h-5" />
                 </button>
               </>
             )}

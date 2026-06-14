@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import Hero from "../components/home/Hero";
 import type { HeroSearchPayload } from "../components/home/Hero";
-import Stats from "../components/home/Stats";
+import KeyFeatures from "../components/home/KeyFeatures";
 import HowUnifyWorks from "../components/home/HowUnifyWorks";
 import RecentUpdates from "../components/home/RecentUpdates";
 import MapSection from "@/components/home/MapSection";
+import heroImg from "../assets/hero.png";
 
 const Index = () => {
     const navigate = useNavigate();
@@ -22,8 +23,8 @@ const Index = () => {
 
     return (
         <div className="bg-gray-50">
-            <Hero onSearchSubmit={handleSearchSubmit} />
-            <Stats />
+            <Hero onSearchSubmit={handleSearchSubmit} backgroundImages={[heroImg]} />
+            <KeyFeatures />
             <HowUnifyWorks />
             <RecentUpdates />
             <MapSection />

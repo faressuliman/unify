@@ -195,7 +195,13 @@ const AboutUs = () => {
                                 className="w-12 h-12 bg-secondary hover:bg-secondary/80 text-white rounded-full flex items-center justify-center transition-colors shadow-sm cursor-pointer"
                                 aria-label="Toggle slide"
                             >
-                                <ArrowRight className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
+                                <motion.div
+                                    initial={false}
+                                    animate={{ rotate: trustSlideIndex === 0 ? 0 : 180 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <ArrowRight className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
+                                </motion.div>
                             </button>
                         </div>
                     </div>

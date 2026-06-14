@@ -30,7 +30,7 @@ export const register = async (req, res, next) => {
       form.append("image", blob, req.file.originalname || "id.jpg");
 
       const [aiRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/detect-ai-image", {
+        fetch(`${process.env.AI_SERVICE_URL}/detect-ai-image`, {
           method: "POST",
           body: form,
         }),

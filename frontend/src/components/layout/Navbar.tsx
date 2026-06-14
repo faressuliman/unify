@@ -13,7 +13,7 @@ import {
 } from '../ui/dropdown-menu';
 import { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import unifyLogo from '../../assets/unify.png';
-import { notificationApi, type BackendNotification, type BackendNotificationPost } from '@/lib/api';
+import { notificationApi, adminApi, type BackendNotification, type BackendNotificationPost } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
 
 const LazyDrawer = lazy(() => import('../ui/Drawer').then((module) => ({ default: module.Drawer })));
@@ -42,6 +42,7 @@ export function Navbar() {
   const [notifications, setNotifications] = useState<BackendNotification[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [adminBadgeCount, setAdminBadgeCount] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isDrawerLoaded, setIsDrawerLoaded] = useState(false);
   const hasPrefetchedCoreRoutes = useRef(false);
@@ -210,6 +211,24 @@ export function Navbar() {
       } catch (e) {
         console.error('Failed to fetch notifications data', e);
       }
+
+      if (user?.role === 'admin') {
+        try {
+          const statsRes = await adminApi.getDashboardStats(token);
+          if (!cancelled && statsRes.stats) {
+            const s = statsRes.stats;
+            const totalActionable = 
+              (s.pendingClaims || 0) + 
+              (s.sightingReports || 0) + 
+              (s.pendingVerifications || 0) + 
+              (s.pendingContactMessages || 0) + 
+              (s.pendingUserReports || 0);
+            setAdminBadgeCount(totalActionable);
+          }
+        } catch (e) {
+          console.error('Failed to fetch admin stats', e);
+        }
+      }
     };
 
     void fetchNotificationsData();
@@ -249,7 +268,7 @@ export function Navbar() {
         socket.off('chat:message', handleChatMessage);
       }
     };
-  }, [isAuthenticated, token, currentPage]);
+  }, [isAuthenticated, token, currentPage, user?.role]);
 
   const isScrolledActive =
     isScrolled &&
@@ -462,7 +481,7 @@ export function Navbar() {
               >
                 <Mail className="h-5 w-5 text-gray-700" strokeWidth={2} />
                 {unreadMessageCount > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 xl:-right-0.5 xl:-top-0.5 min-w-4.5 h-4.5 px-1.5 xl:px-1 rounded-full bg-primary text-primary-foreground text-[10px] xl:text-xs flex items-center justify-center font-semibold">
+                  <span className="absolute -right-1.5 -top-1.5 xl:-right-0.5 xl:-top-0.5 min-w-4.5 h-4.5 px-1.5 xl:px-1 rounded-full bg-primary text-secondary text-[10px] xl:text-xs flex items-center justify-center font-semibold">
                     {unreadMessageCount}
                   </span>
                 )}
@@ -477,7 +496,7 @@ export function Navbar() {
                   >
                     <Bell className="h-6 w-6 xl:h-5 xl:w-5 text-gray-700" strokeWidth={2} />
                     {notificationCount > 0 && (
-                      <span className="absolute -right-1.5 -top-1.5 xl:-right-0.5 xl:-top-0.5 min-w-4.5 h-4.5 px-1.5 xl:px-1 rounded-full bg-primary text-primary-foreground text-[10px] xl:text-xs flex items-center justify-center font-semibold">
+                      <span className="absolute -right-1.5 -top-1.5 xl:-right-0.5 xl:-top-0.5 min-w-4.5 h-4.5 px-1.5 xl:px-1 rounded-full bg-primary text-secondary text-[10px] xl:text-xs flex items-center justify-center font-semibold">
                         {notificationCount}
                       </span>
                     )}
@@ -553,7 +572,7 @@ export function Navbar() {
                               }
                             }}
                             className={`flex gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0 hover:bg-gray-50/80 ${
-                              !notification.isRead ? 'bg-primary-50/30' : 'bg-white'
+                              !notification.isRead ? 'bg-blue-50' : 'bg-white'
                             }`}
                           >
                             <div className="mt-0.5 shrink-0 bg-gray-100 p-2 rounded-full h-10 w-10 flex items-center justify-center">
@@ -587,6 +606,22 @@ export function Navbar() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Desktop: Admin Icon */}
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => handleNavClick('admin')}
+                  className="hidden xl:flex relative w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-200 items-center justify-center transition-all duration-200 cursor-pointer border-none"
+                  aria-label={t('nav.admin')}
+                >
+                  <ShieldCheck className="h-5 w-5 text-gray-700" strokeWidth={2} />
+                  {adminBadgeCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 xl:-right-0.5 xl:-top-0.5 min-w-4.5 h-4.5 px-1.5 xl:px-1 rounded-full bg-primary text-secondary text-[10px] xl:text-xs flex items-center justify-center font-semibold">
+                      {adminBadgeCount > 99 ? '99+' : adminBadgeCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Desktop: User dropdown */}
               <DropdownMenu dir={dropdownDir} modal={false}>

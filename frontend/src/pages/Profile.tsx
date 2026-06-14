@@ -36,6 +36,8 @@ import {
   Loader2,
   Camera,
   ClipboardList,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import MissingPersonCard from "../components/search/MissingPersonCard";
@@ -1161,13 +1163,13 @@ export default function Profile() {
                         });
                       }
                     }}
-                    className={`hidden lg:flex absolute ${isRTL ? "-right-5" : "-left-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-white shadow-md rounded-full border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer text-tertiary`}
+                    className={`hidden lg:flex absolute ${isRTL ? "-right-5" : "-left-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-secondary shadow-md rounded-full transition-colors cursor-pointer text-tertiary hover:bg-[#c4a643]`}
                     aria-label="Scroll left"
                   >
                     {isRTL ? (
-                      <ChevronRight className="w-6 h-6" />
+                      <ArrowRight className="w-6 h-6" />
                     ) : (
-                      <ChevronLeft className="w-6 h-6" />
+                      <ArrowLeft className="w-6 h-6" />
                     )}
                   </button>
                 )}
@@ -1184,13 +1186,13 @@ export default function Profile() {
                         });
                       }
                     }}
-                    className={`hidden lg:flex absolute ${isRTL ? "-left-5" : "-right-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-white shadow-md rounded-full border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer text-tertiary`}
+                    className={`hidden lg:flex absolute ${isRTL ? "-left-5" : "-right-5"} top-[42%] -translate-y-1/2 z-10 w-12 h-12 items-center justify-center bg-secondary shadow-md rounded-full transition-colors cursor-pointer text-tertiary hover:bg-[#c4a643]`}
                     aria-label="Scroll right"
                   >
                     {isRTL ? (
-                      <ChevronLeft className="w-6 h-6" />
+                      <ArrowLeft className="w-6 h-6" />
                     ) : (
-                      <ChevronRight className="w-6 h-6" />
+                      <ArrowRight className="w-6 h-6" />
                     )}
                   </button>
                 )}

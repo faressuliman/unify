@@ -18,7 +18,7 @@ export interface AiImageCheckResult {
  * (Register uses the backend-only flow via auth.service.js)
  */
 /** Minimum time (ms) the loading toast stays visible */
-const MIN_DISPLAY_MS = 2500;
+const MIN_DISPLAY_MS = 3000;
 
 async function logToBackend(source: string, data: any) {
   try {
@@ -41,9 +41,9 @@ export async function checkAiImage(file: File, source: string = 'unknown'): Prom
     fd.append('image', file);
     fd.append('source', source);
 
-    const aiServiceUrl = import.meta.env.VITE_AI_SERVICE_URL;
+    const apiUrl = import.meta.env.VITE_API_BASE_URL ?? '/api/';
     const [res] = await Promise.all([
-      fetch(`${aiServiceUrl}/detect-ai-image`, {
+      fetch(`${apiUrl}posts/detect-ai-image`, {
         method: 'POST',
         body: fd,
       }),

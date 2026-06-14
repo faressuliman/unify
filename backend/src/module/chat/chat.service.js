@@ -62,12 +62,14 @@ export const startChat = async (req, res, next) => {
     }
   }
 
-  // Check if chat already exists
+  // Check if an active chat already exists.
+  // Deleted/archived chats should not be restored; opening a new chat should start fresh.
   let chat = await Chat.findOne({
     $or: [
       { initiatorUserId: req.user._id, responderUserId: responderId },
       { initiatorUserId: responderId, responderUserId: req.user._id },
     ],
+    isActive: true,
   });
 
   if (!chat) {
@@ -76,9 +78,6 @@ export const startChat = async (req, res, next) => {
       responderUserId: responderId,
       isActive: true,
     });
-  } else if (!chat.isActive) {
-    chat.isActive = true;
-    await chat.save();
   }
 
   const populatedChat = await Chat.findById(chat._id)

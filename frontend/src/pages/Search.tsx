@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Info, Search as SearchIcon } from 'lucide-react';
+import { Info, Search as SearchIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import MissingPersonCard from '../components/search/MissingPersonCard';
 import PageHeader from '../components/ui/PageHeader';
@@ -117,6 +117,8 @@ export default function Search() {
   const [error, setError] = useState('');
   const [initialImagePreview, setInitialImagePreview] = useState<string | null>(null);
 
+
+
   // After a successful post creation we land here with `?scrollTo=results` —
   // wait for the results section to render, then smoothly scroll to it so
   // the user sees the cards immediately.
@@ -217,6 +219,38 @@ export default function Search() {
     }
   };
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(Math.abs(scrollLeft) > 5);
+      setCanScrollRight(Math.ceil(Math.abs(scrollLeft) + clientWidth) < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [filteredPosts]);
+
+  const scrollByAmount = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const amount = scrollRef.current.clientWidth * 0.8;
+      const isRtl = document.documentElement.dir === 'rtl';
+      let scrollAmount = direction === 'left' ? -amount : amount;
+      
+      if (isRtl) {
+        scrollAmount = -scrollAmount;
+      }
+      
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-8 pb-16" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex-1">
@@ -296,31 +330,52 @@ export default function Search() {
                 <p>{error}</p>
               </div>
             ) : filteredPosts.length > 0 ? (
-              <motion.div 
-                key={activeTab}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              >
-                {filteredPosts.map((profile, idx) =>
-                  profile.type === 'missing' ? (
-                    <MissingPersonCard
-                      key={profile.id}
-                      profile={(profile as unknown as ProfileData)}
-                      idx={idx}
-                      isRTL={isRTL}
-                    />
-                  ) : (
-                    <FoundPersonCard
-                      key={profile.id}
-                      profile={(profile as unknown as ProfileData)}
-                      idx={idx}
-                      isRTL={isRTL}
-                    />
-                  ),
+              <div className="relative group w-full">
+                <motion.div 
+                  ref={scrollRef}
+                  onScroll={checkScroll}
+                  key={activeTab}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex overflow-x-auto gap-4 md:gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                >
+                  {filteredPosts.map((profile, idx) =>
+                    profile.type === 'missing' ? (
+                      <MissingPersonCard
+                        key={profile.id}
+                        profile={(profile as unknown as ProfileData)}
+                        idx={idx}
+                        isRTL={isRTL}
+                      />
+                    ) : (
+                      <FoundPersonCard
+                        key={profile.id}
+                        profile={(profile as unknown as ProfileData)}
+                        idx={idx}
+                        isRTL={isRTL}
+                      />
+                    ),
+                  )}
+                </motion.div>
+                
+                {filteredPosts.length > 2 && (
+                  <>
+                    <button 
+                      onClick={() => scrollByAmount('left')}
+                      className={`hidden lg:flex absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-secondary shadow-md text-tertiary items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollLeft ? 'hidden lg:hidden' : ''}`}
+                    >
+                      <ArrowLeft className="w-6 h-6" />
+                    </button>
+                    <button 
+                      onClick={() => scrollByAmount('right')}
+                      className={`hidden lg:flex absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-secondary shadow-md text-tertiary items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[#c4a643] ${!canScrollRight ? 'hidden lg:hidden' : ''}`}
+                    >
+                      <ArrowRight className="w-6 h-6" />
+                    </button>
+                  </>
                 )}
-              </motion.div>
+              </div>
             ) : (
                <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
                 <SearchIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />

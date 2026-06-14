@@ -177,8 +177,8 @@ export default function ClaimFamilyModal({ isOpen, onOpenChange, personName, pos
                   isLoading={isSubmitting}
                   className="w-full lg:flex-1 px-8 text-[15px] bg-blue-600 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:bg-blue-700 order-1 lg:order-2 flex items-center justify-center gap-2"
                 >
-                  <HeartHandshake className="w-5 h-5" />
-                  {t.submitClaim}
+                  {!isSubmitting && <HeartHandshake className="w-5 h-5" />}
+                  {!isSubmitting ? t.submitClaim : null}
                 </SubmitButton>
                 <button
                   type="button"

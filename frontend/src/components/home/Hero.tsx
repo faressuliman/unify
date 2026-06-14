@@ -108,9 +108,10 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
             <img
               src={backgroundImages[0]}
               alt="Background"
-              className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
+              className={`w-full h-full object-cover object-[85%_center] lg:object-center ${isRTL ? 'scale-x-[-1]' : ''}`}
             />
-            <div className="absolute inset-0 bg-linear-to-b from-slate-50/80 via-white/80 to-white"></div>
+            {/* Full, smooth gradient from text side to transparent */}
+            <div className="absolute inset-0 bg-slate-50/90 md:bg-slate-50/80 lg:bg-transparent ltr:lg:bg-gradient-to-r rtl:lg:bg-gradient-to-l lg:from-slate-50/95 lg:via-slate-50/60 lg:to-transparent"></div>
           </div>
         ) : (
           <>
@@ -125,14 +126,13 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto w-full z-10 flex flex-col items-center py-16 px-6 lg:px-8">
-
+      <div className="w-full max-w-400 mx-auto z-10 flex flex-col items-start py-16 px-6 lg:px-12 text-start">
         {/* Soft, welcoming typography */}
-        <div className="text-center mb-10 max-w-5xl">
+        <div className="mb-10 max-w-3xl">
           <AnimatePresence>
             {isReady && (
               <motion.h1
-                className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-6 text-tertiary leading-[1.2] flex flex-wrap md:flex-nowrap justify-center gap-y-2 gap-x-[0.3em]"
+                className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-6 text-tertiary leading-[1.2] flex flex-wrap justify-start gap-y-2 gap-x-[0.3em]"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -144,7 +144,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
                 }}
               >
                 {titleParts.map((part, partIndex) => (
-                  <span key={partIndex} className="flex justify-center flex-wrap md:flex-nowrap w-full md:w-auto">
+                  <span key={partIndex} className="flex flex-wrap">
                     {part.split(' ').map((word, wordIndex, wordArray) => (
                       <span key={`${partIndex}-${wordIndex}`} className="flex">
                         <motion.span
@@ -183,7 +183,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
           <AnimatePresence>
             {isReady && (
               <motion.p
-                className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto"
+                className="text-[1.05rem] sm:text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
@@ -198,7 +198,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
         <AnimatePresence>
           {isReady && (
             <motion.div
-              className="w-full max-w-3xl px-2 sm:px-4"
+              className="w-full max-w-3xl"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
@@ -271,7 +271,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
                 </button>
               </form>
 
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500 font-medium opacity-80">
+              <div className="mt-4 flex items-center justify-start gap-2 text-sm text-slate-500 font-medium opacity-80 px-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 {isRTL ? 'نحن هنا لمساعدتك في العثور عليهم' : 'We are here to help you find them'}
               </div>

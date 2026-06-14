@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HeartHandshake, UserSearch, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
+import { HeartHandshake, UserSearch, HelpingHand, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -7,7 +7,7 @@ type UnifyWindow = Window & {
   __unifyLoadingComplete?: boolean;
 };
 
-export default function Stats() {
+export default function KeyFeatures() {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const [isReady, setIsReady] = useState(() => {
@@ -84,24 +84,24 @@ export default function Stats() {
                       {currentSlide === 0 && (
                         <motion.div 
                           key="slide-0"
-                          className="flex items-center justify-center gap-3"
+                          className="flex items-center justify-center gap-3 group"
                           initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
+                          <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0 transition-transform duration-300 group-hover:scale-110">
                             <HeartHandshake className="w-6 h-6" strokeWidth={2} />
                           </div>
                           <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
-                              {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
+                              {isRTL ? 'الهدف الرئيسي' : 'Core Mission'}
                             </p>
                             <p className="text-xl font-bold text-slate-800 whitespace-nowrap">
-                              {isRTL ? '124 عائلة' : '124 Families'}
+                              {isRTL ? 'لم الشمل' : 'Reunite'}
                             </p>
                             <p className="text-[10px] text-secondary font-bold mt-0.5 whitespace-nowrap">
-                              {isRTL ? '+12% عن الشهر الماضي' : '+12% from last month'}
+                              {isRTL ? 'إعادة الأحباء إلى عائلاتهم' : 'Bring loved ones back home'}
                             </p>
                           </div>
                         </motion.div>
@@ -109,24 +109,24 @@ export default function Stats() {
                       {currentSlide === 1 && (
                         <motion.div 
                           key="slide-1"
-                          className="flex items-center justify-center gap-3"
+                          className="flex items-center justify-center gap-3 group"
                           initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
+                          <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0 transition-transform duration-300 group-hover:scale-110">
                             <UserSearch className="w-6 h-6" strokeWidth={2} />
                           </div>
                           <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
-                              {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
+                              {isRTL ? 'الأدوات المتاحة' : 'Available Tools'}
                             </p>
                             <p className="text-xl font-bold text-slate-800 whitespace-nowrap">
-                              {isRTL ? '2,450 حالة' : '2,450 Cases'}
+                              {isRTL ? 'البحث الذكي' : 'Search'}
                             </p>
                             <p className="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">
-                              {isRTL ? 'يتم التحديث كل 10 دقائق' : 'Updates every 10 mins'}
+                              {isRTL ? 'مدعوم بتقنية التعرف على الوجوه' : 'AI-Powered facial recognition'}
                             </p>
                           </div>
                         </motion.div>
@@ -134,24 +134,24 @@ export default function Stats() {
                       {currentSlide === 2 && (
                         <motion.div 
                           key="slide-2"
-                          className="flex items-center justify-center gap-3"
+                          className="flex items-center justify-center gap-3 group"
                           initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0">
-                            <ShieldCheck className="w-6 h-6" strokeWidth={2} />
+                          <div className="p-2.5 bg-primary rounded-full text-secondary shrink-0 transition-transform duration-300 group-hover:scale-110">
+                            <HelpingHand className="w-6 h-6" strokeWidth={2} />
                           </div>
                           <div className="text-center flex flex-col items-center">
                             <p className="text-xs font-medium text-gray-500 whitespace-nowrap">
-                              {isRTL ? 'عمليات تحقق موثقة' : 'Verified Matches'}
+                              {isRTL ? 'دور المجتمع' : 'Community Role'}
                             </p>
                             <p className="text-xl font-bold text-slate-800 whitespace-nowrap">
-                              {isRTL ? '+18.5k مسجل' : '18.5k+ Users'}
+                              {isRTL ? 'مساعدة الآخرين' : 'Help Others'}
                             </p>
                             <p className="text-[10px] text-secondary font-bold mt-0.5 whitespace-nowrap">
-                              {isRTL ? 'مدعوم بالذكاء الاصطناعي' : 'Powered by AI'}
+                              {isRTL ? 'ساهم في إحداث فرق حقيقي' : 'Make a real difference today'}
                             </p>
                           </div>
                         </motion.div>
@@ -190,72 +190,72 @@ export default function Stats() {
               >
                 {/* Card 1 - Reunited */}
                 <motion.div 
-                  className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                  className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow group"
                   variants={{
                     hidden: { opacity: 0, y: 20 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
                   }}
                 >
-                  <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
+                  <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0 transition-transform duration-300 group-hover:scale-110">
                     <HeartHandshake className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                   </div>
                   <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
-                      {isRTL ? 'تم لم شملهم هذا الشهر' : 'Reunited This Month'}
+                      {isRTL ? 'الهدف الرئيسي' : 'Core Mission'}
                     </p>
                     <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
-                      {isRTL ? '124 عائلة' : '124 Families'}
+                      {isRTL ? 'لم الشمل' : 'Reunite'}
                     </p>
                     <p className="text-[10px] lg:text-xs text-secondary font-bold mt-0.5 whitespace-nowrap">
-                      {isRTL ? '+12% عن الشهر الماضي' : '+12% from last month'}
+                      {isRTL ? 'إعادة الأحباء إلى عائلاتهم' : 'Bring loved ones back home'}
                     </p>
                   </div>
                 </motion.div>
 
                 {/* Card 2 - Active Searches */}
                 <motion.div 
-                  className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                  className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow group"
                   variants={{
                     hidden: { opacity: 0, y: 20 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
                   }}
                 >
-                  <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
+                  <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0 transition-transform duration-300 group-hover:scale-110">
                     <UserSearch className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                   </div>
                   <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
-                      {isRTL ? 'حالات البحث النشطة' : 'Active Searches'}
+                      {isRTL ? 'الأدوات المتاحة' : 'Available Tools'}
                     </p>
                     <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
-                      {isRTL ? '2,450 حالة' : '2,450 Cases'}
+                      {isRTL ? 'البحث الذكي' : 'Search'}
                     </p>
                     <p className="text-[10px] lg:text-xs text-gray-400 mt-0.5 whitespace-nowrap">
-                      {isRTL ? 'يتم التحديث كل 10 دقائق' : 'Updates every 10 mins'}
+                      {isRTL ? 'مدعوم بتقنية التعرف على الوجوه' : 'AI-Powered facial recognition'}
                     </p>
                   </div>
                 </motion.div>
 
                 {/* Card 3 - Verified Matches */}
                 <motion.div 
-                  className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow"
+                  className="bg-white p-5 lg:p-6 rounded-xl border border-gray-100 flex items-center justify-start gap-3 lg:gap-4 hover:shadow-md transition-shadow group"
                   variants={{
                     hidden: { opacity: 0, y: 20 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
                   }}
                 >
-                  <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0">
-                    <ShieldCheck className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
+                  <div className="p-2.5 lg:p-3 bg-primary rounded-full text-secondary shrink-0 transition-transform duration-300 group-hover:scale-110">
+                    <HelpingHand className="w-6 h-6 lg:w-8 lg:h-8" strokeWidth={2} />
                   </div>
                   <div className="text-start flex flex-col items-start">
                     <p className="text-xs lg:text-sm font-medium text-gray-500 whitespace-nowrap">
-                      {isRTL ? 'عمليات تحقق موثقة' : 'Verified Matches'}
+                      {isRTL ? 'دور المجتمع' : 'Community Role'}
                     </p>
                     <p className="text-xl lg:text-2xl font-bold text-slate-800 whitespace-nowrap">
-                      {isRTL ? '+18.5k مسجل' : '18.5k+ Users'}
+                      {isRTL ? 'مساعدة الآخرين' : 'Help Others'}
                     </p>
                     <p className="text-[10px] lg:text-xs text-secondary font-bold mt-0.5 whitespace-nowrap">
-                      {isRTL ? 'مدعوم بالذكاء الاصطناعي' : 'Powered by AI'}
+                      {isRTL ? 'ساهم في إحداث فرق حقيقي' : 'Make a real difference today'}
                     </p>
                   </div>
                 </motion.div>
