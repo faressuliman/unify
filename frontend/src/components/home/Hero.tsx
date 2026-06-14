@@ -98,7 +98,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
 
   return (
     <section
-      className="relative isolate min-h-150 flex flex-col items-center justify-center overflow-hidden bg-slate-50"
+      className="relative isolate min-h-150 min-[1537px]:min-h-[680px] flex flex-col items-center justify-center overflow-hidden bg-slate-50"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Background elements */}
@@ -108,7 +108,7 @@ export default function Hero({ backgroundImages = [], onSearchSubmit }: HeroProp
             <img
               src={backgroundImages[0]}
               alt="Background"
-              className={`w-full h-full object-cover object-[85%_center] lg:object-center ${isRTL ? 'scale-x-[-1]' : ''}`}
+              className={`w-full h-full object-cover object-[85%_top] lg:object-top ${isRTL ? 'scale-x-[-1]' : ''}`}
             />
             {/* Full, smooth gradient from text side to transparent */}
             <div className="absolute inset-0 bg-slate-50/90 md:bg-slate-50/80 lg:bg-transparent ltr:lg:bg-gradient-to-r rtl:lg:bg-gradient-to-l lg:from-slate-50/95 lg:via-slate-50/60 lg:to-transparent"></div>
