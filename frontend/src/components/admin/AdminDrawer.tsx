@@ -7,7 +7,7 @@ export type AdminDrawerItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
   badge?: number;
-  tone: 'red' | 'amber' | 'slate' | 'blue';
+  tone: 'red' | 'amber' | 'slate' | 'blue' | 'secondary';
 };
 
 interface AdminDrawerProps {
@@ -70,14 +70,16 @@ export default function AdminDrawer({
                   <span className="flex-1 text-start">{item.label}</span>
                   {typeof item.badge === 'number' && item.badge > 0 && (
                     <span
-                      className={`shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-bold ${
+                       className={`shrink-0 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-bold ${
                         item.tone === 'red'
                           ? 'bg-red-500 text-white'
                           : item.tone === 'amber'
                             ? 'bg-amber-500 text-white'
-                            : isActive
+                            : item.tone === 'secondary'
                               ? 'bg-secondary text-white'
-                              : 'bg-slate-200 text-slate-600'
+                              : isActive
+                                ? 'bg-secondary text-white'
+                                : 'bg-slate-200 text-slate-600'
                       }`}
                     >
                       {item.badge}
