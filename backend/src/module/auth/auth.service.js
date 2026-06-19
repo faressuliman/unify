@@ -22,42 +22,6 @@ export const register = async (req, res, next) => {
 
   let idImagePath;
   if (req.file) {
-    // ── AI Verification (uses buffer directly — no Cloudinary re-download) ──
-    const minDelay = new Promise((resolve) => setTimeout(resolve, 2500));
-    try {
-      const form = new FormData();
-      const blob = new Blob([req.file.buffer], { type: req.file.mimetype });
-      form.append("image", blob, req.file.originalname || "id.jpg");
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
-
-      const [aiRes] = await Promise.all([
-        fetch(`${process.env.AI_SERVICE_URL}/detect-ai-image`, {
-          method: "POST",
-          body: form,
-          signal: controller.signal,
-        }),
-        minDelay,
-      ]);
-      clearTimeout(timeoutId);
-      const aiData = await aiRes.json();
-      console.log("[auth.register] AI detection result:", aiData);
-
-      if (aiData.success && aiData.is_ai_generated) {
-        return next(
-          new Error(
-            "Registration blocked: The uploaded ID document was detected as AI-generated or has insufficient biological authenticity.",
-            { cause: 400 },
-          ),
-        );
-      }
-    } catch (error) {
-      await minDelay;
-      console.error("AI Image Detection failed:", error);
-      // We log but continue, so the app doesn't break if the AI microservice is offline
-    }
-
     // ── Upload to Cloudinary from buffer (replaces multerHost stream) ──
     idImagePath = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
