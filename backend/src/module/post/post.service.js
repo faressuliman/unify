@@ -70,7 +70,7 @@ export const searchByImage = async (req, res, next) => {
       form,
       {
         headers: { ...form.getHeaders() },
-        timeout: 15000,
+        timeout: 120000,
       },
     );
 
