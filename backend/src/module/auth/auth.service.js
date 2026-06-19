@@ -29,13 +29,18 @@ export const register = async (req, res, next) => {
       const blob = new Blob([req.file.buffer], { type: req.file.mimetype });
       form.append("image", blob, req.file.originalname || "id.jpg");
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
       const [aiRes] = await Promise.all([
         fetch(`${process.env.AI_SERVICE_URL}/detect-ai-image`, {
           method: "POST",
           body: form,
+          signal: controller.signal,
         }),
         minDelay,
       ]);
+      clearTimeout(timeoutId);
       const aiData = await aiRes.json();
       console.log("[auth.register] AI detection result:", aiData);
 
