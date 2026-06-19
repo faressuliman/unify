@@ -6,6 +6,7 @@ from typing import Optional
 from deepface import DeepFace
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from transformers import pipeline
 import cv2
 import numpy as np
 from PIL import Image
@@ -21,18 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-_ai_detector = None
+# Load models at startup
+ai_detector = pipeline(
+    "image-classification",
+    model="umm-maybe/AI-image-detector"
+)
 
-def get_ai_detector():
-    global _ai_detector
-    if _ai_detector is None:
-        from transformers import pipeline
-        _ai_detector = pipeline(
-            "image-classification",
-            model="umm-maybe/AI-image-detector"
-        )
-    return _ai_detector
-
+# ----------------------------------------------------
+# Face Encoding Endpoint (used for facial search)
+# ----------------------------------------------------
 @app.post('/get-face-encoding')
 async def get_face_encoding(image: UploadFile = File(...)):
     try:
@@ -45,26 +43,34 @@ async def get_face_encoding(image: UploadFile = File(...)):
         embeddings = DeepFace.represent(
             img_path=img_rgb,
             model_name='Facenet512',
-            detector_backend='opencv',
+            detector_backend='retinaface',
             enforce_detection=True
         )
         encoding = embeddings[0]["embedding"]
-        return {"success": True, "encoding": encoding}
+        return {
+            "success": True,
+            "encoding": encoding
+        }
     except Exception as e:
         print(f"Encoding Error: {e}")
         return {"success": False, "error": str(e)}
 
+# ----------------------------------------------------
+# AI Image Detection Endpoint (used for registration and claim submission)
+# ----------------------------------------------------
 @app.post('/detect-ai-image')
 async def detect_ai_image(image: UploadFile = File(...), source: Optional[str] = Form(None)):
     try:
         contents = await image.read()
         pil_image = Image.open(io.BytesIO(contents)).convert("RGB")
-        ai_detector = get_ai_detector()
         results = ai_detector(pil_image)
         top = results[0]
         label = top["label"]
         score = top["score"]
-        threshold_value = 0.50 if source in ['create_post', 'search_filter'] else 0.80
+
+        # Always use 80% threshold — detection only for registration and claim submission
+        threshold_value = 0.80
+
         if label == "human" and score >= threshold_value:
             is_ai = False
             confidence = round(score * 100, 2)
@@ -74,7 +80,11 @@ async def detect_ai_image(image: UploadFile = File(...), source: Optional[str] =
             is_ai = True
             decision = "block"
             final_label = "artificial"
-            confidence = round(score * 100, 2) if label == "artificial" else round((1 - score) * 100, 2)
+            if label == "artificial":
+                confidence = round(score * 100, 2)
+            else:
+                confidence = round((1 - score) * 100, 2)
+
         return {
             "success": True,
             "is_ai_generated": is_ai,
