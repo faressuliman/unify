@@ -107,6 +107,7 @@ const Register = () => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [showPasswords, setShowPasswords] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [aiDetectionResult, setAiDetectionResult] = useState<{is_ai_generated: boolean, decision: string} | null>(null);
 
     const cityOptions = useMemo(() => {
         const labels = isRTL ? EGYPTIAN_CITIES_AR : EGYPTIAN_CITIES;
@@ -154,6 +155,30 @@ const Register = () => {
         }
     };
 
+    const handleIdPictureSelected = async (file: File | null) => {
+        setFormData(prev => ({ ...prev, idPicture: file }));
+        setAiDetectionResult(null);
+        if (errors.idPicture) setErrors(prev => ({ ...prev, idPicture: '' }));
+        if (!file) return;
+        try {
+            const fd = new FormData();
+            fd.append('image', file);
+            fd.append('source', 'registration');
+            const res = await fetch('/api/posts/detect-ai-image', { method: 'POST', body: fd });
+            if (res.ok) {
+                const data = await res.json() as { success: boolean; is_ai_generated?: boolean; decision?: string };
+                if (data.success && data.decision) {
+                    setAiDetectionResult({
+                        is_ai_generated: data.is_ai_generated || false,
+                        decision: data.decision
+                    });
+                }
+            }
+        } catch (err) {
+            console.warn('[Register] AI detection prefetch failed:', err);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -178,17 +203,35 @@ const Register = () => {
                 : 'Verifying ID authenticity, this may take a moment.'
         );
 
+        // Minimum 2 second loading state
+        const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
+
         try {
-            await register({
-                name: formData.fullName,
-                email: formData.email,
-                city: formData.city,
-                password: formData.password,
-                confirmPassword: formData.confirmPassword,
-                phoneNumber: formData.phoneNumber,
-                birthDate: formData.birthDate,
-                idPicture: formData.idPicture,
-            });
+            // Check AI detection result from prefetch
+            if (aiDetectionResult?.decision === 'block') {
+                await minDelay;
+                toast.dismiss(loadingToastId);
+                toast.error(isRTL ? 'فشل التسجيل' : 'Registration Blocked', {
+                    description: isRTL ? 'يبدو أن الوثيقة المرفقة تم إنشاؤها عبر الذكاء الاصطناعي.' : 'The uploaded ID document was detected as AI-generated or has insufficient biological authenticity.',
+                    duration: 6000,
+                });
+                setIsSubmitting(false);
+                return;
+            }
+
+            await Promise.all([
+                register({
+                    name: formData.fullName,
+                    email: formData.email,
+                    city: formData.city,
+                    password: formData.password,
+                    confirmPassword: formData.confirmPassword,
+                    phoneNumber: formData.phoneNumber,
+                    birthDate: formData.birthDate,
+                    idPicture: formData.idPicture,
+                }),
+                minDelay,
+            ]);
             // Account is created in a "pending verification" state on the
             // backend — surface that explicitly so the user knows why they
             // can't log in immediately and that we'll email them.
@@ -203,6 +246,7 @@ const Register = () => {
             );
             navigate('/');
         } catch (error) {
+            await minDelay;
             const errorMsg = error instanceof ApiError ? error.message : 'Unable to create account right now.';
             const normalized = errorMsg.toLowerCase();
             
@@ -391,7 +435,7 @@ const Register = () => {
                                 {content.verifyIdentity}
                             </label>
                             <ImageUpload
-                                onImageChange={(file) => setFormData((prev) => ({ ...prev, idPicture: file }))}
+                                onImageChange={handleIdPictureSelected}
                                 title={content.uploadId}
                                 dragDropText={content.dragDrop}
                                 subtitle={content.uploadHint}
