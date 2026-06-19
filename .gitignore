@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+backend/ai_services/hf-space/
+backend/ai_services/__pycache__/
+backend/ai_services/*.pyc
 node_modules/
 *.env
 .env
