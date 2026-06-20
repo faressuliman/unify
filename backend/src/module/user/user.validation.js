@@ -9,6 +9,5 @@ export const updateProfileSchema = joi
     phoneNumber: joi.string().length(11).optional(),
     birthDate: joi.date().optional(),
     file: genralrules.file.optional(),
-    authorization: joi.string().required(),
   })
   .unknown(true);

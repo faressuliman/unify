@@ -37,7 +37,6 @@ export const createPostSchema = joi
     latitude: joi.number().optional(),
     longitude: joi.number().optional(),
     files: joi.any().optional(),
-    authorization: joi.string().required(),
   })
   .unknown(true);
 
@@ -45,7 +44,6 @@ export const updatePostSchema = joi
   .object({
     status: joi.string().valid("active", "resolved", "closed").optional(),
     clothesDescription: joi.string().optional(),
-    authorization: joi.string().required(),
     id: genralrules.id.required(),
   })
   .unknown(true);

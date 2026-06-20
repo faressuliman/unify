@@ -10,62 +10,78 @@ import { AppError } from "../../utils/globalErrorHandling/index.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const register = async (req, res, next) => {
-  const { name, email, password, phoneNumber, birthDate, city } = req.body;
+  try {
+    console.log("[register] START — body keys:", Object.keys(req.body), "| has file:", !!req.file);
+    const { name, email, password, phoneNumber, birthDate, city } = req.body;
 
-  const existing = await User.findOne({ email });
-  if (existing && existing.isbanned) {
-    return next(new AppError("Account banned", 403));
-  }
+    const existing = await User.findOne({ email });
+    if (existing && existing.isbanned) {
+      return next(new AppError("Account banned", 403));
+    }
 
-  if (existing && !existing.isdeleted) {
-    return next(new AppError("Email already registered", 409));
-  }
+    if (existing && !existing.isdeleted) {
+      return next(new AppError("Email already registered", 409));
+    }
 
-  let idImagePath;
-  if (req.file) {
-    // ── Upload to Cloudinary from buffer (replaces multerHost stream) ──
-    idImagePath = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "unify/ids", resource_type: "auto" },
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result.secure_url);
-        },
-      );
-      uploadStream.end(req.file.buffer);
+    let idImagePath;
+    if (req.file) {
+      console.log("[register] Uploading to Cloudinary...");
+      try {
+        idImagePath = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: "unify/ids", resource_type: "auto" },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            },
+          );
+          uploadStream.end(req.file.buffer);
+        });
+        console.log("[register] Cloudinary upload OK:", idImagePath);
+      } catch (cloudErr) {
+        console.error("[register] Cloudinary upload FAILED:", cloudErr.message, cloudErr);
+        return next(new AppError("Image upload failed", 500));
+      }
+    }
+
+    console.log("[register] Hashing password...");
+    const hashedPassword = await Hash({ key: password });
+
+    if (existing && existing.isdeleted) {
+      console.log("[register] Restoring deleted account...");
+      existing.name = name;
+      existing.password = hashedPassword;
+      existing.phoneNumber = phoneNumber;
+      existing.birthDate = birthDate;
+      existing.city = city;
+      existing.idImagePath = idImagePath;
+      existing.isdeleted = false;
+      existing.isVerified = false;
+      existing.isbanned = false;
+      existing.changeCredentialsTime = new Date();
+
+      await existing.save();
+      console.log("[register] Restored OK");
+      return res.status(200).json({ message: "Registered successfully", user: existing });
+    }
+
+    console.log("[register] Creating user...");
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      phoneNumber,
+      birthDate,
+      city,
+      idImagePath,
     });
+
+    console.log("[register] User created OK:", user._id);
+    return res.status(201).json({ message: "Registered successfully", user });
+  } catch (err) {
+    console.error("[register] UNHANDLED ERROR:", err.message, err.stack);
+    return next(err);
   }
-
-  const hashedPassword = await Hash({ key: password });
-  // Removed phone number encryption per user request
-
-  if (existing && existing.isdeleted) {
-    existing.name = name;
-    existing.password = hashedPassword;
-    existing.phoneNumber = phoneNumber;
-    existing.birthDate = birthDate;
-    existing.city = city;
-    existing.idImagePath = idImagePath;
-    existing.isdeleted = false;
-    existing.isVerified = false;
-    existing.isbanned = false;
-    existing.changeCredentialsTime = new Date();
-
-    await existing.save();
-    return res.status(200).json({ message: "Registered successfully", user: existing });
-  }
-
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    phoneNumber,
-    birthDate,
-    city,
-    idImagePath,
-  });
-
-  return res.status(201).json({ message: "Registered successfully", user });
 };
 
 

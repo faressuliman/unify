@@ -4,6 +4,18 @@ import cloudinary from "../utils/cloudinary/index.js";
 import fs from "fs";
 import path from "path";
 
+// ── Startup check: surface missing Cloudinary credentials immediately in logs ──
+const { CLOUD_NAME, API_KEY, API_SECRET } = process.env;
+if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+  console.error(
+    "[Cloudinary] MISSING CREDENTIALS — CLOUD_NAME:", CLOUD_NAME,
+    "| API_KEY:", API_KEY ? "set" : "MISSING",
+    "| API_SECRET:", API_SECRET ? "set" : "MISSING"
+  );
+} else {
+  console.log("[Cloudinary] Credentials loaded. Cloud:", CLOUD_NAME);
+}
+
 export const filetypes = {
   image: ["image/png", "image/jpg", "image/jpeg", "image/gif", "image/ico"],
   video: ["video/mp4", "video/quicktime", "video/mpeg"],
@@ -30,7 +42,41 @@ export const multerHost = (customeValidation = [], folder = "mozmen") => {
   }
 
   const upload = multer({ storage, fileFilter });
-  return upload;
+
+  // Return a wrapper that catches multer/Cloudinary errors and forwards them
+  // to Express's error handler with a proper status code
+  return {
+    single: (fieldName) => (req, res, next) => {
+      upload.single(fieldName)(req, res, (err) => {
+        if (err) {
+          console.error("[multerHost] Upload error:", err.message, err);
+          err.statusCode = err.statusCode || err.status || 500;
+          return next(err);
+        }
+        next();
+      });
+    },
+    array: (fieldName, maxCount) => (req, res, next) => {
+      upload.array(fieldName, maxCount)(req, res, (err) => {
+        if (err) {
+          console.error("[multerHost] Upload error:", err.message, err);
+          err.statusCode = err.statusCode || err.status || 500;
+          return next(err);
+        }
+        next();
+      });
+    },
+    fields: (fields) => (req, res, next) => {
+      upload.fields(fields)(req, res, (err) => {
+        if (err) {
+          console.error("[multerHost] Upload error:", err.message, err);
+          err.statusCode = err.statusCode || err.status || 500;
+          return next(err);
+        }
+        next();
+      });
+    },
+  };
 };
 
 export const multerDisk = (subfolder = "uploads") => {
