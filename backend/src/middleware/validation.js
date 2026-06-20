@@ -14,9 +14,8 @@ export const validation = (schema) => {
     const result = schema.validate(inputdata, { abortEarly: true });
 
     if (result?.error) {
-      
       return next(
-        new AppError(result.error.details[0].message, { cause: 400 }),
+        new AppError(result.error.details[0].message, 400),
       );
     }
 

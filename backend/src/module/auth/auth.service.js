@@ -6,6 +6,7 @@ import { sendEmail } from "../../service/sendEmail.js";
 import { html } from "../../utils/sendEmail.events/template.js";
 import { encrypt } from './../../utils/encrypt/encrypt.js';
 import cloudinary from "../../utils/cloudinary/index.js";
+import { AppError } from "../../utils/globalErrorHandling/index.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const register = async (req, res, next) => {
@@ -13,11 +14,11 @@ export const register = async (req, res, next) => {
 
   const existing = await User.findOne({ email });
   if (existing && existing.isbanned) {
-    return next(new Error("Account banned", { cause: 403 }));
+    return next(new AppError("Account banned", 403));
   }
 
   if (existing && !existing.isdeleted) {
-    return next(new Error("Email already registered", { cause: 409 }));
+    return next(new AppError("Email already registered", 409));
   }
 
   let idImagePath;
@@ -73,21 +74,21 @@ export const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user) return next(new Error("Invalid credentials", { cause: 401 }));
+  if (!user) return next(new AppError("Invalid credentials", 401));
 
-  if (user.isdeleted) return next(new Error("Invalid credentials", { cause: 401 }));
-  if (user.isbanned) return next(new Error("Account banned", { cause: 403 }));
+  if (user.isdeleted) return next(new AppError("Invalid credentials", 401));
+  if (user.isbanned) return next(new AppError("Account banned", 403));
 
   const isMatch = await compare({ key: password, hashed: user.password });
-  if (!isMatch) return next(new Error("Invalid credentials", { cause: 401 }));
+  if (!isMatch) return next(new AppError("Invalid credentials", 401));
 
   // Identity verification gate — admins may always sign in, regular users
   // must wait until the admin team approves their submitted ID document.
   if (!user.isVerified && user.role !== "admin") {
     return next(
-      new Error(
+      new AppError(
         "Your account is pending verification. We'll email you as soon as our team reviews your ID.",
-        { cause: 403 },
+        403,
       ),
     );
   }
@@ -119,7 +120,7 @@ export const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user) return next(new Error("Email not found", { cause: 404 }));
+  if (!user) return next(new AppError("Email not found", 404));
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
@@ -142,18 +143,18 @@ export const verifyOtp = async (req, res, next) => {
   const { email, otp } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user) return next(new Error("Email not found", { cause: 404 }));
+  if (!user) return next(new AppError("Email not found", 404));
 
   if (!user.otp || !user.otpExpiry) {
-    return next(new Error("No OTP requested", { cause: 400 }));
+    return next(new AppError("No OTP requested", 400));
   }
 
   if (new Date() > user.otpExpiry) {
-    return next(new Error("OTP expired", { cause: 400 }));
+    return next(new AppError("OTP expired", 400));
   }
 
   const isOtpValid = await compare({ key: otp, hashed: user.otp });
-  if (!isOtpValid) return next(new Error("Invalid OTP", { cause: 400 }));
+  if (!isOtpValid) return next(new AppError("Invalid OTP", 400));
 
   return res.status(200).json({ message: "OTP verified" });
 };
@@ -163,18 +164,18 @@ export const resetPassword = async (req, res, next) => {
   const { email, otp, password } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user) return next(new Error("Email not found", { cause: 404 }));
+  if (!user) return next(new AppError("Email not found", 404));
 
   if (!user.otp || !user.otpExpiry) {
-    return next(new Error("No OTP requested", { cause: 400 }));
+    return next(new AppError("No OTP requested", 400));
   }
 
   if (new Date() > user.otpExpiry) {
-    return next(new Error("OTP expired", { cause: 400 }));
+    return next(new AppError("OTP expired", 400));
   }
 
   const isOtpValid = await compare({ key: otp, hashed: user.otp });
-  if (!isOtpValid) return next(new Error("Invalid OTP", { cause: 400 }));
+  if (!isOtpValid) return next(new AppError("Invalid OTP", 400));
 
   user.password = await Hash({ key: password });
   user.otp = undefined;

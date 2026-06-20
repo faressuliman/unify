@@ -15,14 +15,15 @@ export const asynchandler = (fn) => {
 };
 
 export const globalerrorhandling = (err, req, res, next) => {
+  const statusCode = err.statusCode || err.status || err.cause || 500;
   if (process.env.MODE == "DEV") {
-    return res.status(err.status || 500).json({
+    return res.status(statusCode).json({
       message: err.message,
       stack: err.stack,
       error: err,
     });
   }
-  return res.status(err.status || 500).json({
+  return res.status(statusCode).json({
     message: err.message,
   });
 };
